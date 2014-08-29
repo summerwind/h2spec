@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+
+var util = require('util'),
+    spawn = require('child_process').spawn;
+
+var args = [
+  __dirname + '/../node_modules/.bin/_mocha'
+];
+
+var port = '8888';
+var host = 'localhost';
+
+process.env.H2CHECK_PORT = port;
+process.env.H2CHECK_HOST = host;
+
+var proc = spawn(process.argv[0], args, { customFds: [0,1,2] });
+proc.on('exit', function (code, signal) {
+  process.on('exit', function(){
+    if (signal) {
+      process.kill(process.pid, signal);
+    } else {
+      process.exit(code);
+    }
+  });
+});

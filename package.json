@@ -1,0 +1,28 @@
+{
+  "name": "h2check",
+  "version": "0.0.1",
+  "description": "The conformance tests for HTTP/2 server",
+  "bin": "./bin/h2check",
+  "scripts": {
+    "test": "bin/h2check"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/summerwind/h2check.git"
+  },
+  "homepage": "https://github.com/summerwind/h2check",
+  "keywords": [
+    "http2",
+    "hpack"
+  ],
+  "author": "Moto Ishizawa",
+  "license": "MIT",
+  "dependencies": {
+    "mocha": "^1.14.0",
+    "waitress": "^0.1.5",
+    "sasazka": "git://github.com/summerwind/sasazka.git"
+  },
+  "engines": {
+    "node" : ">=0.10.1"
+  }
+}
