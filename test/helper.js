@@ -20,7 +20,14 @@ function createConnection(cb) {
   var socket = net.connect(port, host);
   var conn = new Connection(socket, {});
   conn.on('connect', function () {
-    setImmediate(cb);
+    var frameHandler = function (frame) {
+      if (frame.type === protocol.FRAME_TYPE_SETTINGS && frame.ack) {
+        conn.removeListener('frame', frameHandler);
+        setImmediate(cb);
+      }
+    };
+
+    conn.on('frame', frameHandler);
   });
 
   return conn;
@@ -69,6 +76,13 @@ function createRstStreamFrame(errorCode) {
   return frame;
 };
 
+function createSettingsFrame(options) {
+  var frame = framer.createSettingsFrame();
+  frame.streamId = 0;
+
+  return frame;
+};
+
 function createWindowUpdateFrame(increment, stream) {
   var frame = framer.createWindowUpdateFrame();
   frame.streamId = stream ? 1 : 0;
@@ -102,6 +116,7 @@ module.exports = {
   createHeadersFrame: createHeadersFrame,
   createPriorityFrame: createPriorityFrame,
   createRstStreamFrame: createRstStreamFrame,
+  createSettingsFrame: createSettingsFrame,
   createWindowUpdateFrame: createWindowUpdateFrame,
   createContinuationFrame: createContinuationFrame,
   createCompressionContext: createCompressionContext
