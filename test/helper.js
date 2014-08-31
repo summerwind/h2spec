@@ -76,9 +76,17 @@ function createRstStreamFrame(errorCode) {
   return frame;
 };
 
-function createSettingsFrame(options) {
+function createSettingsFrame() {
   var frame = framer.createSettingsFrame();
   frame.streamId = 0;
+
+  return frame;
+};
+
+function createPingFrame(ack) {
+  var frame = framer.createPingFrame();
+  frame.streamId = 0;
+  frame.ack = (ack === true);
 
   return frame;
 };
@@ -117,6 +125,7 @@ module.exports = {
   createPriorityFrame: createPriorityFrame,
   createRstStreamFrame: createRstStreamFrame,
   createSettingsFrame: createSettingsFrame,
+  createPingFrame: createPingFrame,
   createWindowUpdateFrame: createWindowUpdateFrame,
   createContinuationFrame: createContinuationFrame,
   createCompressionContext: createCompressionContext
