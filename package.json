@@ -18,11 +18,12 @@
   "author": "Moto Ishizawa",
   "license": "MIT",
   "dependencies": {
+    "commander": "^2.3.0",
     "mocha": "^1.14.0",
-    "waitress": "^0.1.5",
-    "sasazka": "git://github.com/summerwind/sasazka.git"
+    "sasazka": "git://github.com/summerwind/sasazka.git",
+    "waitress": "^0.1.5"
   },
   "engines": {
-    "node" : ">=0.10.1"
+    "node": ">=0.10.1"
   }
 }
