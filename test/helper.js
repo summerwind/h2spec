@@ -91,6 +91,19 @@ function createPingFrame(ack) {
   return frame;
 };
 
+function createGoawayFrame(lastStreamId, errorCode, debugData) {
+  var frame = framer.createGoawayFrame();
+  frame.streamId = 0;
+  frame.setLastStreamId(lastStreamId);
+  frame.setErrorCode(errorCode);
+
+  if (debugData) {
+    frame.setDebugData(debugData);
+  }
+
+  return frame;
+};
+
 function createWindowUpdateFrame(increment, stream) {
   var frame = framer.createWindowUpdateFrame();
   frame.streamId = stream ? 1 : 0;
@@ -126,6 +139,7 @@ module.exports = {
   createRstStreamFrame: createRstStreamFrame,
   createSettingsFrame: createSettingsFrame,
   createPingFrame: createPingFrame,
+  createGoawayFrame: createGoawayFrame,
   createWindowUpdateFrame: createWindowUpdateFrame,
   createContinuationFrame: createContinuationFrame,
   createCompressionContext: createCompressionContext
