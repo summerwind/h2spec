@@ -58,19 +58,20 @@ describe('6.5. SETTINGS', function () {
 
     var conn = helper.createConnection(function () {
       conn.once('error', function (err) {
-        assert.equal(err.code, protocol.CODE_PROTOCOL_ERROR, message);
+        var result = (err.code === protocol.CODE_PROTOCOL_ERROR || err.code === protocol.CODE_FRAME_SIZE_ERROR);
+        assert(result, message);
         done();
       });
 
       var frame = new Buffer([
-        0x00, 0x00, 0x02, 0x04, 0x04, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x64
+        0x00, 0x00, 0x02, 0x04, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x01
       ]);
       conn.socket.write(frame);
     });
   });
 
-  describe('6.5.2.  Defined SETTINGS Parameters', function () {
+  describe('6.5.2. Defined SETTINGS Parameters', function () {
     describe('SETTINGS_ENABLE_PUSH (0x2)', function () {
       it('Sends the value other than 0 or 1', function (done) {
         var message = 'the endpoint MUST respond with a connection error of type PROTOCOL_ERROR.';
