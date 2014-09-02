@@ -104,9 +104,9 @@ function createGoawayFrame(lastStreamId, errorCode, debugData) {
   return frame;
 };
 
-function createWindowUpdateFrame(increment, stream) {
+function createWindowUpdateFrame(increment) {
   var frame = framer.createWindowUpdateFrame();
-  frame.streamId = stream ? 1 : 0;
+  frame.streamId = 0;
   frame.setWindowSizeIncrement(increment);
 
   return frame;
