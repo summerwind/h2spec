@@ -13,6 +13,19 @@ function getHost() {
   return process.env.H2CHECK_HOST;
 }
 
+function getDummyData(length) {
+  var dummy = '';
+  for (var i=0; i<length; i++) {
+    dummy += 'x';
+  }
+
+  return dummy;
+};
+
+function createCompressionContext() {
+  return hpack.createContext();
+};
+
 function createConnection(cb) {
   var port = getPort();
   var host = getHost();
@@ -116,22 +129,17 @@ function createContinuationFrame(fragment, end) {
   var frame = framer.createContinuationFrame();
   frame.streamId = 1;
   frame.setHeaderBlockFragment(fragment);
-
-  if (end) {
-    frame.endHeaders = true;
-  }
+  frame.endHeaders = (end === true);
 
   return frame;
 };
 
-function createCompressionContext() {
-  return hpack.createContext();
-};
 
 module.exports = {
   protocol: protocol,
   getPort: getPort,
   getHost: getHost,
+  getDummyData: getDummyData,
   createConnection: createConnection,
   createDataFrame: createDataFrame,
   createHeadersFrame: createHeadersFrame,

@@ -22,7 +22,8 @@ var files = [
   '6_5_settings.js',
   '6_7_ping.js',
   '6_8_goaway.js',
-  '6_9_window_update.js'
+  '6_9_window_update.js',
+  '6_10_continuation.js'
 ];
 
 var processArgs = [
