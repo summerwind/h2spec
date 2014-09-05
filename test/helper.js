@@ -46,14 +46,11 @@ function createConnection(cb) {
   return conn;
 };
 
-function createDataFrame(data, end) {
+function createDataFrame(data, endStream) {
   var frame = framer.createDataFrame();
   frame.streamId = 1;
   frame.setData(data);
-
-  if (end) {
-    frame.endStream = true;
-  }
+  frame.endStream = (endStream === true);
 
   return frame;
 };
@@ -62,13 +59,8 @@ function createHeadersFrame(fragment, endHeaders, endStream) {
   var frame = framer.createHeadersFrame();
   frame.streamId = 1;
   frame.setHeaderBlockFragment(fragment);
-
-  if (endHeaders) {
-    frame.endHeaders = true;
-  }
-  if (endStream) {
-    frame.endStream = true;
-  }
+  frame.endHeaders = (endHeaders === true);
+  frame.endStream = (endStream === true);
 
   return frame;
 };
@@ -125,11 +117,11 @@ function createWindowUpdateFrame(increment) {
   return frame;
 };
 
-function createContinuationFrame(fragment, end) {
+function createContinuationFrame(fragment, endHeaders) {
   var frame = framer.createContinuationFrame();
   frame.streamId = 1;
   frame.setHeaderBlockFragment(fragment);
-  frame.endHeaders = (end === true);
+  frame.endHeaders = (endHeaders === true);
 
   return frame;
 };
