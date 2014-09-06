@@ -1,30 +1,30 @@
-# h2check
+# h2spec
 
-h2check is a conformance test tool for HTTP/2 servers.  
+h2spec is a conformance test tool for HTTP/2 servers.
 This tool supports [draft-ietf-httpbis-http2-14](http://tools.ietf.org/html/draft-ietf-httpbis-http2-14).
 
 ## Install
 
 ```
-$ git clone https://github.com/summerwind/h2check.git
-$ cd h2check
+$ git clone https://github.com/summerwind/h2spec.git
+$ cd h2spec
 $ npm install
 ```
-*h2check requires [Node.js](http://nodejs.org/), [npm](https://www.npmjs.org/) and [Git](http://git-scm.com/).*
+*h2spec requires [Node.js](http://nodejs.org/), [npm](https://www.npmjs.org/) and [Git](http://git-scm.com/).*
 
 ## Usage
 
 ```
-$ ./bin/h2check --help
+$ ./bin/h2spec --help
 
-  Usage: h2check [options]
+  Usage: h2spec [options]
 
   Options:
 
     -h, --help          output usage information
     -p, --port <value>  target port
     -h, --host <value>  target host
-``` 
+```
 
 ## License
 

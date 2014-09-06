@@ -1,16 +1,16 @@
 {
-  "name": "h2check",
+  "name": "h2spec",
   "version": "0.0.1",
   "description": "The conformance tests for HTTP/2 server",
-  "bin": "./bin/h2check",
+  "bin": "./bin/h2spec",
   "scripts": {
-    "test": "bin/h2check"
+    "test": "bin/h2spec"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/summerwind/h2check.git"
+    "url": "git://github.com/summerwind/h2spec.git"
   },
-  "homepage": "https://github.com/summerwind/h2check",
+  "homepage": "https://github.com/summerwind/h2spec",
   "keywords": [
     "http2",
     "hpack"
