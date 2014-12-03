@@ -12,7 +12,7 @@ func main() {
 	host := flag.String("h", "127.0.0.1", "Target host")
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage %s: [OPTIONS]\n\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS]\n\n", os.Args[0])
 		fmt.Println("Options:")
 		fmt.Println("  -p:     Target port. (Default: 80)")
 		fmt.Println("  -h:     Target host. (Default: 127.0.0.1)")
