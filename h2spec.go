@@ -39,6 +39,7 @@ func Run(ctx *Context) {
 	TestStreamStates(ctx)
 	TestErrorHandling(ctx)
 	TestData(ctx)
+	TestHeaders(ctx)
 }
 
 func CreateTcpConn(ctx *Context) *TcpConn {
