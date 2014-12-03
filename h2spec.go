@@ -38,6 +38,7 @@ func Run(ctx *Context) {
 	TestHeaderCompressionAndDecompression(ctx)
 	TestStreamStates(ctx)
 	TestErrorHandling(ctx)
+	TestData(ctx)
 }
 
 func CreateTcpConn(ctx *Context) *TcpConn {
@@ -105,6 +106,7 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 	}
 
 	fr := http2.NewFramer(conn, conn)
+	fr.AllowIllegalWrites = true
 	dataCh := make(chan http2.Frame)
 	errCh := make(chan error, 1)
 
