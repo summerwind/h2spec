@@ -34,7 +34,7 @@ func TestConnectionErrorHandling(ctx *Context) {
 				gf, ok := f.(*http2.GoAwayFrame)
 				if ok {
 					if gf.ErrCode == http2.ErrCodeProtocol {
-						gfResult = false
+						gfResult = true
 					}
 				}
 			case err := <-http2Conn.errCh:
