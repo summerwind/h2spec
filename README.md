@@ -19,3 +19,7 @@ Options:
   --help: Display this help and exit.
 ```
 
+## Screenshot
+
+![Sceenshot](https://cloud.githubusercontent.com/assets/230145/5282230/c267a6b8-7b47-11e4-8949-2121d8921382.png)
+
