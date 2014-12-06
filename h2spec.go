@@ -40,6 +40,7 @@ func Run(ctx *Context) {
 	TestErrorHandling(ctx)
 	TestData(ctx)
 	TestHeaders(ctx)
+	TestPriority(ctx)
 }
 
 func CreateTcpConn(ctx *Context) *TcpConn {
