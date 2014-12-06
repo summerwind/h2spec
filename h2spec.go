@@ -41,6 +41,7 @@ func Run(ctx *Context) {
 	TestData(ctx)
 	TestHeaders(ctx)
 	TestPriority(ctx)
+	TestRstStream(ctx)
 }
 
 func CreateTcpConn(ctx *Context) *TcpConn {
