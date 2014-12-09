@@ -45,6 +45,7 @@ func Run(ctx *Context) {
 	TestSettings(ctx)
 	TestPing(ctx)
 	TestGoaway(ctx)
+	TestWindowUpdate(ctx)
 }
 
 func CreateTcpConn(ctx *Context) *TcpConn {
