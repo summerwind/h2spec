@@ -44,6 +44,7 @@ func Run(ctx *Context) {
 	TestRstStream(ctx)
 	TestSettings(ctx)
 	TestPing(ctx)
+	TestGoaway(ctx)
 }
 
 func CreateTcpConn(ctx *Context) *TcpConn {
