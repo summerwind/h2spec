@@ -47,6 +47,7 @@ func Run(ctx *Context) {
 	TestGoaway(ctx)
 	TestWindowUpdate(ctx)
 	TestContinuation(ctx)
+	TestHTTPRequestResponseExchange(ctx)
 }
 
 func CreateTcpConn(ctx *Context) *TcpConn {
