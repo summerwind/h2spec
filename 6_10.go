@@ -364,4 +364,6 @@ func TestContinuation(ctx *Context) {
 
 		PrintResult(result, desc, msg, 0)
 	}(ctx)
+
+	PrintFooter()
 }
