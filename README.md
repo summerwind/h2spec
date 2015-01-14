@@ -1,11 +1,17 @@
 # h2spec
 
 h2spec is a conformance test tool for HTTP/2 server.  
-This tool supports [draft-ietf-httpbis-http2-14](http://tools.ietf.org/html/draft-ietf-httpbis-http2-14).
+This tool supports [draft-ietf-httpbis-http2-16](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16).
 
 ## Install
 
 Go to the [releases page](https://github.com/summerwind/h2spec/releases), find the version you want, and download the zip file.
+
+## Build
+
+1. Make sure you have go 1.4 and set GOPATH appropriately
+2. Run `go get github.com/bradfitz/http2`
+3. Run `cd cmd && go build`
 
 ## Usage
 
@@ -16,6 +22,7 @@ Usage: h2spec [OPTIONS]
 Options:
   -p:     Target port. (Default: 80)
   -h:     Target host. (Default: 127.0.0.1)
+  --tls:  Use TLS. (Default: false)
   --help: Display this help and exit.
 ```
 
