@@ -46,7 +46,7 @@ func TestWindowUpdate(ctx *Context) {
 
 	func(ctx *Context) {
 		desc := "Sends a WINDOW_UPDATE frame with an flow control window increment of 0 on a stream"
-		msg := "the endpoint MUST respond with a connection error of type PROTOCOL_ERROR."
+		msg := "the endpoint MUST respond with a stream error of type PROTOCOL_ERROR."
 		result := false
 
 		http2Conn := CreateHttp2Conn(ctx, true)
@@ -78,7 +78,7 @@ func TestWindowUpdate(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
+				gf, ok := f.(*http2.RSTStreamFrame)
 				if ok {
 					if gf.ErrCode == http2.ErrCodeProtocol {
 						result = true

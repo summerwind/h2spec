@@ -333,7 +333,7 @@ func TestContinuation(ctx *Context) {
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 1
-		hp.EndStream = true
+		hp.EndStream = false
 		hp.EndHeaders = true
 		hp.BlockFragment = buf.Bytes()
 		http2Conn.fr.WriteHeaders(hp)
