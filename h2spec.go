@@ -25,9 +25,10 @@ type Http2Conn struct {
 }
 
 type Context struct {
-	Port   int
-	Host   string
-	UseTLS bool
+	Port      int
+	Host      string
+	Tls       bool
+	TlsConfig *tls.Config
 }
 
 func (ctx *Context) Authority() (authority string) {
@@ -52,23 +53,37 @@ func Run(ctx *Context) {
 	TestHTTPRequestResponseExchange(ctx)
 }
 
+func connectTls(ctx *Context) (net.Conn, error) {
+	if ctx.TlsConfig == nil {
+		ctx.TlsConfig = new(tls.Config)
+	}
+	if ctx.TlsConfig.NextProtos == nil {
+		ctx.TlsConfig.NextProtos = append(ctx.TlsConfig.NextProtos, "h2-14", "h2-16")
+	}
+	conn, err := tls.Dial("tcp", ctx.Authority(), ctx.TlsConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	cs := conn.ConnectionState()
+	if !cs.NegotiatedProtocolIsMutual {
+		return nil, fmt.Errorf("HTTP/2 protocol was not negotiated")
+	}
+
+	return conn, err
+}
+
 func CreateTcpConn(ctx *Context) *TcpConn {
 	var conn net.Conn
 	var err error
-
-	if ctx.UseTLS {
-		config := &tls.Config{
-			NextProtos:         []string{"h2-14", "h2-16"},
-			CipherSuites:       []uint16{tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256},
-			InsecureSkipVerify: true,
-		}
-		conn, err = tls.Dial("tcp", fmt.Sprintf("%s:%d", ctx.Host, ctx.Port), config)
+	if ctx.Tls {
+		conn, err = connectTls(ctx)
 	} else {
-		conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", ctx.Host, ctx.Port))
+		conn, err = net.Dial("tcp", ctx.Authority())
 	}
 
 	if err != nil {
-		fmt.Println("Unable to connect to the target server.")
+		fmt.Printf("Unable to connect to the target server: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -99,20 +114,14 @@ func CreateTcpConn(ctx *Context) *TcpConn {
 func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 	var conn net.Conn
 	var err error
-
-	if ctx.UseTLS {
-		config := &tls.Config{
-			NextProtos:         []string{"h2-14", "h2-16"},
-			CipherSuites:       []uint16{tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256},
-			InsecureSkipVerify: true,
-		}
-		conn, err = tls.Dial("tcp", fmt.Sprintf("%s:%d", ctx.Host, ctx.Port), config)
+	if ctx.Tls {
+		conn, err = connectTls(ctx)
 	} else {
-		conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", ctx.Host, ctx.Port))
+		conn, err = net.Dial("tcp", ctx.Authority())
 	}
 
 	if err != nil {
-		fmt.Println("Unable to connect to the target server.")
+		fmt.Printf("Unable to connect to the target server: %v\n", err)
 		os.Exit(1)
 	}
 
