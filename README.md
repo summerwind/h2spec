@@ -22,7 +22,8 @@ Usage: h2spec [OPTIONS]
 Options:
   -p:     Target port. (Default: 80)
   -h:     Target host. (Default: 127.0.0.1)
-  --tls:  Use TLS. (Default: false)
+  -t:     Connect over TLS. (Default: false)
+  -k:     Don't verify server's certificate. (Default: false)
   --help: Display this help and exit.
 ```
 
