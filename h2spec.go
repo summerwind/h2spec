@@ -1,6 +1,7 @@
 package h2spec
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/bradfitz/http2"
 	"github.com/bradfitz/http2/hpack"
@@ -24,8 +25,9 @@ type Http2Conn struct {
 }
 
 type Context struct {
-	Port int
-	Host string
+	Port   int
+	Host   string
+	UseTLS bool
 }
 
 func (ctx *Context) Authority() (authority string) {
@@ -51,7 +53,20 @@ func Run(ctx *Context) {
 }
 
 func CreateTcpConn(ctx *Context) *TcpConn {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", ctx.Host, ctx.Port))
+	var conn net.Conn
+	var err error
+
+	if ctx.UseTLS {
+		config := &tls.Config{
+			NextProtos:         []string{"h2-14", "h2-16"},
+			CipherSuites:       []uint16{tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256},
+			InsecureSkipVerify: true,
+		}
+		conn, err = tls.Dial("tcp", fmt.Sprintf("%s:%d", ctx.Host, ctx.Port), config)
+	} else {
+		conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", ctx.Host, ctx.Port))
+	}
+
 	if err != nil {
 		fmt.Println("Unable to connect to the target server.")
 		os.Exit(1)
@@ -82,7 +97,20 @@ func CreateTcpConn(ctx *Context) *TcpConn {
 }
 
 func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", ctx.Host, ctx.Port))
+	var conn net.Conn
+	var err error
+
+	if ctx.UseTLS {
+		config := &tls.Config{
+			NextProtos:         []string{"h2-14", "h2-16"},
+			CipherSuites:       []uint16{tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256},
+			InsecureSkipVerify: true,
+		}
+		conn, err = tls.Dial("tcp", fmt.Sprintf("%s:%d", ctx.Host, ctx.Port), config)
+	} else {
+		conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", ctx.Host, ctx.Port))
+	}
+
 	if err != nil {
 		fmt.Println("Unable to connect to the target server.")
 		os.Exit(1)
