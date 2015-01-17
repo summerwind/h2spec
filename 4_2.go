@@ -24,7 +24,7 @@ func TestFrameSize(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				gf := f.(*http2.GoAwayFrame)
+				gf,_ := f.(*http2.GoAwayFrame)
 				if gf != nil {
 					if gf.ErrCode == http2.ErrCodeFrameSize {
 						result = true
@@ -56,7 +56,7 @@ func TestFrameSize(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				gf := f.(*http2.GoAwayFrame)
+				gf,_ := f.(*http2.GoAwayFrame)
 				if gf != nil {
 					if gf.ErrCode == http2.ErrCodeFrameSize {
 						result = true

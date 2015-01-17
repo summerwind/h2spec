@@ -85,7 +85,7 @@ func TestPing(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		fmt.Fprintf(http2Conn.conn, "\x00\x00\x06\x06\x00\x00\x00\x00\x03")
+		fmt.Fprintf(http2Conn.conn, "\x00\x00\x06\x06\x00\x00\x00\x00\x00")
 		fmt.Fprintf(http2Conn.conn, "\x00\x00\x00\x00\x00\x00")
 
 		timeCh := time.After(3 * time.Second)
