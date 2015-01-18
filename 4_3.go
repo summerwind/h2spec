@@ -12,8 +12,7 @@ func TestHeaderCompressionAndDecompression(ctx *Context) {
 	func(ctx *Context) {
 		desc := "Sends invalid header block fragment"
 		msg := "The endpoint MUST terminate the connection with a connection error of type COMPRESSION_ERROR."
-		rfResult := false
-		gfResult := false
+		result := false
 
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
@@ -26,13 +25,9 @@ func TestHeaderCompressionAndDecompression(ctx *Context) {
 			select {
 			case f := <-http2Conn.dataCh:
 				switch frame := f.(type) {
-				case *http2.RSTStreamFrame:
-					if frame.ErrCode == http2.ErrCodeCompression {
-						rfResult = true
-					}
 				case *http2.GoAwayFrame:
 					if frame.ErrCode == http2.ErrCodeCompression {
-						gfResult = true
+						result = true
 					}
 				}
 			case <-http2Conn.errCh:
@@ -42,7 +37,7 @@ func TestHeaderCompressionAndDecompression(ctx *Context) {
 			}
 		}
 
-		PrintResult(rfResult && gfResult, desc, msg, 0)
+		PrintResult(result, desc, msg, 0)
 	}(ctx)
 
 	PrintFooter()
