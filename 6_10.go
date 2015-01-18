@@ -51,20 +51,15 @@ func TestContinuation(ctx *Context) {
 
 		http2Conn.fr.WriteContinuation(1, true, blockFragment[16384:])
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				_, ok := f.(*http2.HeadersFrame)
-				if ok {
-					result = true
-					break loop
-				}
-			case <-http2Conn.errCh:
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
 				break loop
-			case <-timeCh:
+			}
+			switch f.(type) {
+			case *http2.HeadersFrame:
+				result = true
 				break loop
 			}
 		}
@@ -109,20 +104,15 @@ func TestContinuation(ctx *Context) {
 		http2Conn.fr.WriteContinuation(1, false, blockFragment[16384:32767])
 		http2Conn.fr.WriteContinuation(1, true, blockFragment[32767:])
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				_, ok := f.(*http2.HeadersFrame)
-				if ok {
-					result = true
-					break loop
-				}
-			case <-http2Conn.errCh:
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
 				break loop
-			case <-timeCh:
+			}
+			switch f.(type) {
+			case *http2.HeadersFrame:
+				result = true
 				break loop
 			}
 		}
@@ -168,23 +158,18 @@ func TestContinuation(ctx *Context) {
 
 		http2Conn.fr.WriteData(1, true, []byte("test"))
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 
@@ -228,23 +213,18 @@ func TestContinuation(ctx *Context) {
 		http2Conn.fr.WriteContinuation(1, false, blockFragment[16384:32767])
 		http2Conn.fr.WriteContinuation(3, true, blockFragment[32767:])
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 
@@ -288,23 +268,18 @@ func TestContinuation(ctx *Context) {
 		http2Conn.fr.WriteContinuation(1, false, blockFragment[16384:32767])
 		http2Conn.fr.WriteContinuation(0, true, blockFragment[32767:])
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 
@@ -342,23 +317,18 @@ func TestContinuation(ctx *Context) {
 
 		http2Conn.fr.WriteContinuation(1, true, buf.Bytes())
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 

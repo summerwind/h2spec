@@ -2,6 +2,7 @@ package h2spec
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"github.com/bradfitz/http2"
 	"github.com/bradfitz/http2/hpack"
@@ -22,6 +23,30 @@ type Http2Conn struct {
 	fr     *http2.Framer
 	dataCh chan http2.Frame
 	errCh  chan error
+}
+
+// ReadFrame reads a complete HTTP/2 frame from underlying connection.
+// This function blocks until a complete frame is received or timeout
+// t is expired.  The returned http2.Frame must not be used after next
+// ReadFrame call.
+func (h2Conn *Http2Conn) ReadFrame(t time.Duration) (http2.Frame, error) {
+	go func() {
+		f, err := h2Conn.fr.ReadFrame()
+		if err != nil {
+			h2Conn.errCh <- err
+			return
+		}
+		h2Conn.dataCh <- f
+	}()
+
+	select {
+	case f := <-h2Conn.dataCh:
+		return f, nil
+	case err := <-h2Conn.errCh:
+		return nil, err
+	case <-time.After(t):
+		return nil, errors.New("timeout waiting for frame")
+	}
 }
 
 type Context struct {
@@ -162,17 +187,6 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 		dataCh: dataCh,
 		errCh:  errCh,
 	}
-
-	go func() {
-		for {
-			f, err := fr.ReadFrame()
-			dataCh <- f
-			if err != nil {
-				errCh <- err
-				return
-			}
-		}
-	}()
 
 	return http2Conn
 }

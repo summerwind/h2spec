@@ -20,23 +20,18 @@ func TestSettings(ctx *Context) {
 		settings := http2.Setting{http2.SettingMaxConcurrentStreams, 100}
 		http2Conn.fr.WriteSettings(settings)
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				sf, ok := f.(*http2.SettingsFrame)
-				if ok {
-					if sf.IsAck() {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.SettingsFrame:
+				if f.IsAck() {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 
@@ -53,23 +48,18 @@ func TestSettings(ctx *Context) {
 
 		fmt.Fprintf(http2Conn.conn, "\x00\x00\x01\x04\x01\x00\x00\x00\x00\x00")
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeFrameSize {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeFrameSize {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 
@@ -87,23 +77,18 @@ func TestSettings(ctx *Context) {
 		fmt.Fprintf(http2Conn.conn, "\x00\x00\x06\x04\x00\x00\x00\x00\x03")
 		fmt.Fprintf(http2Conn.conn, "\x00\x03\x00\x00\x00\x64")
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 
@@ -121,26 +106,19 @@ func TestSettings(ctx *Context) {
 		fmt.Fprintf(http2Conn.conn, "\x00\x00\x02\x04\x00\x00\x00\x00\x00")
 		fmt.Fprintf(http2Conn.conn, "\x00\x00\x01")
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					} else if gf.ErrCode == http2.ErrCodeFrameSize {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				switch f.ErrCode {
+				case http2.ErrCodeProtocol, http2.ErrCodeFrameSize:
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 
@@ -168,23 +146,18 @@ func TestDefinedSettingsParameters(ctx *Context) {
 			fmt.Fprintf(http2Conn.conn, "\x00\x00\x06\x04\x00\x00\x00\x00\x00")
 			fmt.Fprintf(http2Conn.conn, "\x00\x02\x00\x00\x00\x02")
 
-			timeCh := time.After(3 * time.Second)
-
 		loop:
 			for {
-				select {
-				case f := <-http2Conn.dataCh:
-					gf, ok := f.(*http2.GoAwayFrame)
-					if ok {
-						if gf.ErrCode == http2.ErrCodeProtocol {
-							result = true
-							break loop
-						}
+				f, err := http2Conn.ReadFrame(3 * time.Second)
+				if err != nil {
+					break loop
+				}
+				switch f := f.(type) {
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
+						result = true
+						break loop
 					}
-				case <-http2Conn.errCh:
-					break loop
-				case <-timeCh:
-					break loop
 				}
 			}
 
@@ -206,23 +179,18 @@ func TestDefinedSettingsParameters(ctx *Context) {
 			fmt.Fprintf(http2Conn.conn, "\x00\x00\x06\x04\x00\x00\x00\x00\x00")
 			fmt.Fprintf(http2Conn.conn, "\x00\x04\x80\x00\x00\x00")
 
-			timeCh := time.After(3 * time.Second)
-
 		loop:
 			for {
-				select {
-				case f := <-http2Conn.dataCh:
-					gf, ok := f.(*http2.GoAwayFrame)
-					if ok {
-						if gf.ErrCode == http2.ErrCodeFlowControl {
-							result = true
-							break loop
-						}
+				f, err := http2Conn.ReadFrame(3 * time.Second)
+				if err != nil {
+					break loop
+				}
+				switch f := f.(type) {
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeFlowControl {
+						result = true
+						break loop
 					}
-				case <-http2Conn.errCh:
-					break loop
-				case <-timeCh:
-					break loop
 				}
 			}
 
@@ -244,23 +212,18 @@ func TestDefinedSettingsParameters(ctx *Context) {
 			fmt.Fprintf(http2Conn.conn, "\x00\x00\x06\x04\x00\x00\x00\x00\x00")
 			fmt.Fprintf(http2Conn.conn, "\x00\x05\x00\x00\x3f\xff")
 
-			timeCh := time.After(3 * time.Second)
-
 		loop:
 			for {
-				select {
-				case f := <-http2Conn.dataCh:
-					gf, ok := f.(*http2.GoAwayFrame)
-					if ok {
-						if gf.ErrCode == http2.ErrCodeProtocol {
-							result = true
-							break loop
-						}
+				f, err := http2Conn.ReadFrame(3 * time.Second)
+				if err != nil {
+					break loop
+				}
+				switch f := f.(type) {
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
+						result = true
+						break loop
 					}
-				case <-http2Conn.errCh:
-					break loop
-				case <-timeCh:
-					break loop
 				}
 			}
 
@@ -278,23 +241,18 @@ func TestDefinedSettingsParameters(ctx *Context) {
 			fmt.Fprintf(http2Conn.conn, "\x00\x00\x06\x04\x00\x00\x00\x00\x00")
 			fmt.Fprintf(http2Conn.conn, "\x00\x05\x01\x00\x00\x00")
 
-			timeCh := time.After(3 * time.Second)
-
 		loop:
 			for {
-				select {
-				case f := <-http2Conn.dataCh:
-					gf, ok := f.(*http2.GoAwayFrame)
-					if ok {
-						if gf.ErrCode == http2.ErrCodeProtocol {
-							result = true
-							break loop
-						}
+				f, err := http2Conn.ReadFrame(3 * time.Second)
+				if err != nil {
+					break loop
+				}
+				switch f := f.(type) {
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
+						result = true
+						break loop
 					}
-				case <-http2Conn.errCh:
-					break loop
-				case <-timeCh:
-					break loop
 				}
 			}
 
