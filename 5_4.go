@@ -1,6 +1,7 @@
 package h2spec
 
 import (
+	"fmt"
 	"github.com/bradfitz/http2"
 	"io"
 	"time"
@@ -24,7 +25,10 @@ func TestConnectionErrorHandling(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		http2Conn.fr.WriteData(1, true, []byte("test"))
+		// PING frame with invalid stream ID
+		fmt.Fprintf(http2Conn.conn, "\x00\x00\x08\x06\x00\x00\x00\x00\x03")
+		fmt.Fprintf(http2Conn.conn, "\x00\x00\x00\x00\x00\x00\x00\x00")
+
 		timeCh := time.After(3 * time.Second)
 
 	loop:
