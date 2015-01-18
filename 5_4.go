@@ -33,7 +33,7 @@ func TestConnectionErrorHandling(ctx *Context) {
 			case f := <-http2Conn.dataCh:
 				gf, ok := f.(*http2.GoAwayFrame)
 				if ok {
-					if gf.ErrCode == http2.ErrCodeProtocol {
+					if gf.ErrCode == http2.ErrCodeStreamClosed {
 						gfResult = true
 					}
 				}
