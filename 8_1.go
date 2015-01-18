@@ -52,9 +52,14 @@ func TestHTTPHeaderFields(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				rf, ok := f.(*http2.RSTStreamFrame)
-				if ok {
-					if rf.ErrCode == http2.ErrCodeProtocol {
+				switch f := f.(type) {
+				case *http2.RSTStreamFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
+						result = true
+						break loop
+					}
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
 						result = true
 						break loop
 					}
@@ -112,9 +117,14 @@ func TestPseudoHeaderFields(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				rf, ok := f.(*http2.RSTStreamFrame)
-				if ok {
-					if rf.ErrCode == http2.ErrCodeProtocol {
+				switch f := f.(type) {
+				case *http2.RSTStreamFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
+						result = true
+						break loop
+					}
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
 						result = true
 						break loop
 					}
@@ -163,9 +173,14 @@ func TestPseudoHeaderFields(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				rf, ok := f.(*http2.RSTStreamFrame)
-				if ok {
-					if rf.ErrCode == http2.ErrCodeProtocol {
+				switch f := f.(type) {
+				case *http2.RSTStreamFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
+						result = true
+						break loop
+					}
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
 						result = true
 						break loop
 					}
@@ -214,9 +229,14 @@ func TestPseudoHeaderFields(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				rf, ok := f.(*http2.RSTStreamFrame)
-				if ok {
-					if rf.ErrCode == http2.ErrCodeProtocol {
+				switch f := f.(type) {
+				case *http2.RSTStreamFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
+						result = true
+						break loop
+					}
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
 						result = true
 						break loop
 					}
@@ -272,9 +292,14 @@ func TestConnectionSpecificHeaderFields(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				rf, ok := f.(*http2.RSTStreamFrame)
-				if ok {
-					if rf.ErrCode == http2.ErrCodeProtocol {
+				switch f := f.(type) {
+				case *http2.RSTStreamFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
+						result = true
+						break loop
+					}
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
 						result = true
 						break loop
 					}
@@ -324,9 +349,14 @@ func TestConnectionSpecificHeaderFields(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				rf, ok := f.(*http2.RSTStreamFrame)
-				if ok {
-					if rf.ErrCode == http2.ErrCodeProtocol {
+				switch f := f.(type) {
+				case *http2.RSTStreamFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
+						result = true
+						break loop
+					}
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
 						result = true
 						break loop
 					}
@@ -377,9 +407,14 @@ func TestRequestPseudoHeaderFields(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				rf, ok := f.(*http2.RSTStreamFrame)
-				if ok {
-					if rf.ErrCode == http2.ErrCodeProtocol {
+				switch f := f.(type) {
+				case *http2.RSTStreamFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
+						result = true
+						break loop
+					}
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
 						result = true
 						break loop
 					}
@@ -435,9 +470,14 @@ func TestMalformedRequestsAndResponses(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				rf, ok := f.(*http2.RSTStreamFrame)
-				if ok {
-					if rf.ErrCode == http2.ErrCodeProtocol {
+				switch f := f.(type) {
+				case *http2.RSTStreamFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
+						result = true
+						break loop
+					}
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeProtocol {
 						result = true
 						break loop
 					}
