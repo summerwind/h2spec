@@ -18,22 +18,17 @@ func TestRstStream(ctx *Context) {
 
 		http2Conn.fr.WriteRSTStream(0, http2.ErrCodeCancel)
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeProtocol {
-						result = true
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 
@@ -50,22 +45,17 @@ func TestRstStream(ctx *Context) {
 
 		http2Conn.fr.WriteRSTStream(1, http2.ErrCodeCancel)
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeProtocol {
-						result = true
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 

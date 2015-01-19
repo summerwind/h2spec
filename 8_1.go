@@ -46,28 +46,23 @@ func TestHTTPHeaderFields(ctx *Context) {
 		hp.BlockFragment = buf.Bytes()
 		http2Conn.fr.WriteHeaders(hp)
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				switch f := f.(type) {
-				case *http2.RSTStreamFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
-				case *http2.GoAwayFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.RSTStreamFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
+				}
 			}
 		}
 
@@ -111,28 +106,23 @@ func TestPseudoHeaderFields(ctx *Context) {
 		hp.BlockFragment = buf.Bytes()
 		http2Conn.fr.WriteHeaders(hp)
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				switch f := f.(type) {
-				case *http2.RSTStreamFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
-				case *http2.GoAwayFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.RSTStreamFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
+				}
 			}
 		}
 
@@ -167,28 +157,23 @@ func TestPseudoHeaderFields(ctx *Context) {
 		hp.BlockFragment = buf.Bytes()
 		http2Conn.fr.WriteHeaders(hp)
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				switch f := f.(type) {
-				case *http2.RSTStreamFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
-				case *http2.GoAwayFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.RSTStreamFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
+				}
 			}
 		}
 
@@ -223,28 +208,23 @@ func TestPseudoHeaderFields(ctx *Context) {
 		hp.BlockFragment = buf.Bytes()
 		http2Conn.fr.WriteHeaders(hp)
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				switch f := f.(type) {
-				case *http2.RSTStreamFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
-				case *http2.GoAwayFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.RSTStreamFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
+				}
 			}
 		}
 
@@ -286,28 +266,23 @@ func TestConnectionSpecificHeaderFields(ctx *Context) {
 		hp.BlockFragment = buf.Bytes()
 		http2Conn.fr.WriteHeaders(hp)
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				switch f := f.(type) {
-				case *http2.RSTStreamFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
-				case *http2.GoAwayFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.RSTStreamFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
+				}
 			}
 		}
 
@@ -343,28 +318,23 @@ func TestConnectionSpecificHeaderFields(ctx *Context) {
 		hp.BlockFragment = buf.Bytes()
 		http2Conn.fr.WriteHeaders(hp)
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				switch f := f.(type) {
-				case *http2.RSTStreamFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
-				case *http2.GoAwayFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.RSTStreamFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
+				}
 			}
 		}
 
@@ -401,28 +371,23 @@ func TestRequestPseudoHeaderFields(ctx *Context) {
 		hp.BlockFragment = buf.Bytes()
 		http2Conn.fr.WriteHeaders(hp)
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				switch f := f.(type) {
-				case *http2.RSTStreamFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
-				case *http2.GoAwayFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.RSTStreamFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
+				}
 			}
 		}
 
@@ -464,28 +429,23 @@ func TestMalformedRequestsAndResponses(ctx *Context) {
 		http2Conn.fr.WriteHeaders(hp)
 		http2Conn.fr.WriteData(1, true, []byte("test"))
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				switch f := f.(type) {
-				case *http2.RSTStreamFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
-				case *http2.GoAwayFrame:
-					if f.ErrCode == http2.ErrCodeProtocol {
-						result = true
-						break loop
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.RSTStreamFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+					break loop
+				}
 			}
 		}
 
