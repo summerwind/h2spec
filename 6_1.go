@@ -75,9 +75,13 @@ func TestData(ctx *Context) {
 		for {
 			select {
 			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeStreamClosed {
+				switch f := f.(type) {
+				case *http2.RSTStreamFrame:
+					if f.ErrCode == http2.ErrCodeStreamClosed {
+						result = true
+					}
+				case *http2.GoAwayFrame:
+					if f.ErrCode == http2.ErrCodeStreamClosed {
 						result = true
 					}
 				}
