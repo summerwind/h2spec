@@ -42,22 +42,17 @@ func TestPriority(ctx *Context) {
 		http2Conn.conn.Write(buf.Bytes())
 		fmt.Fprintf(http2Conn.conn, "\x80\x00\x00\x01\x0a")
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeProtocol {
-						result = true
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 

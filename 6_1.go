@@ -19,22 +19,18 @@ func TestData(ctx *Context) {
 		defer http2Conn.conn.Close()
 
 		http2Conn.fr.WriteData(0, true, []byte("test"))
-		timeCh := time.After(3 * time.Second)
 
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				gf, ok := f.(*http2.GoAwayFrame)
-				if ok {
-					if gf.ErrCode == http2.ErrCodeProtocol {
-						result = true
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
 			}
 		}
 
@@ -69,26 +65,21 @@ func TestData(ctx *Context) {
 		http2Conn.fr.WriteHeaders(hp)
 		http2Conn.fr.WriteData(1, true, []byte("test"))
 
-		timeCh := time.After(3 * time.Second)
-
 	loop:
 		for {
-			select {
-			case f := <-http2Conn.dataCh:
-				switch f := f.(type) {
-				case *http2.RSTStreamFrame:
-					if f.ErrCode == http2.ErrCodeStreamClosed {
-						result = true
-					}
-				case *http2.GoAwayFrame:
-					if f.ErrCode == http2.ErrCodeStreamClosed {
-						result = true
-					}
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.RSTStreamFrame:
+				if f.ErrCode == http2.ErrCodeStreamClosed {
+					result = true
 				}
-			case <-http2Conn.errCh:
-				break loop
-			case <-timeCh:
-				break loop
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeStreamClosed {
+					result = true
+				}
 			}
 		}
 
