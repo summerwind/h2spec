@@ -10,8 +10,9 @@ Go to the [releases page](https://github.com/summerwind/h2spec/releases), find t
 ## Build
 
 1. Make sure you have go 1.4 and set GOPATH appropriately
-2. Run `go get github.com/bradfitz/http2`
-3. Run `cd cmd && go build`
+2. Clone this repo and move to the cloned repo directory
+3. Run `go get github.com/bradfitz/http2`
+4. Run `go build cmd/h2spec.go`
 
 ## Usage
 
@@ -24,6 +25,7 @@ Options:
   -h:     Target host. (Default: 127.0.0.1)
   -t:     Connect over TLS. (Default: false)
   -k:     Don't verify server's certificate. (Default: false)
+  -s:     Section number on which to run the test. (Example: -s 6.1 -s 6.2)
   --help: Display this help and exit.
 ```
 
