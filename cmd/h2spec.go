@@ -35,7 +35,7 @@ func main() {
 		fmt.Println("  -h:     Target host. (Default: 127.0.0.1)")
 		fmt.Println("  -t:     Connect over TLS. (Default: false)")
 		fmt.Println("  -k:     Don't verify server's certificate. (Default: false)")
-		fmt.Println("  -s:     Section number on which to run the test")
+		fmt.Println("  -s:     Section number on which to run the test. (Example: -s 6.1 -s 6.2)")
 		fmt.Println("  --help: Display this help and exit.")
 		os.Exit(1)
 	}
