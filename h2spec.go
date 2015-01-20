@@ -54,10 +54,20 @@ type Context struct {
 	Host      string
 	Tls       bool
 	TlsConfig *tls.Config
+	Sections  map[string]bool
 }
 
-func (ctx *Context) Authority() (authority string) {
+func (ctx *Context) Authority() string {
 	return fmt.Sprintf("%s:%d", ctx.Host, ctx.Port)
+}
+
+func (ctx *Context) IsTarget(section string) bool {
+	if ctx.Sections == nil {
+		return true
+	}
+
+	_, ok := ctx.Sections[section]
+	return ok
 }
 
 func Run(ctx *Context) {

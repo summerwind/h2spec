@@ -16,6 +16,10 @@ func GetDummyData(num int) string {
 }
 
 func TestContinuation(ctx *Context) {
+	if !ctx.IsTarget("6.10") {
+		return
+	}
+
 	PrintHeader("6.10. CONTINUATION", 0)
 
 	func(ctx *Context) {

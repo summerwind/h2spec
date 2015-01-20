@@ -8,6 +8,10 @@ import (
 )
 
 func TestStreamStates(ctx *Context) {
+	if !ctx.IsTarget("5.1") {
+		return
+	}
+
 	PrintHeader("5.1. Stream States", 0)
 	TestStreamIdentifiers(ctx)
 	PrintFooter()

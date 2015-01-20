@@ -8,10 +8,12 @@ import (
 )
 
 func TestHTTPRequestResponseExchange(ctx *Context) {
+	if !ctx.IsTarget("8.1") {
+		return
+	}
+
 	PrintHeader("8.1. HTTP Request/Response Exchange", 0)
-
 	TestHTTPHeaderFields(ctx)
-
 	PrintFooter()
 }
 

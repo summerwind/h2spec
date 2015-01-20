@@ -9,6 +9,10 @@ import (
 )
 
 func TestPriority(ctx *Context) {
+	if !ctx.IsTarget("6.3") {
+		return
+	}
+
 	PrintHeader("6.3. PRIORITY", 0)
 
 	func(ctx *Context) {

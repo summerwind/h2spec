@@ -9,6 +9,10 @@ import (
 )
 
 func TestWindowUpdate(ctx *Context) {
+	if !ctx.IsTarget("6.9") {
+		return
+	}
+
 	PrintHeader("6.9. WINDOW_UPDATE", 0)
 
 	func(ctx *Context) {

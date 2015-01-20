@@ -7,6 +7,10 @@ import (
 )
 
 func TestHttp2ConnectionPreface(ctx *Context) {
+	if !ctx.IsTarget("3.5") {
+		return
+	}
+
 	PrintHeader("3.5. HTTP/2 Connection Preface", 0)
 
 	func(ctx *Context) {

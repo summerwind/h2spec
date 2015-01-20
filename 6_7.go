@@ -7,6 +7,10 @@ import (
 )
 
 func TestPing(ctx *Context) {
+	if !ctx.IsTarget("6.7") {
+		return
+	}
+
 	PrintHeader("6.7. PING", 0)
 
 	func(ctx *Context) {

@@ -7,6 +7,10 @@ import (
 )
 
 func TestHeaderCompressionAndDecompression(ctx *Context) {
+	if !ctx.IsTarget("4.3") {
+		return
+	}
+
 	PrintHeader("4.3. Header Compression and Decompression", 0)
 
 	func(ctx *Context) {
@@ -25,7 +29,7 @@ func TestHeaderCompressionAndDecompression(ctx *Context) {
 			if err != nil {
 				break loop
 			}
-			switch f:= f.(type) {
+			switch f := f.(type) {
 			case *http2.GoAwayFrame:
 				if f.ErrCode == http2.ErrCodeCompression {
 					result = true

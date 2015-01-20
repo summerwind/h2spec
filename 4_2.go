@@ -7,6 +7,10 @@ import (
 )
 
 func TestFrameSize(ctx *Context) {
+	if !ctx.IsTarget("4.2") {
+		return
+	}
+
 	PrintHeader("4.2. Frame Size", 0)
 	msg := "The endpoint MUST send a FRAME_SIZE_ERROR error."
 

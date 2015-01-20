@@ -7,6 +7,10 @@ import (
 )
 
 func TestSettings(ctx *Context) {
+	if !ctx.IsTarget("6.5") {
+		return
+	}
+
 	PrintHeader("6.5. SETTINGS", 0)
 
 	func(ctx *Context) {

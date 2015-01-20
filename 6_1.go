@@ -8,6 +8,10 @@ import (
 )
 
 func TestData(ctx *Context) {
+	if !ctx.IsTarget("6.1") {
+		return
+	}
+
 	PrintHeader("6.1. DATA", 0)
 
 	func(ctx *Context) {

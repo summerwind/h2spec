@@ -7,6 +7,10 @@ import (
 )
 
 func TestGoaway(ctx *Context) {
+	if !ctx.IsTarget("6.8") {
+		return
+	}
+
 	PrintHeader("6.8. GOAWAY", 0)
 
 	func(ctx *Context) {

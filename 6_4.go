@@ -6,6 +6,10 @@ import (
 )
 
 func TestRstStream(ctx *Context) {
+	if !ctx.IsTarget("6.4") {
+		return
+	}
+
 	PrintHeader("6.4. RST_STREAM", 0)
 
 	func(ctx *Context) {

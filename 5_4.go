@@ -8,6 +8,10 @@ import (
 )
 
 func TestErrorHandling(ctx *Context) {
+	if !ctx.IsTarget("5.4") {
+		return
+	}
+
 	PrintHeader("5.4. Error Handling", 0)
 	TestConnectionErrorHandling(ctx)
 	PrintFooter()

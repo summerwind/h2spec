@@ -9,6 +9,10 @@ import (
 )
 
 func TestHeaders(ctx *Context) {
+	if !ctx.IsTarget("6.2") {
+		return
+	}
+
 	PrintHeader("6.2. HEADERS", 0)
 
 	func(ctx *Context) {
