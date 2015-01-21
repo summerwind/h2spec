@@ -162,31 +162,30 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 
 	fmt.Fprintf(conn, "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")
 
-	if sn {
-		done := false
-		fr := http2.NewFramer(conn, conn)
-		fr.WriteSettings()
+	done := false
+	fr := http2.NewFramer(conn, conn)
+	fr.WriteSettings()
 
-		for {
-			f, _ := fr.ReadFrame()
-			switch f := f.(type) {
-			case *http2.SettingsFrame:
-				if f.IsAck() {
-					done = true
-				} else {
+	for {
+		f, _ := fr.ReadFrame()
+		switch f := f.(type) {
+		case *http2.SettingsFrame:
+			if f.IsAck() {
+				done = true
+			} else {
+				if sn {
 					fr.WriteSettingsAck()
 				}
-			default:
-				done = true
 			}
+		default:
+			done = true
+		}
 
-			if done {
-				break
-			}
+		if done {
+			break
 		}
 	}
 
-	fr := http2.NewFramer(conn, conn)
 	fr.AllowIllegalWrites = true
 	dataCh := make(chan http2.Frame)
 	errCh := make(chan error, 1)
