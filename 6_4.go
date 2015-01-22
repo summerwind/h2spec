@@ -1,7 +1,10 @@
 package h2spec
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/bradfitz/http2"
+	"github.com/bradfitz/http2/hpack"
 	"time"
 )
 
@@ -58,6 +61,54 @@ func TestRstStream(ctx *Context) {
 			switch f := f.(type) {
 			case *http2.GoAwayFrame:
 				if f.ErrCode == http2.ErrCodeProtocol {
+					result = true
+				}
+			}
+		}
+
+		PrintResult(result, desc, msg, 0)
+	}(ctx)
+
+	func(ctx *Context) {
+		desc := "Sends a RST_STREAM frame with a length other than 4 octets"
+		msg := "The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR."
+		result := false
+
+		http2Conn := CreateHttp2Conn(ctx, true)
+		defer http2Conn.conn.Close()
+
+		var buf bytes.Buffer
+		hdrs := []hpack.HeaderField{
+			pair(":method", "GET"),
+			pair(":scheme", "http"),
+			pair(":path", "/"),
+			pair(":authority", ctx.Authority()),
+		}
+		enc := hpack.NewEncoder(&buf)
+		for _, hf := range hdrs {
+			_ = enc.WriteField(hf)
+		}
+
+		var hp http2.HeadersFrameParam
+		hp.StreamID = 1
+		hp.EndStream = false
+		hp.EndHeaders = true
+		hp.BlockFragment = buf.Bytes()
+		http2Conn.fr.WriteHeaders(hp)
+
+		// RST_STREAM Frame
+		fmt.Fprintf(http2Conn.conn, "\x00\x00\x03\x03\x00\x00\x00\x00\x01")
+		fmt.Fprintf(http2Conn.conn, "\x00\x00\x00")
+
+	loop:
+		for {
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeFrameSize {
 					result = true
 				}
 			}
