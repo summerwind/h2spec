@@ -77,6 +77,8 @@ func TestFrameSize(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, false)
 		defer http2Conn.conn.Close()
 
+		http2Conn.fr.WriteSettings()
+
 		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
