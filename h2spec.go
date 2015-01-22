@@ -86,6 +86,7 @@ func Run(ctx *Context) {
 	TestWindowUpdate(ctx)
 	TestContinuation(ctx)
 	TestHTTPRequestResponseExchange(ctx)
+	TestServerPush(ctx)
 }
 
 func connectTls(ctx *Context) (net.Conn, error) {
