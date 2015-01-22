@@ -94,6 +94,36 @@ func TestWindowUpdate(ctx *Context) {
 		PrintResult(result, desc, msg, 0)
 	}(ctx)
 
+	func(ctx *Context) {
+		desc := "Sends a WINDOW_UPDATE frame with a length other than a multiple of 4 octets"
+		msg := "the endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR."
+		result := false
+
+		http2Conn := CreateHttp2Conn(ctx, true)
+		defer http2Conn.conn.Close()
+
+		fmt.Fprintf(http2Conn.conn, "\x00\x00\x03\x08\x00\x00\x00\x00\x00")
+		fmt.Fprintf(http2Conn.conn, "\x00\x00\x01")
+
+	loop:
+		for {
+			f, err := http2Conn.ReadFrame(3 * time.Second)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				switch f.ErrCode {
+				case http2.ErrCodeProtocol, http2.ErrCodeFrameSize:
+					result = true
+					break loop
+				}
+			}
+		}
+
+		PrintResult(result, desc, msg, 0)
+	}(ctx)
+
 	TestInitialFlowControlWindowSize(ctx)
 
 	PrintFooter()
