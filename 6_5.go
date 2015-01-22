@@ -100,8 +100,8 @@ func TestSettings(ctx *Context) {
 	}(ctx)
 
 	func(ctx *Context) {
-		desc := "Sends a incomplete SETTINGS frame"
-		msg := "the endpoint MUST respond with a connection error of type PROTOCOL_ERROR."
+		desc := "Sends a SETTINGS frame with a length other than a multiple of 6 octets"
+		msg := "the endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR."
 		result := false
 
 		http2Conn := CreateHttp2Conn(ctx, true)
