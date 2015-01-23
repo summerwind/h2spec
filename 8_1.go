@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/bradfitz/http2"
 	"github.com/bradfitz/http2/hpack"
-	"time"
 )
 
 func TestHTTPRequestResponseExchange(ctx *Context) {
@@ -50,7 +49,7 @@ func TestHTTPHeaderFields(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -110,7 +109,7 @@ func TestPseudoHeaderFields(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -161,7 +160,7 @@ func TestPseudoHeaderFields(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -212,7 +211,7 @@ func TestPseudoHeaderFields(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -236,9 +235,6 @@ func TestPseudoHeaderFields(ctx *Context) {
 
 func TestConnectionSpecificHeaderFields(ctx *Context) {
 	PrintHeader("8.1.2.2. Connection-Specific Header Fields", 2)
-
-	// 8.1.2.3. CONNECT リクエスト (8.3節) である場合を除き、":method"、":scheme"、そして ":path" 擬似ヘッダーフィールドに有効な値を1つ含まなければなりません (MUST)。これらの擬似ヘッダーフィールドが省略された HTTP リクエストは不正な形式 (8.1.2.6節) です。
-	// 8.1.2.6. ボディを構成する DATA フレームペイロードの長さの合計が "content-length" ヘッダーフィールドの値と等しくない場合、リクエストやレスポンスは不正な形式になります。
 
 	func(ctx *Context) {
 		desc := "Sends a HEADERS frame that contains the connection-specific header field"
@@ -270,7 +266,7 @@ func TestConnectionSpecificHeaderFields(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -322,7 +318,7 @@ func TestConnectionSpecificHeaderFields(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -375,7 +371,7 @@ func TestRequestPseudoHeaderFields(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -399,8 +395,6 @@ func TestRequestPseudoHeaderFields(ctx *Context) {
 
 func TestMalformedRequestsAndResponses(ctx *Context) {
 	PrintHeader("8.1.2.6. Malformed Requests and Responses", 2)
-
-	// 8.1.2.6. ボディを構成する DATA フレームペイロードの長さの合計が "content-length" ヘッダーフィールドの値と等しくない場合、リクエストやレスポンスは不正な形式になります。
 
 	func(ctx *Context) {
 		desc := "Sends a HEADERS frame that contains invalid \"content-length\" header field"
@@ -433,7 +427,7 @@ func TestMalformedRequestsAndResponses(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}

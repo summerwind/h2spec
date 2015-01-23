@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/bradfitz/http2"
 	"github.com/bradfitz/http2/hpack"
-	"time"
 )
 
 func GetDummyData(num int) string {
@@ -57,7 +56,7 @@ func TestContinuation(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -110,7 +109,7 @@ func TestContinuation(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -164,7 +163,7 @@ func TestContinuation(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -219,7 +218,7 @@ func TestContinuation(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -274,7 +273,7 @@ func TestContinuation(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -323,7 +322,7 @@ func TestContinuation(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}

@@ -3,7 +3,6 @@ package h2spec
 import (
 	"fmt"
 	"github.com/bradfitz/http2"
-	"time"
 )
 
 func TestSettings(ctx *Context) {
@@ -26,7 +25,7 @@ func TestSettings(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -54,7 +53,7 @@ func TestSettings(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -83,7 +82,7 @@ func TestSettings(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -112,7 +111,7 @@ func TestSettings(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -152,7 +151,7 @@ func TestDefinedSettingsParameters(ctx *Context) {
 
 		loop:
 			for {
-				f, err := http2Conn.ReadFrame(3 * time.Second)
+				f, err := http2Conn.ReadFrame(ctx.Timeout)
 				if err != nil {
 					break loop
 				}
@@ -185,7 +184,7 @@ func TestDefinedSettingsParameters(ctx *Context) {
 
 		loop:
 			for {
-				f, err := http2Conn.ReadFrame(3 * time.Second)
+				f, err := http2Conn.ReadFrame(ctx.Timeout)
 				if err != nil {
 					break loop
 				}
@@ -218,7 +217,7 @@ func TestDefinedSettingsParameters(ctx *Context) {
 
 		loop:
 			for {
-				f, err := http2Conn.ReadFrame(3 * time.Second)
+				f, err := http2Conn.ReadFrame(ctx.Timeout)
 				if err != nil {
 					break loop
 				}
@@ -247,7 +246,7 @@ func TestDefinedSettingsParameters(ctx *Context) {
 
 		loop:
 			for {
-				f, err := http2Conn.ReadFrame(3 * time.Second)
+				f, err := http2Conn.ReadFrame(ctx.Timeout)
 				if err != nil {
 					break loop
 				}

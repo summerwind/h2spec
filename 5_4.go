@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/bradfitz/http2"
 	"io"
-	"time"
 )
 
 func TestErrorHandling(ctx *Context) {
@@ -35,7 +34,7 @@ func TestConnectionErrorHandling(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				if err == io.EOF {
 					closeResult = true

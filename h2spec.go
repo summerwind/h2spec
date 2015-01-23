@@ -55,6 +55,7 @@ type Context struct {
 	Tls       bool
 	TlsConfig *tls.Config
 	Sections  map[string]bool
+	Timeout   time.Duration
 }
 
 func (ctx *Context) Authority() string {

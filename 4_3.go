@@ -3,7 +3,6 @@ package h2spec
 import (
 	"fmt"
 	"github.com/bradfitz/http2"
-	"time"
 )
 
 func TestHeaderCompressionAndDecompression(ctx *Context) {
@@ -25,7 +24,7 @@ func TestHeaderCompressionAndDecompression(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}

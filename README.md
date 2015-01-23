@@ -25,6 +25,7 @@ Options:
   -h:     Target host. (Default: 127.0.0.1)
   -t:     Connect over TLS. (Default: false)
   -k:     Don't verify server's certificate. (Default: false)
+  -o:     Maximum time allowed for test. (Default: 3)
   -s:     Section number on which to run the test. (Example: -s 6.1 -s 6.2)
   --help: Display this help and exit.
 ```

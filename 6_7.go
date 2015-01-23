@@ -3,7 +3,6 @@ package h2spec
 import (
 	"fmt"
 	"github.com/bradfitz/http2"
-	"time"
 )
 
 func TestPing(ctx *Context) {
@@ -26,7 +25,7 @@ func TestPing(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -55,7 +54,7 @@ func TestPing(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}
@@ -84,7 +83,7 @@ func TestPing(ctx *Context) {
 
 	loop:
 		for {
-			f, err := http2Conn.ReadFrame(3 * time.Second)
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
 			if err != nil {
 				break loop
 			}

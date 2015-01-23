@@ -22,7 +22,7 @@ func TestHttp2ConnectionPreface(ctx *Context) {
 		defer tcpConn.conn.Close()
 
 		fmt.Fprintf(tcpConn.conn, "INVALID CONNECTION PREFACE")
-		timeCh := time.After(3 * time.Second)
+		timeCh := time.After(ctx.Timeout)
 
 	loop:
 		for {
