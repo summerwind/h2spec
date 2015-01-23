@@ -32,5 +32,5 @@ Options:
 
 ## Screenshot
 
-![Sceenshot](https://cloud.githubusercontent.com/assets/230145/5282230/c267a6b8-7b47-11e4-8949-2121d8921382.png)
+![Sceenshot](https://cloud.githubusercontent.com/assets/230145/5875758/f3099c7a-a353-11e4-9324-0add314a2f98.png)
 
