@@ -167,25 +167,47 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 	fr := http2.NewFramer(conn, conn)
 
 	if sn {
-		done := false
+		doneCh := make(chan bool, 1)
+		errCh := make(chan error, 1)
 		fr.WriteSettings()
 
-		for {
-			f, _ := fr.ReadFrame()
-			switch f := f.(type) {
-			case *http2.SettingsFrame:
-				if f.IsAck() {
-					done = true
-				} else {
-					fr.WriteSettingsAck()
-				}
-			default:
-				done = true
-			}
+		go func() {
+			local := false
+			remote := false
 
-			if done {
-				break
+			for {
+				f, err := fr.ReadFrame()
+				if err != nil {
+					errCh <- err
+					return
+				}
+
+				switch f := f.(type) {
+				case *http2.SettingsFrame:
+					if f.IsAck() {
+						local = true
+					} else {
+						fr.WriteSettingsAck()
+						remote = true
+					}
+				}
+
+				if local && remote {
+					doneCh <- true
+					return
+				}
 			}
+		}()
+
+		select {
+		case <-doneCh:
+			// Nothing to. do
+		case <-errCh:
+			fmt.Println("HTTP/2 settings negotiation failed")
+			os.Exit(1)
+		case <-time.After(ctx.Timeout):
+			fmt.Println("HTTP/2 settings negotiation timeout")
+			os.Exit(1)
 		}
 	}
 
