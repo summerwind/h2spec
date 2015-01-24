@@ -95,7 +95,7 @@ func connectTls(ctx *Context) (net.Conn, error) {
 		ctx.TlsConfig = new(tls.Config)
 	}
 	if ctx.TlsConfig.NextProtos == nil {
-		ctx.TlsConfig.NextProtos = append(ctx.TlsConfig.NextProtos, "h2-14", "h2-16")
+		ctx.TlsConfig.NextProtos = append(ctx.TlsConfig.NextProtos, "h2-14", "h2-15", "h2-16")
 	}
 	conn, err := tls.Dial("tcp", ctx.Authority(), ctx.TlsConfig)
 	if err != nil {
