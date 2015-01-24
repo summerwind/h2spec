@@ -115,17 +115,13 @@ func TestStreamConcurrency(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
 			pair(":scheme", "http"),
 			pair(":path", "/"),
 			pair(":authority", ctx.Authority()),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
+		hbf := http2Conn.EncodeHeader(hdrs)
 
 		var streamID uint32 = 1
 		for i := 0; i <= int(ctx.Settings[http2.SettingMaxConcurrentStreams]); i++ {
@@ -133,7 +129,7 @@ func TestStreamConcurrency(ctx *Context) {
 			hp.StreamID = streamID
 			hp.EndStream = true
 			hp.EndHeaders = true
-			hp.BlockFragment = buf.Bytes()
+			hp.BlockFragment = hbf
 			http2Conn.fr.WriteHeaders(hp)
 			streamID += 2
 		}
