@@ -44,7 +44,7 @@ func main() {
 	}
 
 	flag.Parse()
-	if flag.Lookup("p") != nil && *useTls {
+	if flag.Lookup("p") == nil && *useTls {
 		*port = 443
 	}
 
