@@ -13,6 +13,7 @@ func TestStreamStates(ctx *Context) {
 
 	PrintHeader("5.1. Stream States", 0)
 	TestStreamIdentifiers(ctx)
+	TestStreamConcurrency(ctx)
 	PrintFooter()
 }
 
@@ -106,6 +107,59 @@ func TestStreamIdentifiers(ctx *Context) {
 			case *http2.GoAwayFrame:
 				if f.ErrCode == http2.ErrCodeProtocol {
 					result = true
+				}
+			}
+		}
+
+		PrintResult(result, desc, msg, 1)
+	}(ctx)
+}
+
+func TestStreamConcurrency(ctx *Context) {
+	PrintHeader("5.1.2. Stream Concurrency", 1)
+
+	func(ctx *Context) {
+		desc := "Sends HEADERS frames that causes their advertised concurrent stream limit to be exceeded"
+		msg := "The endpoint MUST treat this as a stream error (Section 5.4.2) of type PROTOCOL_ERROR or REFUSED_STREAM"
+		result := false
+
+		http2Conn := CreateHttp2Conn(ctx, true)
+		defer http2Conn.conn.Close()
+
+		var buf bytes.Buffer
+		hdrs := []hpack.HeaderField{
+			pair(":method", "GET"),
+			pair(":scheme", "http"),
+			pair(":path", "/"),
+			pair(":authority", ctx.Authority()),
+		}
+		enc := hpack.NewEncoder(&buf)
+		for _, hf := range hdrs {
+			_ = enc.WriteField(hf)
+		}
+
+		var streamID uint32 = 1
+		for i := 0; i <= int(ctx.Settings[http2.SettingMaxConcurrentStreams]); i++ {
+			var hp http2.HeadersFrameParam
+			hp.StreamID = streamID
+			hp.EndStream = true
+			hp.EndHeaders = true
+			hp.BlockFragment = buf.Bytes()
+			http2Conn.fr.WriteHeaders(hp)
+			streamID += 2
+		}
+
+	loop:
+		for {
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeProtocol || f.ErrCode == http2.ErrCodeRefusedStream {
+					result = true
+					break loop
 				}
 			}
 		}

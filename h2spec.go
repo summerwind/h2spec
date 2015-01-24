@@ -56,6 +56,7 @@ type Context struct {
 	TlsConfig *tls.Config
 	Sections  map[string]bool
 	Timeout   time.Duration
+	Settings  map[http2.SettingID]uint32
 }
 
 func (ctx *Context) Authority() string {
@@ -187,6 +188,11 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 					if f.IsAck() {
 						local = true
 					} else {
+						ctx.Settings = map[http2.SettingID]uint32{}
+						f.ForeachSetting(func(setting http2.Setting) error {
+							ctx.Settings[setting.ID] = setting.Val
+							return nil
+						})
 						fr.WriteSettingsAck()
 						remote = true
 					}
