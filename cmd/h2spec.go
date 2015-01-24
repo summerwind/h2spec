@@ -25,7 +25,7 @@ func main() {
 	host := flag.String("h", "127.0.0.1", "Target host")
 	useTls := flag.Bool("t", false, "Connect over TLS")
 	insecureSkipVerify := flag.Bool("k", false, "Don't verify server's certificate")
-	timeout := flag.Int("o", 3, "Maximum time allowed for test. (Default: 3)")
+	timeout := flag.Int("o", 3, "Maximum time allowed for test.")
 
 	var sectionFlag sections
 	flag.Var(&sectionFlag, "s", "Section number on which to run the test")
@@ -33,7 +33,7 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS]\n\n", os.Args[0])
 		fmt.Println("Options:")
-		fmt.Println("  -p:     Target port. (Default: 80)")
+		fmt.Println("  -p:     Target port. (Default: 80 or 443)")
 		fmt.Println("  -h:     Target host. (Default: 127.0.0.1)")
 		fmt.Println("  -t:     Connect over TLS. (Default: false)")
 		fmt.Println("  -k:     Don't verify server's certificate. (Default: false)")
@@ -44,6 +44,9 @@ func main() {
 	}
 
 	flag.Parse()
+	if flag.Lookup("p") != nil && *useTls {
+		*port = 443
+	}
 
 	var ctx h2spec.Context
 	ctx.Port = *port
