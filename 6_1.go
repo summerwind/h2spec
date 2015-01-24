@@ -1,7 +1,6 @@
 package h2spec
 
 import (
-	"bytes"
 	"github.com/bradfitz/http2"
 	"github.com/bradfitz/http2/hpack"
 )
@@ -48,23 +47,18 @@ func TestData(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
 			pair(":scheme", "http"),
 			pair(":path", "/"),
 			pair(":authority", ctx.Authority()),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 1
 		hp.EndStream = true
 		hp.EndHeaders = true
-		hp.BlockFragment = buf.Bytes()
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp)
 		http2Conn.fr.WriteData(1, true, []byte("test"))
 

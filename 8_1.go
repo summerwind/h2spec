@@ -1,7 +1,6 @@
 package h2spec
 
 import (
-	"bytes"
 	"github.com/bradfitz/http2"
 	"github.com/bradfitz/http2/hpack"
 )
@@ -27,7 +26,6 @@ func TestHTTPHeaderFields(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
 			pair(":scheme", "http"),
@@ -35,16 +33,12 @@ func TestHTTPHeaderFields(ctx *Context) {
 			pair(":authority", ctx.Authority()),
 			pair("X-TEST", "test"),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 1
 		hp.EndStream = true
 		hp.EndHeaders = true
-		hp.BlockFragment = buf.Bytes()
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp)
 
 	loop:
@@ -87,7 +81,6 @@ func TestPseudoHeaderFields(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
 			pair(":scheme", "http"),
@@ -95,16 +88,12 @@ func TestPseudoHeaderFields(ctx *Context) {
 			pair(":authority", ctx.Authority()),
 			pair(":status", "200"),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 1
 		hp.EndStream = true
 		hp.EndHeaders = true
-		hp.BlockFragment = buf.Bytes()
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp)
 
 	loop:
@@ -138,7 +127,6 @@ func TestPseudoHeaderFields(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
 			pair(":scheme", "http"),
@@ -146,16 +134,12 @@ func TestPseudoHeaderFields(ctx *Context) {
 			pair(":authority", ctx.Authority()),
 			pair(":test", "test"),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 1
 		hp.EndStream = true
 		hp.EndHeaders = true
-		hp.BlockFragment = buf.Bytes()
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp)
 
 	loop:
@@ -189,7 +173,6 @@ func TestPseudoHeaderFields(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair("x-test", "test"),
 			pair(":method", "GET"),
@@ -197,16 +180,12 @@ func TestPseudoHeaderFields(ctx *Context) {
 			pair(":path", "/"),
 			pair(":authority", ctx.Authority()),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 1
 		hp.EndStream = true
 		hp.EndHeaders = true
-		hp.BlockFragment = buf.Bytes()
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp)
 
 	loop:
@@ -244,7 +223,6 @@ func TestConnectionSpecificHeaderFields(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
 			pair(":scheme", "http"),
@@ -252,16 +230,12 @@ func TestConnectionSpecificHeaderFields(ctx *Context) {
 			pair(":authority", ctx.Authority()),
 			pair("connection", "keep-alive"),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 1
 		hp.EndStream = true
 		hp.EndHeaders = true
-		hp.BlockFragment = buf.Bytes()
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp)
 
 	loop:
@@ -295,7 +269,6 @@ func TestConnectionSpecificHeaderFields(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
 			pair(":scheme", "http"),
@@ -304,16 +277,12 @@ func TestConnectionSpecificHeaderFields(ctx *Context) {
 			pair("trailers", "test"),
 			pair("te", "trailers, deflate"),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 1
 		hp.EndStream = true
 		hp.EndHeaders = true
-		hp.BlockFragment = buf.Bytes()
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp)
 
 	loop:
@@ -351,22 +320,17 @@ func TestRequestPseudoHeaderFields(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
 			pair(":scheme", "http"),
 			pair(":authority", ctx.Authority()),
-		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
 		}
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 1
 		hp.EndStream = true
 		hp.EndHeaders = true
-		hp.BlockFragment = buf.Bytes()
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp)
 
 	loop:
@@ -404,7 +368,6 @@ func TestMalformedRequestsAndResponses(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "POST"),
 			pair(":scheme", "http"),
@@ -412,16 +375,12 @@ func TestMalformedRequestsAndResponses(ctx *Context) {
 			pair(":authority", ctx.Authority()),
 			pair("content-length", "1"),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 1
 		hp.EndStream = false
 		hp.EndHeaders = true
-		hp.BlockFragment = buf.Bytes()
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp)
 		http2Conn.fr.WriteData(1, true, []byte("test"))
 

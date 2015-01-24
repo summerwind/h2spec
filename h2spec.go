@@ -1,6 +1,7 @@
 package h2spec
 
 import (
+	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -19,10 +20,12 @@ type TcpConn struct {
 }
 
 type Http2Conn struct {
-	conn   net.Conn
-	fr     *http2.Framer
-	dataCh chan http2.Frame
-	errCh  chan error
+	conn           net.Conn
+	fr             *http2.Framer
+	dataCh         chan http2.Frame
+	errCh          chan error
+	HeaderWriteBuf bytes.Buffer
+	HpackEncoder   *hpack.Encoder
 }
 
 // ReadFrame reads a complete HTTP/2 frame from underlying connection.
@@ -47,6 +50,19 @@ func (h2Conn *Http2Conn) ReadFrame(t time.Duration) (http2.Frame, error) {
 	case <-time.After(t):
 		return nil, errors.New("timeout waiting for frame")
 	}
+}
+
+// EncodeHeader encodes header and returns encoded bytes.  h2Conn
+// retains encoding context and next call of EncodeHeader will be
+// performed using the same encoding context.
+func (h2Conn *Http2Conn) EncodeHeader(header []hpack.HeaderField) []byte {
+	h2Conn.HeaderWriteBuf.Reset()
+	for _, hf := range header {
+		_ = h2Conn.HpackEncoder.WriteField(hf)
+	}
+	dst := make([]byte, h2Conn.HeaderWriteBuf.Len())
+	copy(dst, h2Conn.HeaderWriteBuf.Bytes())
+	return dst
 }
 
 type Context struct {
@@ -221,6 +237,8 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 		dataCh: dataCh,
 		errCh:  errCh,
 	}
+
+	http2Conn.HpackEncoder = hpack.NewEncoder(&http2Conn.HeaderWriteBuf)
 
 	return http2Conn
 }

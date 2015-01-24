@@ -22,23 +22,18 @@ func TestHeaders(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
 			pair(":scheme", "http"),
 			pair(":path", "/"),
 			pair(":authority", ctx.Authority()),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 1
 		hp.EndStream = false
 		hp.EndHeaders = false
-		hp.BlockFragment = buf.Bytes()
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp)
 		http2Conn.fr.WriteData(1, true, []byte("test"))
 
@@ -67,30 +62,25 @@ func TestHeaders(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
 			pair(":scheme", "http"),
 			pair(":path", "/"),
 			pair(":authority", ctx.Authority()),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
 
 		var hp1 http2.HeadersFrameParam
 		hp1.StreamID = 1
 		hp1.EndStream = false
 		hp1.EndHeaders = false
-		hp1.BlockFragment = buf.Bytes()
+		hp1.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp1)
 
 		var hp2 http2.HeadersFrameParam
 		hp2.StreamID = 3
 		hp2.EndStream = true
 		hp2.EndHeaders = true
-		hp2.BlockFragment = buf.Bytes()
+		hp2.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp2)
 
 	loop:
@@ -118,23 +108,18 @@ func TestHeaders(ctx *Context) {
 		http2Conn := CreateHttp2Conn(ctx, true)
 		defer http2Conn.conn.Close()
 
-		var buf bytes.Buffer
 		hdrs := []hpack.HeaderField{
 			pair(":method", "GET"),
 			pair(":scheme", "http"),
 			pair(":path", "/"),
 			pair(":authority", ctx.Authority()),
 		}
-		enc := hpack.NewEncoder(&buf)
-		for _, hf := range hdrs {
-			_ = enc.WriteField(hf)
-		}
 
 		var hp http2.HeadersFrameParam
 		hp.StreamID = 0
 		hp.EndStream = true
 		hp.EndHeaders = true
-		hp.BlockFragment = buf.Bytes()
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 		http2Conn.fr.WriteHeaders(hp)
 
 	loop:
