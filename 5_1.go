@@ -141,6 +141,11 @@ func TestStreamConcurrency(ctx *Context) {
 				break loop
 			}
 			switch f := f.(type) {
+			case *http2.RSTStreamFrame:
+				if f.ErrCode == http2.ErrCodeProtocol || f.ErrCode == http2.ErrCodeRefusedStream {
+					result = true
+					break loop
+				}
 			case *http2.GoAwayFrame:
 				if f.ErrCode == http2.ErrCodeProtocol || f.ErrCode == http2.ErrCodeRefusedStream {
 					result = true
