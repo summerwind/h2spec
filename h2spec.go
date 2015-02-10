@@ -94,6 +94,7 @@ func Run(ctx *Context) {
 	TestHeaderCompressionAndDecompression(ctx)
 	TestStreamStates(ctx)
 	TestErrorHandling(ctx)
+	TestExtendingHTTP2(ctx)
 	TestData(ctx)
 	TestHeaders(ctx)
 	TestPriority(ctx)
