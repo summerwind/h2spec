@@ -117,9 +117,86 @@ func TestWindowUpdate(ctx *Context) {
 		PrintResult(result, desc, msg, 0)
 	}(ctx)
 
+	TestFlowControlWindowLimits(ctx)
 	TestInitialFlowControlWindowSize(ctx)
 
 	PrintFooter()
+}
+
+func TestFlowControlWindowLimits(ctx *Context) {
+	PrintHeader("6.9.1. The Flow Control Window", 1)
+
+	func(ctx *Context) {
+		desc := "Sends multiple WINDOW_UPDATE frames on a connection increasing the flow control window to above 2^31-1"
+		msg := "the endpoint MUST respond with a stream error of type FLOW_CONTROL_ERROR."
+		result := false
+
+		http2Conn := CreateHttp2Conn(ctx, true)
+		defer http2Conn.conn.Close()
+
+		http2Conn.fr.WriteWindowUpdate(0, 2147483647)
+		http2Conn.fr.WriteWindowUpdate(0, 2147483647)
+
+	loop:
+		for {
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.GoAwayFrame:
+				if f.ErrCode == http2.ErrCodeFlowControl {
+					result = true
+					break loop
+				}
+			}
+		}
+
+		PrintResult(result, desc, msg, 0)
+	}(ctx)
+
+	func(ctx *Context) {
+		desc := "Sends multiple WINDOW_UPDATE frames on a stream increasing the flow control window to above 2^31-1"
+		msg := "the endpoint MUST respond with a stream error of type FLOW_CONTROL_ERROR."
+		result := false
+
+		http2Conn := CreateHttp2Conn(ctx, true)
+		defer http2Conn.conn.Close()
+
+		hdrs := []hpack.HeaderField{
+			pair(":method", "GET"),
+			pair(":scheme", "http"),
+			pair(":path", "/"),
+			pair(":authority", ctx.Authority()),
+		}
+
+		var hp http2.HeadersFrameParam
+		hp.StreamID = 1
+		hp.EndStream = false
+		hp.EndHeaders = true
+		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+		http2Conn.fr.WriteHeaders(hp)
+
+		http2Conn.fr.WriteWindowUpdate(1, 2147483647)
+		http2Conn.fr.WriteWindowUpdate(1, 2147483647)
+
+	loop:
+		for {
+			f, err := http2Conn.ReadFrame(ctx.Timeout)
+			if err != nil {
+				break loop
+			}
+			switch f := f.(type) {
+			case *http2.RSTStreamFrame:
+				if f.ErrCode == http2.ErrCodeFlowControl {
+					result = true
+					break loop
+				}
+			}
+		}
+
+		PrintResult(result, desc, msg, 0)
+	}(ctx)
 }
 
 func TestInitialFlowControlWindowSize(ctx *Context) {
