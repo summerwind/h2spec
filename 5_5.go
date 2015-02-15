@@ -10,40 +10,8 @@ func ExtendingHttp2TestGroup() *TestGroup {
 	tg := NewTestGroup("5.5", "Extending HTTP/2")
 
 	tg.AddTestCase(NewTestCase(
-		"Sends a extension frame in the middle of a header block",
-		"The endpoint MUST treat as a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
-			http2Conn := CreateHttp2Conn(ctx, true)
-			defer http2Conn.conn.Close()
-
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-				pair("x-dummy1", dummyData(10000)),
-				pair("x-dummy2", dummyData(10000)),
-			}
-
-			blockFragment := http2Conn.EncodeHeader(hdrs)
-
-			var hp http2.HeadersFrameParam
-			hp.StreamID = 1
-			hp.EndStream = true
-			hp.EndHeaders = false
-			hp.BlockFragment = blockFragment[0:16384]
-			http2Conn.fr.WriteHeaders(hp)
-
-			http2Conn.fr.WriteRawFrame(0xFF, 0x01, 0, []byte("unknown"))
-
-			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
-			return TestConnectionError(ctx, http2Conn, actualCodes)
-		},
-	))
-
-	tg.AddTestCase(NewTestCase(
-		"Sends an unknown frame type",
-		"the endpoint must ignore unknown frame types.",
+		"Sends an unknown extension frame type",
+		"The endpoint MUST discard frames that have unknown or unsupported types",
 		func(ctx *Context) (expected []Result, actual Result) {
 			expected = []Result{
 				&ResultFrame{http2.FramePing, http2.FlagPingAck, ErrCodeDefault},
@@ -78,6 +46,7 @@ func ExtendingHttp2TestGroup() *TestGroup {
 					}
 					break loop
 				}
+
 				switch f := f.(type) {
 				case *http2.PingFrame:
 					actual = &ResultFrame{f.Header().Type, f.Header().Flags, ErrCodeDefault}
@@ -90,6 +59,38 @@ func ExtendingHttp2TestGroup() *TestGroup {
 			}
 
 			return expected, actual
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"Sends an unknown extension frame in the middle of a header block",
+		"The endpoint MUST treat as a connection error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+				pair("x-dummy1", dummyData(10000)),
+				pair("x-dummy2", dummyData(10000)),
+			}
+
+			blockFragment := http2Conn.EncodeHeader(hdrs)
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = false
+			hp.BlockFragment = blockFragment[0:16384]
+			http2Conn.fr.WriteHeaders(hp)
+
+			http2Conn.fr.WriteRawFrame(0xFF, 0x01, 0, []byte("unknown"))
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
 		},
 	))
 
