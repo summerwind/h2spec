@@ -1,7 +1,7 @@
 # h2spec
 
 h2spec is a conformance test tool for HTTP/2 server.  
-This tool supports [draft-ietf-httpbis-http2-16](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16).
+This tool supports [draft-ietf-httpbis-http2-17](http://tools.ietf.org/html/draft-ietf-httpbis-http2-17).
 
 ## Install
 
@@ -25,12 +25,12 @@ Options:
   -h:     Target host. (Default: 127.0.0.1)
   -t:     Connect over TLS. (Default: false)
   -k:     Don't verify server's certificate. (Default: false)
-  -o:     Maximum time allowed for test. (Default: 3)
+  -o:     Maximum time allowed for test. (Default: 2)
   -s:     Section number on which to run the test. (Example: -s 6.1 -s 6.2)
   --help: Display this help and exit.
 ```
 
 ## Screenshot
 
-![Sceenshot](https://cloud.githubusercontent.com/assets/230145/5875758/f3099c7a-a353-11e4-9324-0add314a2f98.png)
+![Sceenshot](https://cloud.githubusercontent.com/assets/230145/6203647/bb15df9e-b56f-11e4-864e-fc63ac0743fb.png)
 
