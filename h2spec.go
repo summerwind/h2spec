@@ -148,7 +148,7 @@ func (tc *TestCase) PrintError(expected []Result, actual Result, level int) {
 	fmt.Printf("\x1b[31m")
 	fmt.Printf("%s%s %s\n", indent, mark, tc.Desc)
 	fmt.Printf("%s  - %s\n", indent, tc.Spec)
-	fmt.Printf("\x1b[33m")
+	fmt.Printf("\x1b[32m")
 	for i, exp := range expected {
 		var lavel string
 		if i == 0 {
@@ -158,7 +158,7 @@ func (tc *TestCase) PrintError(expected []Result, actual Result, level int) {
 		}
 		fmt.Printf("%s    %s %s\n", indent, lavel, exp)
 	}
-	fmt.Printf("\x1b[32m")
+	fmt.Printf("\x1b[33m")
 	fmt.Printf("%s      Actual: %s\n", indent, actual)
 	fmt.Printf("\x1b[0m")
 }
