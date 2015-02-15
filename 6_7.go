@@ -3,101 +3,85 @@ package h2spec
 import (
 	"fmt"
 	"github.com/bradfitz/http2"
+	"io"
 )
 
-func TestPing(ctx *Context) {
-	if !ctx.IsTarget("6.7") {
-		return
-	}
+func PingTestGroup() *TestGroup {
+	tg := NewTestGroup("6.7", "PING")
 
-	PrintHeader("6.7. PING", 0)
-
-	func(ctx *Context) {
-		desc := "Sends a PING frame"
-		msg := "the endpoint MUST sends a PING frame with ACK."
-		result := false
-
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
-
-		data := [8]byte{'h', '2', 's', 'p', 'e', 'c'}
-		http2Conn.fr.WritePing(false, data)
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
+	tg.AddTestCase(NewTestCase(
+		"Sends a PING frame",
+		"the endpoint MUST sends a PING frame with ACK.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			expected = []Result{
+				&ResultFrame{http2.FramePing, http2.FlagPingAck, ErrCodeDefault},
 			}
-			switch f := f.(type) {
-			case *http2.PingFrame:
-				if f.FrameHeader.Flags.Has(http2.FlagPingAck) {
-					result = true
+
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			data := [8]byte{'h', '2', 's', 'p', 'e', 'c'}
+			http2Conn.fr.WritePing(false, data)
+
+		loop:
+			for {
+				f, err := http2Conn.ReadFrame(ctx.Timeout)
+				if err != nil {
+					if err == io.EOF {
+						actual = &ResultConnectionClose{}
+					} else if err == TIMEOUT {
+						if actual == nil {
+							actual = &ResultTestTimeout{}
+						}
+					} else {
+						actual = &ResultError{err}
+					}
 					break loop
 				}
-			}
-		}
-
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
-
-	func(ctx *Context) {
-		desc := "Sends a PING frame with the stream identifier that is not 0x0"
-		msg := "the endpoint MUST respond with a connection error of type PROTOCOL_ERROR."
-		result := false
-
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
-
-		fmt.Fprintf(http2Conn.conn, "\x00\x00\x08\x06\x00\x00\x00\x00\x03")
-		fmt.Fprintf(http2Conn.conn, "\x00\x00\x00\x00\x00\x00\x00\x00")
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
-			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeProtocol {
-					result = true
-					break loop
+				switch f := f.(type) {
+				case *http2.PingFrame:
+					actual = &ResultFrame{f.Header().Type, f.Header().Flags, ErrCodeDefault}
+					if f.FrameHeader.Flags.Has(http2.FlagPingAck) {
+						break loop
+					}
+				default:
+					actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
 				}
 			}
-		}
 
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
+			return expected, actual
+		},
+	))
 
-	func(ctx *Context) {
-		desc := "Sends a PING frame with a length field value other than 8"
-		msg := "the endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR."
-		result := false
+	tg.AddTestCase(NewTestCase(
+		"Sends a PING frame with the stream identifier that is not 0x0",
+		"the endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
 
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x08\x06\x00\x00\x00\x00\x03")
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x00\x00\x00\x00\x00\x00")
 
-		fmt.Fprintf(http2Conn.conn, "\x00\x00\x06\x06\x00\x00\x00\x00\x00")
-		fmt.Fprintf(http2Conn.conn, "\x00\x00\x00\x00\x00\x00")
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
 
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
-			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeFrameSize {
-					result = true
-					break loop
-				}
-			}
-		}
+	tg.AddTestCase(NewTestCase(
+		"Sends a PING frame with a length field value other than 8",
+		"the endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
 
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x06\x06\x00\x00\x00\x00\x00")
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x00\x00\x00\x00")
 
-	PrintFooter()
+			actualCodes := []http2.ErrCode{http2.ErrCodeFrameSize}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	return tg
 }

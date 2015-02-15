@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/summerwind/h2spec"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -21,7 +22,7 @@ func (s *sections) Set(v string) error {
 }
 
 func main() {
-	port := flag.Int("p", 80, "Target port")
+	port := flag.Int("p", 0, "Target port")
 	host := flag.String("h", "127.0.0.1", "Target host")
 	useTls := flag.Bool("t", false, "Connect over TLS")
 	insecureSkipVerify := flag.Bool("k", false, "Don't verify server's certificate")
@@ -44,8 +45,12 @@ func main() {
 	}
 
 	flag.Parse()
-	if flag.Lookup("p") == nil && *useTls {
-		*port = 443
+	if *port == 0 {
+		if *useTls {
+			*port = 443
+		} else {
+			*port = 80
+		}
 	}
 
 	var ctx h2spec.Context
@@ -59,8 +64,24 @@ func main() {
 
 	if len(sectionFlag) > 0 {
 		ctx.Sections = map[string]bool{}
-		for _, v := range sectionFlag {
-			ctx.Sections[v] = true
+		for _, sec := range sectionFlag {
+			splitedSec := strings.Split(sec, ".")
+			lastIndex := len(splitedSec) - 1
+
+			num := []string{}
+			for i, sec := range splitedSec {
+				num = append(num, sec)
+				if i != 0 {
+					key := strings.Join(num, ".")
+
+					runAll := false
+					if i == lastIndex || ctx.Sections[key] {
+						runAll = true
+					}
+
+					ctx.Sections[key] = runAll
+				}
+			}
 		}
 	}
 

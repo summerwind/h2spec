@@ -5,41 +5,23 @@ import (
 	"github.com/bradfitz/http2"
 )
 
-func TestGoaway(ctx *Context) {
-	if !ctx.IsTarget("6.8") {
-		return
-	}
+func GoawayTestGroup() *TestGroup {
+	tg := NewTestGroup("6.8", "GOAWAY")
 
-	PrintHeader("6.8. GOAWAY", 0)
+	tg.AddTestCase(NewTestCase(
+		"Sends a GOAWAY frame with the stream identifier that is not 0x0",
+		"the endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
 
-	func(ctx *Context) {
-		desc := "Sends a GOAWAY frame with the stream identifier that is not 0x0"
-		msg := "the endpoint MUST respond with a connection error of type PROTOCOL_ERROR."
-		result := false
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x08\x07\x00\x00\x00\x00\x03")
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x00\x00\x00\x00\x00\x00")
 
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
 
-		fmt.Fprintf(http2Conn.conn, "\x00\x00\x08\x07\x00\x00\x00\x00\x03")
-		fmt.Fprintf(http2Conn.conn, "\x00\x00\x00\x00\x00\x00\x00\x00")
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
-			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeProtocol {
-					result = true
-					break loop
-				}
-			}
-		}
-
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
-
-	PrintFooter()
+	return tg
 }

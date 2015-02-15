@@ -6,109 +6,66 @@ import (
 	"github.com/bradfitz/http2/hpack"
 )
 
-func TestRstStream(ctx *Context) {
-	if !ctx.IsTarget("6.4") {
-		return
-	}
+func RstStreamTestGroup() *TestGroup {
+	tg := NewTestGroup("6.4", "RST_STREAM")
 
-	PrintHeader("6.4. RST_STREAM", 0)
+	tg.AddTestCase(NewTestCase(
+		"Sends a RST_STREAM frame with 0x0 stream identifier",
+		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
 
-	func(ctx *Context) {
-		desc := "Sends a RST_STREAM frame with 0x0 stream identifier"
-		msg := "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR."
-		result := false
+			http2Conn.fr.WriteRSTStream(0, http2.ErrCodeCancel)
 
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
 
-		http2Conn.fr.WriteRSTStream(0, http2.ErrCodeCancel)
+	tg.AddTestCase(NewTestCase(
+		"Sends a RST_STREAM frame on a idle stream",
+		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
 
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
+			http2Conn.fr.WriteRSTStream(1, http2.ErrCodeCancel)
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"Sends a RST_STREAM frame with a length other than 4 octets",
+		"The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
 			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeProtocol {
-					result = true
-				}
-			}
-		}
 
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = false
+			hp.EndHeaders = true
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp)
 
-	func(ctx *Context) {
-		desc := "Sends a RST_STREAM frame on a idle stream"
-		msg := "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR."
-		result := false
+			// RST_STREAM Frame
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x03\x03\x00\x00\x00\x00\x01")
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x00")
 
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
+			actualCodes := []http2.ErrCode{http2.ErrCodeFrameSize}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
 
-		http2Conn.fr.WriteRSTStream(1, http2.ErrCodeCancel)
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
-			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeProtocol {
-					result = true
-				}
-			}
-		}
-
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
-
-	func(ctx *Context) {
-		desc := "Sends a RST_STREAM frame with a length other than 4 octets"
-		msg := "The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR."
-		result := false
-
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
-
-		hdrs := []hpack.HeaderField{
-			pair(":method", "GET"),
-			pair(":scheme", "http"),
-			pair(":path", "/"),
-			pair(":authority", ctx.Authority()),
-		}
-
-		var hp http2.HeadersFrameParam
-		hp.StreamID = 1
-		hp.EndStream = false
-		hp.EndHeaders = true
-		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
-		http2Conn.fr.WriteHeaders(hp)
-
-		// RST_STREAM Frame
-		fmt.Fprintf(http2Conn.conn, "\x00\x00\x03\x03\x00\x00\x00\x00\x01")
-		fmt.Fprintf(http2Conn.conn, "\x00\x00\x00")
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
-			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeFrameSize {
-					result = true
-				}
-			}
-		}
-
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
-
-	PrintFooter()
+	return tg
 }

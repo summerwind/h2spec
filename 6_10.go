@@ -3,309 +3,268 @@ package h2spec
 import (
 	"github.com/bradfitz/http2"
 	"github.com/bradfitz/http2/hpack"
+	"io"
 )
 
-func GetDummyData(num int) string {
-	var data string
-	for i := 0; i < num; i++ {
-		data += "x"
-	}
-	return data
-}
+func ContinuationTestGroup() *TestGroup {
+	tg := NewTestGroup("6.10", "CONTINUATION")
 
-func TestContinuation(ctx *Context) {
-	if !ctx.IsTarget("6.10") {
-		return
-	}
-
-	PrintHeader("6.10. CONTINUATION", 0)
-
-	func(ctx *Context) {
-		desc := "Sends a CONTINUATION frame"
-		msg := "The endpoint must accept the frame."
-		result := false
-
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
-
-		hdrs := []hpack.HeaderField{
-			pair(":method", "GET"),
-			pair(":scheme", "http"),
-			pair(":path", "/"),
-			pair(":authority", ctx.Authority()),
-			pair("x-dummy1", GetDummyData(10000)),
-			pair("x-dummy2", GetDummyData(10000)),
-		}
-
-		blockFragment := http2Conn.EncodeHeader(hdrs)
-
-		var hp http2.HeadersFrameParam
-		hp.StreamID = 1
-		hp.EndStream = true
-		hp.EndHeaders = false
-		hp.BlockFragment = blockFragment[0:16384]
-		http2Conn.fr.WriteHeaders(hp)
-
-		http2Conn.fr.WriteContinuation(1, true, blockFragment[16384:])
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
+	tg.AddTestCase(NewTestCase(
+		"Sends a CONTINUATION frame",
+		"The endpoint must accept the frame.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			expected = []Result{
+				&ResultFrame{http2.FrameHeaders, FlagDefault, ErrCodeDefault},
 			}
-			switch f.(type) {
-			case *http2.HeadersFrame:
-				result = true
-				break loop
+
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+				pair("x-dummy1", dummyData(10000)),
+				pair("x-dummy2", dummyData(10000)),
 			}
-		}
 
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
+			blockFragment := http2Conn.EncodeHeader(hdrs)
 
-	func(ctx *Context) {
-		desc := "Sends multiple CONTINUATION frames"
-		msg := "The endpoint must accept the frames."
-		result := false
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = false
+			hp.BlockFragment = blockFragment[0:16384]
+			http2Conn.fr.WriteHeaders(hp)
 
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
+			http2Conn.fr.WriteContinuation(1, true, blockFragment[16384:])
 
-		hdrs := []hpack.HeaderField{
-			pair(":method", "GET"),
-			pair(":scheme", "http"),
-			pair(":path", "/"),
-			pair(":authority", ctx.Authority()),
-			pair("x-dummy1", GetDummyData(10000)),
-			pair("x-dummy2", GetDummyData(10000)),
-			pair("x-dummy3", GetDummyData(10000)),
-			pair("x-dummy4", GetDummyData(10000)),
-			pair("x-dummy5", GetDummyData(10000)),
-		}
+		loop:
+			for {
+				f, err := http2Conn.ReadFrame(ctx.Timeout)
+				if err != nil {
+					if err == io.EOF {
+						actual = &ResultConnectionClose{}
+					} else if err == TIMEOUT {
+						if actual == nil {
+							actual = &ResultTestTimeout{}
+						}
+					} else {
+						actual = &ResultError{err}
+					}
+					break loop
+				}
 
-		blockFragment := http2Conn.EncodeHeader(hdrs)
-
-		var hp http2.HeadersFrameParam
-		hp.StreamID = 1
-		hp.EndStream = true
-		hp.EndHeaders = false
-		hp.BlockFragment = blockFragment[0:16384]
-		http2Conn.fr.WriteHeaders(hp)
-
-		http2Conn.fr.WriteContinuation(1, false, blockFragment[16384:32767])
-		http2Conn.fr.WriteContinuation(1, true, blockFragment[32767:])
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
-			}
-			switch f.(type) {
-			case *http2.HeadersFrame:
-				result = true
-				break loop
-			}
-		}
-
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
-
-	func(ctx *Context) {
-		desc := "Sends a CONTINUATION frame followed by any frame other than CONTINUATION"
-		msg := "The endpoint MUST treat as a connection error of type PROTOCOL_ERROR."
-		result := false
-
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
-
-		hdrs := []hpack.HeaderField{
-			pair(":method", "GET"),
-			pair(":scheme", "http"),
-			pair(":path", "/"),
-			pair(":authority", ctx.Authority()),
-			pair("x-dummy1", GetDummyData(10000)),
-			pair("x-dummy2", GetDummyData(10000)),
-			pair("x-dummy3", GetDummyData(10000)),
-			pair("x-dummy4", GetDummyData(10000)),
-			pair("x-dummy5", GetDummyData(10000)),
-		}
-
-		blockFragment := http2Conn.EncodeHeader(hdrs)
-
-		var hp http2.HeadersFrameParam
-		hp.StreamID = 1
-		hp.EndStream = true
-		hp.EndHeaders = false
-		hp.BlockFragment = blockFragment[0:16384]
-		http2Conn.fr.WriteHeaders(hp)
-
-		http2Conn.fr.WriteContinuation(1, false, blockFragment[16384:32767])
-
-		http2Conn.fr.WriteData(1, true, []byte("test"))
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
-			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeProtocol {
-					result = true
+				actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+				_, ok := f.(*http2.HeadersFrame)
+				if ok {
 					break loop
 				}
 			}
-		}
 
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
+			return expected, actual
+		},
+	))
 
-	func(ctx *Context) {
-		desc := "Sends a CONTINUATION frame followed by a frame on a different stream"
-		msg := "The endpoint MUST treat as a connection error of type PROTOCOL_ERROR."
-		result := false
-
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
-
-		hdrs := []hpack.HeaderField{
-			pair(":method", "GET"),
-			pair(":scheme", "http"),
-			pair(":path", "/"),
-			pair(":authority", ctx.Authority()),
-			pair("x-dummy1", GetDummyData(10000)),
-			pair("x-dummy2", GetDummyData(10000)),
-			pair("x-dummy3", GetDummyData(10000)),
-			pair("x-dummy4", GetDummyData(10000)),
-			pair("x-dummy5", GetDummyData(10000)),
-		}
-
-		blockFragment := http2Conn.EncodeHeader(hdrs)
-
-		var hp http2.HeadersFrameParam
-		hp.StreamID = 1
-		hp.EndStream = true
-		hp.EndHeaders = false
-		hp.BlockFragment = blockFragment[0:16384]
-		http2Conn.fr.WriteHeaders(hp)
-
-		http2Conn.fr.WriteContinuation(1, false, blockFragment[16384:32767])
-		http2Conn.fr.WriteContinuation(3, true, blockFragment[32767:])
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
+	tg.AddTestCase(NewTestCase(
+		"Sends multiple CONTINUATION frames",
+		"The endpoint must accept the frames.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			expected = []Result{
+				&ResultFrame{http2.FrameHeaders, FlagDefault, ErrCodeDefault},
 			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeProtocol {
-					result = true
+
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+				pair("x-dummy1", dummyData(10000)),
+				pair("x-dummy2", dummyData(10000)),
+				pair("x-dummy3", dummyData(10000)),
+				pair("x-dummy4", dummyData(10000)),
+				pair("x-dummy5", dummyData(10000)),
+			}
+
+			blockFragment := http2Conn.EncodeHeader(hdrs)
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = false
+			hp.BlockFragment = blockFragment[0:16384]
+			http2Conn.fr.WriteHeaders(hp)
+
+			http2Conn.fr.WriteContinuation(1, false, blockFragment[16384:32767])
+			http2Conn.fr.WriteContinuation(1, true, blockFragment[32767:])
+
+		loop:
+			for {
+				f, err := http2Conn.ReadFrame(ctx.Timeout)
+				if err != nil {
+					if err == io.EOF {
+						actual = &ResultConnectionClose{}
+					} else if err == TIMEOUT {
+						if actual == nil {
+							actual = &ResultTestTimeout{}
+						}
+					} else {
+						actual = &ResultError{err}
+					}
+					break loop
+				}
+
+				actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+				_, ok := f.(*http2.HeadersFrame)
+				if ok {
 					break loop
 				}
 			}
-		}
 
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
+			return expected, actual
+		},
+	))
 
-	func(ctx *Context) {
-		desc := "Sends a CONTINUATION frame with the stream identifier that is 0x0"
-		msg := "The endpoint MUST treat as a connection error of type PROTOCOL_ERROR."
-		result := false
+	tg.AddTestCase(NewTestCase(
+		"Sends a CONTINUATION frame followed by any frame other than CONTINUATION",
+		"The endpoint MUST treat as a connection error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
 
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
-
-		hdrs := []hpack.HeaderField{
-			pair(":method", "GET"),
-			pair(":scheme", "http"),
-			pair(":path", "/"),
-			pair(":authority", ctx.Authority()),
-			pair("x-dummy1", GetDummyData(10000)),
-			pair("x-dummy2", GetDummyData(10000)),
-			pair("x-dummy3", GetDummyData(10000)),
-			pair("x-dummy4", GetDummyData(10000)),
-			pair("x-dummy5", GetDummyData(10000)),
-		}
-
-		blockFragment := http2Conn.EncodeHeader(hdrs)
-
-		var hp http2.HeadersFrameParam
-		hp.StreamID = 1
-		hp.EndStream = true
-		hp.EndHeaders = false
-		hp.BlockFragment = blockFragment[0:16384]
-		http2Conn.fr.WriteHeaders(hp)
-
-		http2Conn.fr.WriteContinuation(1, false, blockFragment[16384:32767])
-		http2Conn.fr.WriteContinuation(0, true, blockFragment[32767:])
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+				pair("x-dummy1", dummyData(10000)),
+				pair("x-dummy2", dummyData(10000)),
+				pair("x-dummy3", dummyData(10000)),
+				pair("x-dummy4", dummyData(10000)),
+				pair("x-dummy5", dummyData(10000)),
 			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeProtocol {
-					result = true
-					break loop
-				}
+
+			blockFragment := http2Conn.EncodeHeader(hdrs)
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = false
+			hp.BlockFragment = blockFragment[0:16384]
+			http2Conn.fr.WriteHeaders(hp)
+
+			http2Conn.fr.WriteContinuation(1, false, blockFragment[16384:32767])
+			http2Conn.fr.WriteData(1, true, []byte("test"))
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"Sends a CONTINUATION frame followed by a frame on a different stream",
+		"The endpoint MUST treat as a connection error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+				pair("x-dummy1", dummyData(10000)),
+				pair("x-dummy2", dummyData(10000)),
+				pair("x-dummy3", dummyData(10000)),
+				pair("x-dummy4", dummyData(10000)),
+				pair("x-dummy5", dummyData(10000)),
 			}
-		}
 
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
+			blockFragment := http2Conn.EncodeHeader(hdrs)
 
-	func(ctx *Context) {
-		desc := "Sends a CONTINUATION frame after the frame other than HEADERS, PUSH_PROMISE or CONTINUATION"
-		msg := "The endpoint MUST treat as a connection error of type PROTOCOL_ERROR."
-		result := false
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = false
+			hp.BlockFragment = blockFragment[0:16384]
+			http2Conn.fr.WriteHeaders(hp)
 
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
+			http2Conn.fr.WriteContinuation(1, false, blockFragment[16384:32767])
+			http2Conn.fr.WriteContinuation(3, true, blockFragment[32767:])
 
-		hdrs := []hpack.HeaderField{
-			pair(":method", "GET"),
-			pair(":scheme", "http"),
-			pair(":path", "/"),
-			pair(":authority", ctx.Authority()),
-		}
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
 
-		var hp http2.HeadersFrameParam
-		hp.StreamID = 1
-		hp.EndStream = false
-		hp.EndHeaders = true
-		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
-		http2Conn.fr.WriteHeaders(hp)
+	tg.AddTestCase(NewTestCase(
+		"Sends a CONTINUATION frame with the stream identifier that is 0x0",
+		"The endpoint MUST treat as a connection error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
 
-		http2Conn.fr.WriteData(1, true, []byte("test"))
-
-		http2Conn.fr.WriteContinuation(1, true, http2Conn.EncodeHeader(hdrs))
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+				pair("x-dummy1", dummyData(10000)),
+				pair("x-dummy2", dummyData(10000)),
+				pair("x-dummy3", dummyData(10000)),
+				pair("x-dummy4", dummyData(10000)),
+				pair("x-dummy5", dummyData(10000)),
 			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeProtocol {
-					result = true
-					break loop
-				}
+
+			blockFragment := http2Conn.EncodeHeader(hdrs)
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = false
+			hp.BlockFragment = blockFragment[0:16384]
+			http2Conn.fr.WriteHeaders(hp)
+
+			http2Conn.fr.WriteContinuation(1, false, blockFragment[16384:32767])
+			http2Conn.fr.WriteContinuation(0, true, blockFragment[32767:])
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"Sends a CONTINUATION frame after the frame other than HEADERS, PUSH_PROMISE or CONTINUATION",
+		"The endpoint MUST treat as a connection error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
 			}
-		}
 
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = false
+			hp.EndHeaders = true
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp)
 
-	PrintFooter()
+			http2Conn.fr.WriteData(1, true, []byte("test"))
+			http2Conn.fr.WriteContinuation(1, true, http2Conn.EncodeHeader(hdrs))
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	return tg
 }

@@ -5,39 +5,22 @@ import (
 	"github.com/bradfitz/http2"
 )
 
-func TestHeaderCompressionAndDecompression(ctx *Context) {
-	if !ctx.IsTarget("4.3") {
-		return
-	}
+func HeaderCompressionAndDecompressionTestGroup() *TestGroup {
+	tg := NewTestGroup("4.3", "Header Compression and Decompression")
 
-	PrintHeader("4.3. Header Compression and Decompression", 0)
+	tg.AddTestCase(NewTestCase(
+		"Sends invalid header block fragment",
+		"The endpoint MUST terminate the connection with a connection error of type COMPRESSION_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
 
-	func(ctx *Context) {
-		desc := "Sends invalid header block fragment"
-		msg := "The endpoint MUST terminate the connection with a connection error of type COMPRESSION_ERROR."
-		result := false
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x14\x01\x05\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
 
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
+			actualCodes := []http2.ErrCode{http2.ErrCodeCompression}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
 
-		fmt.Fprintf(http2Conn.conn, "\x00\x00\x14\x01\x05\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
-			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeCompression {
-					result = true
-				}
-			}
-		}
-
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
-
-	PrintFooter()
+	return tg
 }

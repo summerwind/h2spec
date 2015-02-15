@@ -6,41 +6,44 @@ import (
 	"time"
 )
 
-func TestHttp2ConnectionPreface(ctx *Context) {
-	if !ctx.IsTarget("3.5") {
-		return
-	}
+func Http2ConnectionPrefaceTestGroup() *TestGroup {
+	tg := NewTestGroup("3.5", "HTTP/2 Connection Preface")
 
-	PrintHeader("3.5. HTTP/2 Connection Preface", 0)
+	tg.AddTestCase(NewTestCase(
+		"Sends invalid connection preface",
+		"The endpoint MUST terminate the TCP connection.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			expected = []Result{
+				&ResultConnectionClose{},
+			}
 
-	func(ctx *Context) {
-		desc := "Sends invalid connection preface"
-		msg := "The endpoint MUST terminate the TCP connection."
-		result := false
+			tcpConn := CreateTcpConn(ctx)
+			defer tcpConn.conn.Close()
 
-		tcpConn := CreateTcpConn(ctx)
-		defer tcpConn.conn.Close()
+			fmt.Fprintf(tcpConn.conn, "INVALID CONNECTION PREFACE")
+			timeCh := time.After(ctx.Timeout)
 
-		fmt.Fprintf(tcpConn.conn, "INVALID CONNECTION PREFACE")
-		timeCh := time.After(ctx.Timeout)
-
-	loop:
-		for {
-			select {
-			case <-tcpConn.dataCh:
-				break
-			case err := <-tcpConn.errCh:
-				if err == io.EOF {
-					result = true
+		loop:
+			for {
+				select {
+				case <-tcpConn.dataCh:
+					break
+				case err := <-tcpConn.errCh:
+					if err == io.EOF {
+						actual = &ResultConnectionClose{}
+					} else {
+						actual = &ResultError{err}
+					}
+					break loop
+				case <-timeCh:
+					actual = &ResultTestTimeout{}
 					break loop
 				}
-			case <-timeCh:
-				break loop
 			}
-		}
 
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
+			return expected, actual
+		},
+	))
 
-	PrintFooter()
+	return tg
 }

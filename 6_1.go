@@ -5,137 +5,57 @@ import (
 	"github.com/bradfitz/http2/hpack"
 )
 
-func TestData(ctx *Context) {
-	if !ctx.IsTarget("6.1") {
-		return
-	}
+func DataTestGroup() *TestGroup {
+	tg := NewTestGroup("6.1", "DATA")
 
-	PrintHeader("6.1. DATA", 0)
-
-	func(ctx *Context) {
-		desc := "Sends a DATA frame with 0x0 stream identifier"
-		msg := "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR."
-		result := false
-
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
-
-		http2Conn.fr.WriteData(0, true, []byte("test"))
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
-			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeProtocol {
-					result = true
-				}
-			}
-		}
-
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
-
-	func(ctx *Context) {
-		desc := "Sends a DATA frame on the stream that is not opend"
-		msg := "The endpoint MUST respond with a stream error of type STREAM_CLOSED."
-		result := false
-
-		http2Conn := CreateHttp2Conn(ctx, true)
-		defer http2Conn.conn.Close()
-
-		hdrs := []hpack.HeaderField{
-			pair(":method", "GET"),
-			pair(":scheme", "http"),
-			pair(":path", "/"),
-			pair(":authority", ctx.Authority()),
-		}
-
-		var hp http2.HeadersFrameParam
-		hp.StreamID = 1
-		hp.EndStream = true
-		hp.EndHeaders = true
-		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
-		http2Conn.fr.WriteHeaders(hp)
-		http2Conn.fr.WriteData(1, true, []byte("test"))
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
-			}
-			switch f := f.(type) {
-			case *http2.RSTStreamFrame:
-				if f.ErrCode == http2.ErrCodeStreamClosed {
-					result = true
-				}
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeStreamClosed {
-					result = true
-				}
-			}
-		}
-
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
-
-	// bradfitz/http2 does not support padding of DATA frame.
-	/*
-		func(ctx *Context) {
-			desc := "Sends a DATA frame with invalid pad length"
-			msg := "The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR."
-			result := false
-
+	tg.AddTestCase(NewTestCase(
+		"Sends a DATA frame with 0x0 stream identifier",
+		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			var buf bytes.Buffer
+			http2Conn.fr.WriteData(0, true, []byte("test"))
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"Sends a DATA frame on the stream that is not opend",
+		"The endpoint MUST respond with a stream error of type STREAM_CLOSED.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
 			hdrs := []hpack.HeaderField{
 				pair(":method", "GET"),
 				pair(":scheme", "http"),
 				pair(":path", "/"),
 				pair(":authority", ctx.Authority()),
 			}
-			enc := hpack.NewEncoder(&buf)
-			for _, hf := range hdrs {
-				_ = enc.WriteField(hf)
-			}
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
 			hp.EndStream = true
 			hp.EndHeaders = true
-			hp.BlockFragment = buf.Bytes()
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 			http2Conn.fr.WriteHeaders(hp)
-
 			http2Conn.fr.WriteData(1, true, []byte("test"))
 
-			timeCh := time.After(3 * time.Second)
+			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
 
-		loop:
-			for {
-				select {
-				case f := <-http2Conn.dataCh:
-					gf, ok := f.(*http2.GoAwayFrame)
-					if ok {
-						if gf.ErrCode == http2.ErrCodeProtocol {
-							result = true
-						}
-					}
-				case <-http2Conn.errCh:
-					break loop
-				case <-timeCh:
-					break loop
-				}
-			}
-
-			PrintResult(result, desc, msg, 0)
-		}(ctx)
+	/*
+		tg.AddTestCase(NewTestCase(
+			"Sends a DATA frame with invalid pad length",
+			"The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR."
+			func(ctx *Context) (expected []Result, actual Result) {},
+		))
 	*/
 
-	PrintFooter()
+	return tg
 }

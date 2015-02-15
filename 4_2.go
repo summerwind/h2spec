@@ -5,55 +5,37 @@ import (
 	"github.com/bradfitz/http2/hpack"
 )
 
-func TestFrameSize(ctx *Context) {
-	if !ctx.IsTarget("4.2") {
-		return
-	}
+func FrameSizeTestGroup() *TestGroup {
+	tg := NewTestGroup("4.2", "Frame Size")
 
-	PrintHeader("4.2. Frame Size", 0)
-	msg := "The endpoint MUST send a FRAME_SIZE_ERROR error."
+	tg.AddTestCase(NewTestCase(
+		"Sends large size frame that exceeds the SETTINGS_MAX_FRAME_SIZE",
+		"The endpoint MUST send a FRAME_SIZE_ERROR error.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, false)
+			defer http2Conn.conn.Close()
 
-	func(ctx *Context) {
-		desc := "Sends large size frame that exceeds the SETTINGS_MAX_FRAME_SIZE"
-		result := false
+			http2Conn.fr.WriteSettings()
 
-		http2Conn := CreateHttp2Conn(ctx, false)
-		defer http2Conn.conn.Close()
-
-		http2Conn.fr.WriteSettings()
-
-		hdrs := []hpack.HeaderField{
-			pair(":method", "GET"),
-			pair(":scheme", "http"),
-			pair(":path", "/"),
-			pair(":authority", ctx.Authority()),
-		}
-
-		var hp http2.HeadersFrameParam
-		hp.StreamID = 1
-		hp.EndStream = false
-		hp.EndHeaders = true
-		hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
-		http2Conn.fr.WriteHeaders(hp)
-		http2Conn.fr.WriteData(1, true, []byte(GetDummyData(16385)))
-
-	loop:
-		for {
-			f, err := http2Conn.ReadFrame(ctx.Timeout)
-			if err != nil {
-				break loop
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
 			}
-			switch f := f.(type) {
-			case *http2.GoAwayFrame:
-				if f.ErrCode == http2.ErrCodeFrameSize {
-					result = true
-					break loop
-				}
-			}
-		}
 
-		PrintResult(result, desc, msg, 0)
-	}(ctx)
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = false
+			hp.EndHeaders = true
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp)
+			http2Conn.fr.WriteData(1, true, []byte(dummyData(16385)))
 
-	PrintFooter()
+			actualCodes := []http2.ErrCode{http2.ErrCodeFrameSize}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	return tg
 }
