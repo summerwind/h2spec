@@ -10,7 +10,7 @@ func ExtendingHttp2TestGroup() *TestGroup {
 	tg := NewTestGroup("5.5", "Extending HTTP/2")
 
 	tg.AddTestCase(NewTestCase(
-		"Sends an unknown extension frame type",
+		"Sends an unknown extension frame",
 		"The endpoint MUST discard frames that have unknown or unsupported types",
 		func(ctx *Context) (expected []Result, actual Result) {
 			expected = []Result{

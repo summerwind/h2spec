@@ -207,7 +207,7 @@ func (rf *ResultFrame) String() string {
 		parts = append(parts, fmt.Sprintf("Flags: %d", rf.Flags))
 	}
 	if rf.Code != ErrCodeDefault {
-		parts = append(parts, fmt.Sprintf("Error Code: %s", rf.Code.String()))
+		parts = append(parts, fmt.Sprintf("ErrorCode: %s", rf.Code.String()))
 	}
 
 	res := fmt.Sprintf("%s frame", rf.Type.String())
