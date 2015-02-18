@@ -31,7 +31,6 @@ type Context struct {
 	TlsConfig *tls.Config
 	Sections  map[string]bool
 	Timeout   time.Duration
-	Settings  map[http2.SettingID]uint32
 }
 
 func (ctx *Context) Authority() string {
@@ -113,6 +112,13 @@ type TestCase struct {
 
 func (tc *TestCase) Run(ctx *Context, level int) {
 	expected, actual := tc.handler(ctx)
+
+	_, ok := actual.(*ResultSkipped)
+	if ok {
+		tc.PrintSkipped(actual, level)
+		return
+	}
+
 	if tc.evaluateResult(expected, actual) {
 		tc.PrintResult(level)
 	} else {
@@ -160,6 +166,16 @@ func (tc *TestCase) PrintError(expected []Result, actual Result, level int) {
 	}
 	fmt.Printf("\x1b[33m")
 	fmt.Printf("%s      Actual: %s\n", indent, actual)
+	fmt.Printf("\x1b[0m")
+}
+
+func (tc *TestCase) PrintSkipped(actual Result, level int) {
+	mark := " "
+	indent := strings.Repeat("  ", level)
+
+	fmt.Printf("\x1b[36m")
+	fmt.Printf("%s%s %s\n", indent, mark, tc.Desc)
+	fmt.Printf("%s  - %s\n", indent, actual)
 	fmt.Printf("\x1b[0m")
 }
 
@@ -214,6 +230,14 @@ func (ttr *ResultTestTimeout) String() string {
 	return "Test timeout"
 }
 
+type ResultSkipped struct {
+	Reason string
+}
+
+func (rs *ResultSkipped) String() string {
+	return "Skipped: " + rs.Reason
+}
+
 type ResultError struct {
 	Error error
 }
@@ -235,6 +259,7 @@ type Http2Conn struct {
 	fr             *http2.Framer
 	HpackEncoder   *hpack.Encoder
 	HeaderWriteBuf bytes.Buffer
+	Settings       map[http2.SettingID]uint32
 }
 
 // ReadFrame reads a complete HTTP/2 frame from underlying connection.
@@ -356,6 +381,7 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 	fmt.Fprintf(conn, "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")
 
 	fr := http2.NewFramer(conn, conn)
+	settings := map[http2.SettingID]uint32{}
 
 	if sn {
 		doneCh := make(chan bool, 1)
@@ -378,9 +404,8 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 					if f.IsAck() {
 						local = true
 					} else {
-						ctx.Settings = map[http2.SettingID]uint32{}
 						f.ForeachSetting(func(setting http2.Setting) error {
-							ctx.Settings[setting.ID] = setting.Val
+							settings[setting.ID] = setting.Val
 							return nil
 						})
 						fr.WriteSettingsAck()
@@ -412,10 +437,11 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 	errCh := make(chan error, 1)
 
 	http2Conn := &Http2Conn{
-		conn:   conn,
-		fr:     fr,
-		dataCh: dataCh,
-		errCh:  errCh,
+		conn:     conn,
+		fr:       fr,
+		dataCh:   dataCh,
+		errCh:    errCh,
+		Settings: settings,
 	}
 
 	http2Conn.HpackEncoder = hpack.NewEncoder(&http2Conn.HeaderWriteBuf)

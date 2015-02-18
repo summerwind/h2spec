@@ -89,6 +89,13 @@ func StreamConcurrencyTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
+			// Skip this test when SETTINGS_MAX_CONCURRENT_STREAMS is unlimited.
+			_, ok := http2Conn.Settings[http2.SettingMaxConcurrentStreams]
+			if !ok {
+				actual = &ResultSkipped{"SETTINGS_MAX_CONCURRENT_STREAMS is unlimited."}
+				return nil, actual
+			}
+
 			hdrs := []hpack.HeaderField{
 				pair(":method", "GET"),
 				pair(":scheme", "http"),
@@ -98,7 +105,7 @@ func StreamConcurrencyTestGroup() *TestGroup {
 			hbf := http2Conn.EncodeHeader(hdrs)
 
 			var streamID uint32 = 1
-			for i := 0; i <= int(ctx.Settings[http2.SettingMaxConcurrentStreams]); i++ {
+			for i := 0; i <= int(http2Conn.Settings[http2.SettingMaxConcurrentStreams]); i++ {
 				var hp http2.HeadersFrameParam
 				hp.StreamID = streamID
 				hp.EndStream = true
