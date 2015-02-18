@@ -234,7 +234,7 @@ func MalformedRequestsAndResponsesTestGroup() *TestGroup {
 	tg := NewTestGroup("8.1.2.6", "Malformed Requests and Responses")
 
 	tg.AddTestCase(NewTestCase(
-		"Sends a HEADERS frame that is omitted mandatory pseudo-header fields",
+		"Sends a HEADERS frame that contains the \"content-length\" header field which does not equal the sum of the DATA frame payload lengths",
 		"the endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
@@ -254,6 +254,35 @@ func MalformedRequestsAndResponsesTestGroup() *TestGroup {
 			hp.EndHeaders = true
 			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 			http2Conn.fr.WriteHeaders(hp)
+			http2Conn.fr.WriteData(1, true, []byte("test"))
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"Sends a HEADERS frame that contains the \"content-length\" header field which does not equal the sum of the multiple DATA frame payload lengths",
+		"the endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "POST"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+				pair("content-length", "1"),
+			}
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = false
+			hp.EndHeaders = true
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp)
+			http2Conn.fr.WriteData(1, false, []byte("test"))
 			http2Conn.fr.WriteData(1, true, []byte("test"))
 
 			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
