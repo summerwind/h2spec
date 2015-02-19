@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -459,7 +460,8 @@ loop:
 	for {
 		f, err := http2Conn.ReadFrame(ctx.Timeout)
 		if err != nil {
-			if err == io.EOF {
+			opErr, ok := err.(*net.OpError)
+			if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
 				actual = &ResultConnectionClose{}
 			} else if err == TIMEOUT {
 				if actual == nil {
@@ -496,7 +498,8 @@ loop:
 	for {
 		f, err := http2Conn.ReadFrame(ctx.Timeout)
 		if err != nil {
-			if err == io.EOF {
+			opErr, ok := err.(*net.OpError)
+			if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
 				actual = &ResultConnectionClose{}
 			} else if err == TIMEOUT {
 				if actual == nil {

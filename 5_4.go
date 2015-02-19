@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/bradfitz/http2"
 	"io"
+	"net"
+	"syscall"
 )
 
 func ErrorHandlingTestGroup() *TestGroup {
@@ -39,7 +41,8 @@ func ConnectionErrorHandlingTestGroup() *TestGroup {
 			for {
 				f, err := http2Conn.ReadFrame(ctx.Timeout)
 				if err != nil {
-					if err == io.EOF {
+					opErr, ok := err.(*net.OpError)
+					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
 						closed = true
 					} else if err == TIMEOUT {
 						if actual == nil {

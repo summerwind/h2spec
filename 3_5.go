@@ -3,6 +3,8 @@ package h2spec
 import (
 	"fmt"
 	"io"
+	"net"
+	"syscall"
 	"time"
 )
 
@@ -29,7 +31,8 @@ func Http2ConnectionPrefaceTestGroup() *TestGroup {
 				case <-tcpConn.dataCh:
 					break
 				case err := <-tcpConn.errCh:
-					if err == io.EOF {
+					opErr, ok := err.(*net.OpError)
+					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
 						actual = &ResultConnectionClose{}
 					} else {
 						actual = &ResultError{err}

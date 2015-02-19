@@ -5,6 +5,8 @@ import (
 	"github.com/bradfitz/http2"
 	"github.com/bradfitz/http2/hpack"
 	"io"
+	"net"
+	"syscall"
 )
 
 func WindowUpdateTestGroup() *TestGroup {
@@ -93,7 +95,8 @@ func TheFlowControlWindowTestGroup() *TestGroup {
 			for {
 				f, err := http2Conn.ReadFrame(ctx.Timeout)
 				if err != nil {
-					if err == io.EOF {
+					opErr, ok := err.(*net.OpError)
+					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
 						actual = &ResultConnectionClose{}
 					} else if err == TIMEOUT {
 						if actual == nil {
@@ -152,7 +155,8 @@ func TheFlowControlWindowTestGroup() *TestGroup {
 			for {
 				f, err := http2Conn.ReadFrame(ctx.Timeout)
 				if err != nil {
-					if err == io.EOF {
+					opErr, ok := err.(*net.OpError)
+					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
 						actual = &ResultConnectionClose{}
 					} else if err == TIMEOUT {
 						if actual == nil {
