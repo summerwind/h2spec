@@ -109,7 +109,7 @@ func StreamConcurrencyTestGroup() *TestGroup {
 				var hp http2.HeadersFrameParam
 				hp.StreamID = streamID
 				hp.EndStream = true
-				hp.EndHeaders = true
+				hp.EndHeaders = false
 				hp.BlockFragment = hbf
 				http2Conn.fr.WriteHeaders(hp)
 				streamID += 2
