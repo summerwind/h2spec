@@ -33,7 +33,7 @@ func FrameSizeTestGroup() *TestGroup {
 			http2Conn.fr.WriteData(1, true, []byte(dummyData(16385)))
 
 			actualCodes := []http2.ErrCode{http2.ErrCodeFrameSize}
-			return TestConnectionError(ctx, http2Conn, actualCodes)
+			return TestStreamError(ctx, http2Conn, actualCodes)
 		},
 	))
 
