@@ -105,11 +105,17 @@ func (tg *TestGroup) PrintFailedTestCase(level int) {
 
 	tg.PrintHeader(level)
 
+	numTestCaseFailed := 0
 	for _, tc := range tg.testCases {
 		if tc.verdict {
 			continue
 		}
 		tc.PrintError(tc.expected, tc.actual, level+1)
+		numTestCaseFailed += 1
+	}
+
+	if numTestCaseFailed > 0 {
+		fmt.Println("")
 	}
 
 	for _, testGroup := range tg.testGroups {
@@ -614,14 +620,13 @@ func pair(name, value string) hpack.HeaderField {
 
 // printSummary prints out the test summary of all tests performed.
 func printSummary(groups []*TestGroup, numTestCases, numSkipped, numFailed int) {
-	fmt.Printf("\x1b[35m")
+	fmt.Printf("\x1b[36m")
 	fmt.Println(`
-*******************************************************************************
-*                                                                             *
-*			     Test Summary                                     *
-*                                                                             *
-*******************************************************************************`)
-	fmt.Println("\x1b[0m")
+===============================================================================
+Test Summary
+===============================================================================
+`)
+	fmt.Printf("\x1b[0m")
 	if numFailed > 0 {
 		fmt.Println("Failed tests:")
 		for _, tg := range groups {
@@ -631,12 +636,15 @@ func printSummary(groups []*TestGroup, numTestCases, numSkipped, numFailed int) 
 
 	numPassed := numTestCases - numSkipped - numFailed
 
-	fmt.Printf("\n%v tests, %v passed, %v skipped, %v failed\n", numTestCases, numPassed, numSkipped, numFailed)
+	fmt.Printf("\x1b[36m")
+	fmt.Printf("%v tests, %v passed, %v skipped, %v failed\n", numTestCases, numPassed, numSkipped, numFailed)
+	fmt.Printf("\x1b[0m")
 	if numFailed == 0 {
 		fmt.Printf("\x1b[32m")
 		fmt.Printf("All tests passed\n")
 		fmt.Printf("\x1b[0m")
 	}
+	fmt.Printf("\n")
 }
 
 func Run(ctx *Context) {
