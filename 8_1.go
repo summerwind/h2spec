@@ -227,6 +227,36 @@ func RequestPseudoHeaderFieldsTestGroup() *TestGroup {
 		},
 	))
 
+	tg.AddTestCase(NewTestCase(
+		"Sends a HEADERS frame containing more than one pseudo-header fields with the same name",
+		"the endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "http"),
+				pair(":authority", ctx.Authority()),
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "http"),
+				pair(":authority", ctx.Authority()),
+			}
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = true
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp)
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
 	return tg
 }
 
