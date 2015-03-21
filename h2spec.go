@@ -164,6 +164,7 @@ const (
 )
 
 func (tc *TestCase) Run(ctx *Context, level int) TestResult {
+	tc.PrintEphemeralDesc(level)
 	expected, actual := tc.handler(ctx)
 
 	_, ok := actual.(*ResultSkipped)
@@ -202,17 +203,22 @@ func (tc *TestCase) HandleFunc(handler func(*Context) ([]Result, Result)) {
 	tc.handler = handler
 }
 
+func (tc *TestCase) PrintEphemeralDesc(level int) {
+	indent := strings.Repeat("  ", level)
+	fmt.Printf("%s  \x1b[90m%s\x1b[0m", indent, tc.Desc)
+}
+
 func (tc *TestCase) PrintResult(level int) {
 	mark := "✓"
 	indent := strings.Repeat("  ", level)
-	fmt.Printf("%s\x1b[32m%s\x1b[0m \x1b[90m%s\x1b[0m\n", indent, mark, tc.Desc)
+	fmt.Printf("\r%s\x1b[32m%s\x1b[0m \x1b[90m%s\x1b[0m\n", indent, mark, tc.Desc)
 }
 
 func (tc *TestCase) PrintError(expected []Result, actual Result, level int) {
 	mark := "×"
 	indent := strings.Repeat("  ", level)
 
-	fmt.Printf("\x1b[31m")
+	fmt.Printf("\r\x1b[31m")
 	fmt.Printf("%s%s %s\n", indent, mark, tc.Desc)
 	fmt.Printf("%s  - %s\n", indent, tc.Spec)
 	fmt.Printf("\x1b[32m")
@@ -234,7 +240,7 @@ func (tc *TestCase) PrintSkipped(actual Result, level int) {
 	mark := " "
 	indent := strings.Repeat("  ", level)
 
-	fmt.Printf("\x1b[36m")
+	fmt.Printf("\r\x1b[36m")
 	fmt.Printf("%s%s %s\n", indent, mark, tc.Desc)
 	fmt.Printf("%s  - %s\n", indent, actual)
 	fmt.Printf("\x1b[0m")
@@ -620,31 +626,29 @@ func pair(name, value string) hpack.HeaderField {
 
 // printSummary prints out the test summary of all tests performed.
 func printSummary(groups []*TestGroup, numTestCases, numSkipped, numFailed int) {
-	fmt.Printf("\x1b[36m")
+	numPassed := numTestCases - numSkipped - numFailed
+
+	fmt.Printf("\x1b[90m")
+	fmt.Printf("%v tests, %v passed, %v skipped, %v failed\n", numTestCases, numPassed, numSkipped, numFailed)
+	fmt.Printf("\x1b[0m")
+	if numFailed == 0 {
+		fmt.Printf("\x1b[90m")
+		fmt.Printf("All tests passed\n")
+		fmt.Printf("\x1b[0m")
+	}
+
+	fmt.Printf("\x1b[31m")
 	fmt.Println(`
 ===============================================================================
-Test Summary
+Failed tests
 ===============================================================================
 `)
 	fmt.Printf("\x1b[0m")
 	if numFailed > 0 {
-		fmt.Println("Failed tests:")
 		for _, tg := range groups {
 			tg.PrintFailedTestCase(1)
 		}
 	}
-
-	numPassed := numTestCases - numSkipped - numFailed
-
-	fmt.Printf("\x1b[36m")
-	fmt.Printf("%v tests, %v passed, %v skipped, %v failed\n", numTestCases, numPassed, numSkipped, numFailed)
-	fmt.Printf("\x1b[0m")
-	if numFailed == 0 {
-		fmt.Printf("\x1b[32m")
-		fmt.Printf("All tests passed\n")
-		fmt.Printf("\x1b[0m")
-	}
-	fmt.Printf("\n")
 }
 
 func Run(ctx *Context) {
