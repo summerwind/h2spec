@@ -8,6 +8,277 @@ import (
 func StreamStatesTestGroup() *TestGroup {
 	tg := NewTestGroup("5.1", "Stream States")
 
+	tg.AddTestCase(NewTestCase(
+		"idle: Sends a DATA frame",
+		"the endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			http2Conn.fr.WriteData(1, true, []byte("test"))
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"idle: Sends a RST_STREAM frame",
+		"the endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			http2Conn.fr.WriteRSTStream(1, http2.ErrCodeCancel)
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"idle: Sends a WINDOW_UPDATE frame",
+		"the endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			http2Conn.fr.WriteWindowUpdate(1, 100)
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"idle: Sends a CONTINUATION frame",
+		"the endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+			}
+
+			blockFragment := http2Conn.EncodeHeader(hdrs)
+
+			http2Conn.fr.WriteContinuation(1, true, blockFragment)
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestConnectionError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"half closed (remote): Sends a DATA frame",
+		"the endpoint MUST respond with a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+			}
+
+			blockFragment := http2Conn.EncodeHeader(hdrs)
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = true
+			hp.BlockFragment = blockFragment
+			http2Conn.fr.WriteHeaders(hp)
+
+			http2Conn.fr.WriteData(1, true, []byte("test"))
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"half closed (remote): Sends a HEADERS frame",
+		"the endpoint MUST respond with a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+			}
+
+			blockFragment := http2Conn.EncodeHeader(hdrs)
+
+			var hp1 http2.HeadersFrameParam
+			hp1.StreamID = 1
+			hp1.EndStream = true
+			hp1.EndHeaders = true
+			hp1.BlockFragment = blockFragment
+			http2Conn.fr.WriteHeaders(hp1)
+
+			var hp2 http2.HeadersFrameParam
+			hp2.StreamID = 1
+			hp2.EndStream = true
+			hp2.EndHeaders = true
+			hp2.BlockFragment = blockFragment
+			http2Conn.fr.WriteHeaders(hp2)
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"half closed (remote): Sends a CONTINUATION frame",
+		"the endpoint MUST respond with a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+				pair("x-dummy1", dummyData(10000)),
+				pair("x-dummy2", dummyData(10000)),
+			}
+
+			blockFragment := http2Conn.EncodeHeader(hdrs)
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = true
+			hp.BlockFragment = blockFragment[0:16384]
+			http2Conn.fr.WriteHeaders(hp)
+
+			http2Conn.fr.WriteContinuation(1, true, blockFragment[16384:])
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"closed: Sends a DATA frame",
+		"the endpoint MUST treat this as a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+			}
+
+			blockFragment := http2Conn.EncodeHeader(hdrs)
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = true
+			hp.BlockFragment = blockFragment
+			http2Conn.fr.WriteHeaders(hp)
+
+			expected, actual = TestStreamClose(ctx, http2Conn)
+			if !EvaluateResult(expected, actual) {
+				return expected, actual
+			}
+
+			http2Conn.fr.WriteData(1, true, []byte("test"))
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"closed: Sends a HEADERS frame",
+		"the endpoint MUST treat this as a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+			}
+
+			blockFragment := http2Conn.EncodeHeader(hdrs)
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = true
+			hp.BlockFragment = blockFragment
+			http2Conn.fr.WriteHeaders(hp)
+
+			expected, actual = TestStreamClose(ctx, http2Conn)
+			if !EvaluateResult(expected, actual) {
+				return expected, actual
+			}
+
+			http2Conn.fr.WriteHeaders(hp)
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"closed: Sends a CONTINUATION frame",
+		"the endpoint MUST treat this as a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				pair(":method", "GET"),
+				pair(":scheme", "http"),
+				pair(":path", "/"),
+				pair(":authority", ctx.Authority()),
+				pair("x-dummy1", dummyData(10000)),
+				pair("x-dummy2", dummyData(10000)),
+			}
+
+			blockFragment := http2Conn.EncodeHeader(hdrs)
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = false
+			hp.BlockFragment = blockFragment[0:16384]
+			http2Conn.fr.WriteHeaders(hp)
+
+			http2Conn.fr.WriteContinuation(1, true, blockFragment[16384:])
+
+			expected, actual = TestStreamClose(ctx, http2Conn)
+			if !EvaluateResult(expected, actual) {
+				return expected, actual
+			}
+
+			http2Conn.fr.WriteContinuation(1, true, blockFragment[16384:])
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
 	tg.AddTestGroup(StreamIdentifiersTestGroup())
 	tg.AddTestGroup(StreamConcurrencyTestGroup())
 

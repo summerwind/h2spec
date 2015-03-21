@@ -178,7 +178,7 @@ func (tc *TestCase) Run(ctx *Context, level int) TestResult {
 	tc.expected = expected
 	tc.actual = actual
 
-	if tc.evaluateResult(expected, actual) {
+	if EvaluateResult(expected, actual) {
 		tc.verdict = true
 		tc.PrintResult(level)
 		return Passed
@@ -186,17 +186,6 @@ func (tc *TestCase) Run(ctx *Context, level int) TestResult {
 		tc.PrintError(expected, actual, level)
 		return Failed
 	}
-}
-
-func (tc *TestCase) evaluateResult(expected []Result, actual Result) bool {
-	actualStr := actual.String()
-	for _, exp := range expected {
-		if exp.String() == actualStr {
-			return true
-		}
-	}
-
-	return false
 }
 
 func (tc *TestCase) HandleFunc(handler func(*Context) ([]Result, Result)) {
@@ -296,6 +285,12 @@ type ResultConnectionClose struct{}
 
 func (rcc *ResultConnectionClose) String() string {
 	return "Connection close"
+}
+
+type ResultStreamClose struct{}
+
+func (rsc *ResultStreamClose) String() string {
+	return "Stream close"
 }
 
 type ResultTestTimeout struct{}
@@ -603,12 +598,66 @@ loop:
 	return expected, actual
 }
 
+func TestStreamClose(ctx *Context, http2Conn *Http2Conn) (expected []Result, actual Result) {
+	expected = append(expected, &ResultStreamClose{})
+
+loop:
+	for {
+		f, err := http2Conn.ReadFrame(ctx.Timeout)
+		if err != nil {
+			opErr, ok := err.(*net.OpError)
+			if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
+				actual = &ResultConnectionClose{}
+			} else if err == TIMEOUT {
+				if actual == nil {
+					actual = &ResultTestTimeout{}
+				}
+			} else {
+				actual = &ResultError{err}
+			}
+			break loop
+		}
+
+		switch f := f.(type) {
+		case *http2.DataFrame:
+			if f.StreamEnded() {
+				actual = &ResultStreamClose{}
+				break loop
+			} else {
+				actual = &ResultFrame{f.Header().Type, f.Header().Flags, ErrCodeDefault}
+			}
+		case *http2.HeadersFrame:
+			if f.StreamEnded() {
+				actual = &ResultStreamClose{}
+				break loop
+			} else {
+				actual = &ResultFrame{f.Header().Type, f.Header().Flags, ErrCodeDefault}
+			}
+		default:
+			actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+		}
+	}
+
+	return expected, actual
+}
+
 func TestErrorCode(code http2.ErrCode, expected []http2.ErrCode) bool {
 	for _, exp := range expected {
 		if code == exp {
 			return true
 		}
 	}
+	return false
+}
+
+func EvaluateResult(expected []Result, actual Result) bool {
+	actualStr := actual.String()
+	for _, exp := range expected {
+		if exp.String() == actualStr {
+			return true
+		}
+	}
+
 	return false
 }
 
