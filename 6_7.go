@@ -13,7 +13,7 @@ func PingTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a PING frame",
-		"the endpoint MUST sends a PING frame with ACK.",
+		"The endpoint MUST sends a PING frame with ACK.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			expected = []Result{
 				&ResultFrame{http2.FramePing, http2.FlagPingAck, ErrCodeDefault},
@@ -58,7 +58,7 @@ func PingTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a PING frame with the stream identifier that is not 0x0",
-		"the endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -73,7 +73,7 @@ func PingTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a PING frame with a length field value other than 8",
-		"the endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
+		"The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()

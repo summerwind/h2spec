@@ -10,7 +10,7 @@ func StreamStatesTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"idle: Sends a DATA frame",
-		"the endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
+		"The endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -24,7 +24,7 @@ func StreamStatesTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"idle: Sends a RST_STREAM frame",
-		"the endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
+		"The endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -38,7 +38,7 @@ func StreamStatesTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"idle: Sends a WINDOW_UPDATE frame",
-		"the endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
+		"The endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -52,7 +52,7 @@ func StreamStatesTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"idle: Sends a CONTINUATION frame",
-		"the endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
+		"The endpoint MUST treat this as a connection error (Section 5.4.1) of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -75,7 +75,7 @@ func StreamStatesTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"half closed (remote): Sends a DATA frame",
-		"the endpoint MUST respond with a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		"The endpoint MUST respond with a stream error (Section 5.4.2) of type STREAM_CLOSED.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -105,7 +105,7 @@ func StreamStatesTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"half closed (remote): Sends a HEADERS frame",
-		"the endpoint MUST respond with a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		"The endpoint MUST respond with a stream error (Section 5.4.2) of type STREAM_CLOSED.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -140,7 +140,7 @@ func StreamStatesTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"half closed (remote): Sends a CONTINUATION frame",
-		"the endpoint MUST respond with a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		"The endpoint MUST respond with a stream error (Section 5.4.2) of type STREAM_CLOSED.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -172,7 +172,7 @@ func StreamStatesTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"closed: Sends a DATA frame",
-		"the endpoint MUST treat this as a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		"The endpoint MUST treat this as a stream error (Section 5.4.2) of type STREAM_CLOSED.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -207,7 +207,7 @@ func StreamStatesTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"closed: Sends a HEADERS frame",
-		"the endpoint MUST treat this as a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		"The endpoint MUST treat this as a stream error (Section 5.4.2) of type STREAM_CLOSED.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -242,7 +242,7 @@ func StreamStatesTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"closed: Sends a CONTINUATION frame",
-		"the endpoint MUST treat this as a stream error (Section 5.4.2) of type STREAM_CLOSED.",
+		"The endpoint MUST treat this as a stream error (Section 5.4.2) of type STREAM_CLOSED.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()

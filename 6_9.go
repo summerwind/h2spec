@@ -14,7 +14,7 @@ func WindowUpdateTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a WINDOW_UPDATE frame with an flow control window increment of 0",
-		"the endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -28,7 +28,7 @@ func WindowUpdateTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a WINDOW_UPDATE frame with an flow control window increment of 0 on a stream",
-		"the endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
+		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -55,7 +55,7 @@ func WindowUpdateTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a WINDOW_UPDATE frame with a length other than a multiple of 4 octets",
-		"the endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
+		"The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -79,7 +79,7 @@ func TheFlowControlWindowTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends multiple WINDOW_UPDATE frames on a connection increasing the flow control window to above 2^31-1",
-		"the endpoint MUST sends a GOAWAY frame with a FLOW_CONTROL_ERROR code.",
+		"The endpoint MUST sends a GOAWAY frame with a FLOW_CONTROL_ERROR code.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			expected = []Result{
 				&ResultFrame{http2.FrameGoAway, FlagDefault, http2.ErrCodeFlowControl},
@@ -125,7 +125,7 @@ func TheFlowControlWindowTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends multiple WINDOW_UPDATE frames on a stream increasing the flow control window to above 2^31-1",
-		"the endpoint MUST sends a RST_STREAM with the error code of FLOW_CONTROL_ERROR code.",
+		"The endpoint MUST sends a RST_STREAM with the error code of FLOW_CONTROL_ERROR code.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			expected = []Result{
 				&ResultFrame{http2.FrameRSTStream, FlagDefault, http2.ErrCodeFlowControl},
@@ -191,7 +191,7 @@ func InitialFlowControlWindowSizeTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a SETTINGS_INITIAL_WINDOW_SIZE settings with an exceeded maximum window size value",
-		"the endpoint MUST respond with a connection error of type FLOW_CONTROL_ERROR.",
+		"The endpoint MUST respond with a connection error of type FLOW_CONTROL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()

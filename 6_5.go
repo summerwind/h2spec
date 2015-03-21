@@ -13,7 +13,7 @@ func SettingsTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a SETTINGS frame",
-		"the endpoint MUST sends a SETTINGS frame with ACK.",
+		"The endpoint MUST sends a SETTINGS frame with ACK.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			expected = []Result{
 				&ResultFrame{http2.FrameSettings, http2.FlagSettingsAck, ErrCodeDefault},
@@ -58,7 +58,7 @@ func SettingsTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a SETTINGS frame that is not a zero-length with ACK flag",
-		"the endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
+		"The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -72,7 +72,7 @@ func SettingsTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a SETTINGS frame with the stream identifier that is not 0x0",
-		"the endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -87,7 +87,7 @@ func SettingsTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a SETTINGS frame with a length other than a multiple of 6 octets",
-		"the endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
+		"The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -110,7 +110,7 @@ func DefinedSettingsParametersTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"SETTINGS_ENABLE_PUSH (0x2): Sends the value other than 0 or 1",
-		"the endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -125,7 +125,7 @@ func DefinedSettingsParametersTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"SETTINGS_INITIAL_WINDOW_SIZE (0x4): Sends the value above the maximum flow control window size",
-		"the endpoint MUST respond with a connection error of type FLOW_CONTROL_ERROR.",
+		"The endpoint MUST respond with a connection error of type FLOW_CONTROL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -140,7 +140,7 @@ func DefinedSettingsParametersTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"SETTINGS_MAX_FRAME_SIZE (0x5): Sends the value below the initial value",
-		"the endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
@@ -155,7 +155,7 @@ func DefinedSettingsParametersTestGroup() *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"SETTINGS_MAX_FRAME_SIZE (0x5): Sends the value above the maximum allowed frame size",
-		"the endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
