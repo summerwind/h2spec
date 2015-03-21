@@ -1,7 +1,7 @@
 # h2spec
 
-h2spec is a conformance test tool for HTTP/2 server.  
-This tool supports [draft-ietf-httpbis-http2-17](http://tools.ietf.org/html/draft-ietf-httpbis-http2-17).
+h2spec is a conformance testing tool for HTTP/2 implementation.  
+This tool comply with [draft-ietf-httpbis-http2-17](http://tools.ietf.org/html/draft-ietf-httpbis-http2-17).
 
 ## Install
 
