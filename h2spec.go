@@ -631,22 +631,24 @@ func printSummary(groups []*TestGroup, numTestCases, numSkipped, numFailed int) 
 	fmt.Printf("\x1b[90m")
 	fmt.Printf("%v tests, %v passed, %v skipped, %v failed\n", numTestCases, numPassed, numSkipped, numFailed)
 	fmt.Printf("\x1b[0m")
+
 	if numFailed == 0 {
 		fmt.Printf("\x1b[90m")
 		fmt.Printf("All tests passed\n")
 		fmt.Printf("\x1b[0m")
-	}
+	} else {
+		fmt.Println("")
+		fmt.Printf("\x1b[31m")
+		fmt.Println("===============================================================================")
+		fmt.Println("Failed tests")
+		fmt.Println("===============================================================================")
+		fmt.Printf("\x1b[0m")
+		fmt.Println("")
 
-	fmt.Printf("\x1b[31m")
-	fmt.Println(`
-===============================================================================
-Failed tests
-===============================================================================
-`)
-	fmt.Printf("\x1b[0m")
-	if numFailed > 0 {
-		for _, tg := range groups {
-			tg.PrintFailedTestCase(1)
+		if numFailed > 0 {
+			for _, tg := range groups {
+				tg.PrintFailedTestCase(1)
+			}
 		}
 	}
 }
