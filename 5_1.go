@@ -1,6 +1,7 @@
 package h2spec
 
 import (
+        "fmt"
 	"github.com/bradfitz/http2"
 	"github.com/bradfitz/http2/hpack"
 )
@@ -367,6 +368,10 @@ func StreamConcurrencyTestGroup() *TestGroup {
 				return nil, actual
 			}
 
+			// Set INITIAL_WINDOW_SIZE to zero to prevent the peer from closing the stream
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x06\x04\x00\x00\x00\x00\x00")
+			fmt.Fprintf(http2Conn.conn, "\x00\x04\x00\x00\x00\x00")
+
 			hdrs := []hpack.HeaderField{
 				pair(":method", "GET"),
 				pair(":scheme", "http"),
@@ -380,7 +385,7 @@ func StreamConcurrencyTestGroup() *TestGroup {
 				var hp http2.HeadersFrameParam
 				hp.StreamID = streamID
 				hp.EndStream = true
-				hp.EndHeaders = false
+				hp.EndHeaders = true
 				hp.BlockFragment = hbf
 				http2Conn.fr.WriteHeaders(hp)
 				streamID += 2
