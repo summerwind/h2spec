@@ -379,8 +379,8 @@ func StreamConcurrencyTestGroup() *TestGroup {
 			for i := 0; i <= int(http2Conn.Settings[http2.SettingMaxConcurrentStreams]); i++ {
 				var hp http2.HeadersFrameParam
 				hp.StreamID = streamID
-				hp.EndStream = true
-				hp.EndHeaders = false
+				hp.EndStream = false
+				hp.EndHeaders = true
 				hp.BlockFragment = hbf
 				http2Conn.fr.WriteHeaders(hp)
 				streamID += 2
