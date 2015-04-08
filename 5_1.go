@@ -367,6 +367,10 @@ func StreamConcurrencyTestGroup() *TestGroup {
 				return nil, actual
 			}
 
+			// Set INITIAL_WINDOW_SIZE to zero to prevent the peer from closing the stream
+			settings := http2.Setting{http2.SettingInitialWindowSize, 0}
+			http2Conn.fr.WriteSettings(settings)
+
 			hdrs := []hpack.HeaderField{
 				pair(":method", "GET"),
 				pair(":scheme", "http"),
@@ -379,7 +383,7 @@ func StreamConcurrencyTestGroup() *TestGroup {
 			for i := 0; i <= int(http2Conn.Settings[http2.SettingMaxConcurrentStreams]); i++ {
 				var hp http2.HeadersFrameParam
 				hp.StreamID = streamID
-				hp.EndStream = false
+				hp.EndStream = true
 				hp.EndHeaders = true
 				hp.BlockFragment = hbf
 				http2Conn.fr.WriteHeaders(hp)
