@@ -661,6 +661,38 @@ func EvaluateResult(expected []Result, actual Result) bool {
 	return false
 }
 
+func commonHeaderFields(ctx *Context) []hpack.HeaderField {
+	var scheme, authority string
+	defaultPort := false
+
+	if ctx.Tls {
+		scheme = "https"
+
+		if ctx.Port == 443 {
+			defaultPort = true
+		}
+	} else {
+		scheme = "http"
+
+		if ctx.Port == 80 {
+			defaultPort = true
+		}
+	}
+
+	if defaultPort {
+		authority = ctx.Host
+	} else {
+		authority = ctx.Authority()
+	}
+
+	return []hpack.HeaderField{
+		pair(":method", "GET"),
+		pair(":scheme", scheme),
+		pair(":path", "/"),
+		pair(":authority", authority),
+	}
+}
+
 func dummyData(num int) string {
 	var data string
 	for i := 0; i < num; i++ {

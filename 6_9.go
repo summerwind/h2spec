@@ -3,7 +3,6 @@ package h2spec
 import (
 	"fmt"
 	"github.com/bradfitz/http2"
-	"github.com/bradfitz/http2/hpack"
 	"io"
 	"net"
 	"syscall"
@@ -33,12 +32,7 @@ func WindowUpdateTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -134,12 +128,7 @@ func TheFlowControlWindowTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1

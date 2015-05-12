@@ -2,7 +2,6 @@ package h2spec
 
 import (
 	"github.com/bradfitz/http2"
-	"github.com/bradfitz/http2/hpack"
 	"io"
 	"net"
 	"syscall"
@@ -72,15 +71,9 @@ func ExtendingHttp2TestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-				pair("x-dummy1", dummyData(10000)),
-				pair("x-dummy2", dummyData(10000)),
-			}
-
+			hdrs := commonHeaderFields(ctx)
+			hdrs = append(hdrs, pair("x-dummy1", dummyData(10000)))
+			hdrs = append(hdrs, pair("x-dummy2", dummyData(10000)))
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
 			var hp http2.HeadersFrameParam

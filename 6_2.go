@@ -17,12 +17,7 @@ func HeadersTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -44,12 +39,7 @@ func HeadersTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
 
 			var hp1 http2.HeadersFrameParam
 			hp1.StreamID = 1
@@ -77,12 +67,7 @@ func HeadersTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 0
@@ -104,12 +89,7 @@ func HeadersTestGroup() *TestGroup {
 			defer http2Conn.conn.Close()
 
 			var buf bytes.Buffer
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
 			enc := hpack.NewEncoder(&buf)
 			for _, hf := range hdrs {
 				_ = enc.WriteField(hf)

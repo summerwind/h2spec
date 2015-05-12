@@ -17,12 +17,7 @@ func ServerPushTestGroup() *TestGroup {
 			defer http2Conn.conn.Close()
 
 			var buf bytes.Buffer
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
 			enc := hpack.NewEncoder(&buf)
 			for _, hf := range hdrs {
 				_ = enc.WriteField(hf)

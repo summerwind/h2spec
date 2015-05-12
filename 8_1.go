@@ -23,13 +23,8 @@ func HttpHeaderFieldsTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-				pair("X-TEST", "test"),
-			}
+			hdrs := commonHeaderFields(ctx)
+			hdrs = append(hdrs, pair("X-TEST", "test"))
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -61,13 +56,8 @@ func PseudoHeaderFieldsTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-				pair(":status", "200"),
-			}
+			hdrs := commonHeaderFields(ctx)
+			hdrs = append(hdrs, pair(":status", "200"))
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -88,13 +78,8 @@ func PseudoHeaderFieldsTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-				pair(":test", "test"),
-			}
+			hdrs := commonHeaderFields(ctx)
+			hdrs = append(hdrs, pair(":test", "test"))
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -115,13 +100,11 @@ func PseudoHeaderFieldsTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
+			hdrs := commonHeaderFields(ctx)
+			tmp := []hpack.HeaderField{
 				pair("x-test", "test"),
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
 			}
+			hdrs = append(tmp, hdrs...)
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -148,13 +131,8 @@ func ConnectionSpecificHeaderFieldsTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-				pair("connection", "keep-alive"),
-			}
+			hdrs := commonHeaderFields(ctx)
+			hdrs = append(hdrs, pair("connection", "keep-alive"))
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -175,14 +153,9 @@ func ConnectionSpecificHeaderFieldsTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-				pair("trailers", "test"),
-				pair("te", "trailers, deflate"),
-			}
+			hdrs := commonHeaderFields(ctx)
+			hdrs = append(hdrs, pair("trailers", "test"))
+			hdrs = append(hdrs, pair("te", "trailers, deflate"))
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -209,11 +182,9 @@ func RequestPseudoHeaderFieldsTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
+			tmp := hdrs[0:2]
+			hdrs = append(tmp, hdrs[3])
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -234,16 +205,9 @@ func RequestPseudoHeaderFieldsTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "http"),
-				pair(":authority", ctx.Authority()),
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "http"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs1 := commonHeaderFields(ctx)
+			hdrs2 := commonHeaderFields(ctx)
+			hdrs := append(hdrs1, hdrs2...)
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -270,13 +234,9 @@ func MalformedRequestsAndResponsesTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "POST"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-				pair("content-length", "1"),
-			}
+			hdrs := commonHeaderFields(ctx)
+			hdrs = append(hdrs, pair("content-length", "1"))
+			hdrs[0].Value = "POST"
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -298,13 +258,9 @@ func MalformedRequestsAndResponsesTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "POST"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-				pair("content-length", "1"),
-			}
+			hdrs := commonHeaderFields(ctx)
+			hdrs = append(hdrs, pair("content-length", "1"))
+			hdrs[0].Value = "POST"
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1

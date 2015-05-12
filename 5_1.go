@@ -2,7 +2,6 @@ package h2spec
 
 import (
 	"github.com/bradfitz/http2"
-	"github.com/bradfitz/http2/hpack"
 )
 
 func StreamStatesTestGroup() *TestGroup {
@@ -57,13 +56,7 @@ func StreamStatesTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
-
+			hdrs := commonHeaderFields(ctx)
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
 			http2Conn.fr.WriteContinuation(1, true, blockFragment)
@@ -80,13 +73,7 @@ func StreamStatesTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
-
+			hdrs := commonHeaderFields(ctx)
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
 			var hp http2.HeadersFrameParam
@@ -110,13 +97,7 @@ func StreamStatesTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
-
+			hdrs := commonHeaderFields(ctx)
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
 			var hp1 http2.HeadersFrameParam
@@ -145,15 +126,9 @@ func StreamStatesTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-				pair("x-dummy1", dummyData(10000)),
-				pair("x-dummy2", dummyData(10000)),
-			}
-
+			hdrs := commonHeaderFields(ctx)
+			hdrs = append(hdrs, pair("x-dummy1", dummyData(10000)))
+			hdrs = append(hdrs, pair("x-dummy2", dummyData(10000)))
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
 			var hp http2.HeadersFrameParam
@@ -177,13 +152,7 @@ func StreamStatesTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
-
+			hdrs := commonHeaderFields(ctx)
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
 			var hp http2.HeadersFrameParam
@@ -212,13 +181,7 @@ func StreamStatesTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
-
+			hdrs := commonHeaderFields(ctx)
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
 			var hp http2.HeadersFrameParam
@@ -247,15 +210,9 @@ func StreamStatesTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-				pair("x-dummy1", dummyData(10000)),
-				pair("x-dummy2", dummyData(10000)),
-			}
-
+			hdrs := commonHeaderFields(ctx)
+			hdrs = append(hdrs, pair("x-dummy1", dummyData(10000)))
+			hdrs = append(hdrs, pair("x-dummy2", dummyData(10000)))
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
 			var hp http2.HeadersFrameParam
@@ -295,12 +252,7 @@ func StreamIdentifiersTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 2
@@ -321,12 +273,7 @@ func StreamIdentifiersTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
 
 			var hp1 http2.HeadersFrameParam
 			hp1.StreamID = 5
@@ -371,12 +318,7 @@ func StreamConcurrencyTestGroup() *TestGroup {
 			settings := http2.Setting{http2.SettingInitialWindowSize, 0}
 			http2Conn.fr.WriteSettings(settings)
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
 			hbf := http2Conn.EncodeHeader(hdrs)
 
 			var streamID uint32 = 1

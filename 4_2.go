@@ -2,7 +2,6 @@ package h2spec
 
 import (
 	"github.com/bradfitz/http2"
-	"github.com/bradfitz/http2/hpack"
 )
 
 func FrameSizeTestGroup() *TestGroup {
@@ -15,12 +14,7 @@ func FrameSizeTestGroup() *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := []hpack.HeaderField{
-				pair(":method", "GET"),
-				pair(":scheme", "http"),
-				pair(":path", "/"),
-				pair(":authority", ctx.Authority()),
-			}
+			hdrs := commonHeaderFields(ctx)
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -29,11 +23,11 @@ func FrameSizeTestGroup() *TestGroup {
 			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 			http2Conn.fr.WriteHeaders(hp)
 			max_size, ok := http2Conn.Settings[http2.SettingMaxFrameSize]
-			if( !ok ) {
+			if !ok {
 				max_size = 18384
 			}
 
-			http2Conn.fr.WriteData(1, true, []byte(dummyData(int(max_size) + 1)))
+			http2Conn.fr.WriteData(1, true, []byte(dummyData(int(max_size)+1)))
 
 			actualCodes := []http2.ErrCode{http2.ErrCodeFrameSize}
 			return TestStreamError(ctx, http2Conn, actualCodes)
