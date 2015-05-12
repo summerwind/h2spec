@@ -203,7 +203,7 @@ func RequestPseudoHeaderFieldsTestGroup() *TestGroup {
 	tg := NewTestGroup("8.1.2.3", "Request Pseudo-Header Fields")
 
 	tg.AddTestCase(NewTestCase(
-		"Sends a HEADERS frame that is omitted mandatory pseudo-header fields",
+		"Sends a HEADERS frame that omits mandatory pseudo-header fields",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
 		func(ctx *Context) (expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
