@@ -1,7 +1,7 @@
 # h2spec
 
 h2spec is a conformance testing tool for HTTP/2 implementation.  
-This.tool is compliant with [RFC 7540 (HTTP/2)](http://www.rfc-editor.org/rfc/rfc7540.txt).
+This tool is compliant with [RFC 7540 (HTTP/2)](http://www.rfc-editor.org/rfc/rfc7540.txt).
 
 ## Install
 
