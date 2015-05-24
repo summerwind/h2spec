@@ -44,7 +44,7 @@ func main() {
 		fmt.Println("  -k:        Don't verify server's certificate. (Default: false)")
 		fmt.Println("  -o:        Maximum time allowed for test. (Default: 2)")
 		fmt.Println("  -s:        Section number on which to run the test. (Example: -s 6.1 -s 6.2)")
-		fmt.Println("  -S:        Strict mode.")
+		fmt.Println("  -S:        Run the test cases marked as \"strict\".")
 		fmt.Println("  --version: Display version information and exit.")
 		fmt.Println("  --help:    Display this help and exit.")
 		os.Exit(1)
