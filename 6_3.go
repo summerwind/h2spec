@@ -5,7 +5,7 @@ import (
 	"github.com/bradfitz/http2"
 )
 
-func PriorityTestGroup() *TestGroup {
+func PriorityTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.3", "PRIORITY")
 
 	tg.AddTestCase(NewTestCase(

@@ -6,7 +6,7 @@ import (
 	"github.com/bradfitz/http2/hpack"
 )
 
-func ServerPushTestGroup() *TestGroup {
+func ServerPushTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("8.2", "Server Push")
 
 	tg.AddTestCase(NewTestCase(

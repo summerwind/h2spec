@@ -7,7 +7,7 @@ import (
 	"syscall"
 )
 
-func ExtendingHttp2TestGroup() *TestGroup {
+func ExtendingHttp2TestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("5.5", "Extending HTTP/2")
 
 	tg.AddTestCase(NewTestCase(

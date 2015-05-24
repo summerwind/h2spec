@@ -7,7 +7,7 @@ import (
 	"syscall"
 )
 
-func ContinuationTestGroup() *TestGroup {
+func ContinuationTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.10", "CONTINUATION")
 
 	tg.AddTestCase(NewTestCase(

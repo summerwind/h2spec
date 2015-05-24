@@ -28,6 +28,7 @@ const (
 type Context struct {
 	Port      int
 	Host      string
+	Strict    bool
 	Tls       bool
 	TlsConfig *tls.Config
 	Sections  map[string]bool
@@ -188,8 +189,8 @@ const (
 
 func (tc *TestCase) Run(ctx *Context, level int) TestResult {
 	tc.PrintEphemeralDesc(level)
-	expected, actual := tc.handler(ctx)
 
+	expected, actual := tc.handler(ctx)
 	_, ok := actual.(*ResultSkipped)
 	if ok {
 		tc.PrintSkipped(actual, level)
@@ -769,23 +770,23 @@ func printSummary(groups []*TestGroup) {
 
 func Run(ctx *Context) {
 	groups := []*TestGroup{
-		Http2ConnectionPrefaceTestGroup(),
-		FrameSizeTestGroup(),
-		HeaderCompressionAndDecompressionTestGroup(),
-		StreamStatesTestGroup(),
-		ErrorHandlingTestGroup(),
-		ExtendingHttp2TestGroup(),
-		DataTestGroup(),
-		HeadersTestGroup(),
-		PriorityTestGroup(),
-		RstStreamTestGroup(),
-		SettingsTestGroup(),
-		PingTestGroup(),
-		GoawayTestGroup(),
-		WindowUpdateTestGroup(),
-		ContinuationTestGroup(),
-		HttpRequestResponseExchangeTestGroup(),
-		ServerPushTestGroup(),
+		Http2ConnectionPrefaceTestGroup(ctx),
+		FrameSizeTestGroup(ctx),
+		HeaderCompressionAndDecompressionTestGroup(ctx),
+		StreamStatesTestGroup(ctx),
+		ErrorHandlingTestGroup(ctx),
+		ExtendingHttp2TestGroup(ctx),
+		DataTestGroup(ctx),
+		HeadersTestGroup(ctx),
+		PriorityTestGroup(ctx),
+		RstStreamTestGroup(ctx),
+		SettingsTestGroup(ctx),
+		PingTestGroup(ctx),
+		GoawayTestGroup(ctx),
+		WindowUpdateTestGroup(ctx),
+		ContinuationTestGroup(ctx),
+		HttpRequestResponseExchangeTestGroup(ctx),
+		ServerPushTestGroup(ctx),
 	}
 
 	for _, group := range groups {

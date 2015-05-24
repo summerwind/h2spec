@@ -9,15 +9,15 @@ import (
 	"syscall"
 )
 
-func ErrorHandlingTestGroup() *TestGroup {
+func ErrorHandlingTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("5.4", "Error Handling")
 
-	tg.AddTestGroup(ConnectionErrorHandlingTestGroup())
+	tg.AddTestGroup(ConnectionErrorHandlingTestGroup(ctx))
 
 	return tg
 }
 
-func ConnectionErrorHandlingTestGroup() *TestGroup {
+func ConnectionErrorHandlingTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("5.4.1", "Connection Error Handling")
 
 	tg.AddTestCase(NewTestCase(

@@ -8,7 +8,7 @@ import (
 	"syscall"
 )
 
-func PingTestGroup() *TestGroup {
+func PingTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.7", "PING")
 
 	tg.AddTestCase(NewTestCase(

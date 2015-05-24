@@ -5,7 +5,7 @@ import (
 	"github.com/bradfitz/http2"
 )
 
-func DataTestGroup() *TestGroup {
+func DataTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.1", "DATA")
 
 	tg.AddTestCase(NewTestCase(

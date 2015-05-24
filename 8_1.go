@@ -5,15 +5,15 @@ import (
 	"github.com/bradfitz/http2/hpack"
 )
 
-func HttpRequestResponseExchangeTestGroup() *TestGroup {
+func HttpRequestResponseExchangeTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("8.1", "HTTP Request/Response Exchange")
 
-	tg.AddTestGroup(HttpHeaderFieldsTestGroup())
+	tg.AddTestGroup(HttpHeaderFieldsTestGroup(ctx))
 
 	return tg
 }
 
-func HttpHeaderFieldsTestGroup() *TestGroup {
+func HttpHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("8.1.2", "HTTP Header Fields")
 
 	tg.AddTestCase(NewTestCase(
@@ -38,15 +38,15 @@ func HttpHeaderFieldsTestGroup() *TestGroup {
 		},
 	))
 
-	tg.AddTestGroup(PseudoHeaderFieldsTestGroup())
-	tg.AddTestGroup(ConnectionSpecificHeaderFieldsTestGroup())
-	tg.AddTestGroup(RequestPseudoHeaderFieldsTestGroup())
-	tg.AddTestGroup(MalformedRequestsAndResponsesTestGroup())
+	tg.AddTestGroup(PseudoHeaderFieldsTestGroup(ctx))
+	tg.AddTestGroup(ConnectionSpecificHeaderFieldsTestGroup(ctx))
+	tg.AddTestGroup(RequestPseudoHeaderFieldsTestGroup(ctx))
+	tg.AddTestGroup(MalformedRequestsAndResponsesTestGroup(ctx))
 
 	return tg
 }
 
-func PseudoHeaderFieldsTestGroup() *TestGroup {
+func PseudoHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("8.1.2.1", "Pseudo-Header Fields")
 
 	tg.AddTestCase(NewTestCase(
@@ -121,7 +121,7 @@ func PseudoHeaderFieldsTestGroup() *TestGroup {
 	return tg
 }
 
-func ConnectionSpecificHeaderFieldsTestGroup() *TestGroup {
+func ConnectionSpecificHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("8.1.2.2", "Connection-Specific Header Fields")
 
 	tg.AddTestCase(NewTestCase(
@@ -172,7 +172,7 @@ func ConnectionSpecificHeaderFieldsTestGroup() *TestGroup {
 	return tg
 }
 
-func RequestPseudoHeaderFieldsTestGroup() *TestGroup {
+func RequestPseudoHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("8.1.2.3", "Request Pseudo-Header Fields")
 
 	tg.AddTestCase(NewTestCase(
@@ -224,7 +224,7 @@ func RequestPseudoHeaderFieldsTestGroup() *TestGroup {
 	return tg
 }
 
-func MalformedRequestsAndResponsesTestGroup() *TestGroup {
+func MalformedRequestsAndResponsesTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("8.1.2.6", "Malformed Requests and Responses")
 
 	tg.AddTestCase(NewTestCase(

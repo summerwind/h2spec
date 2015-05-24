@@ -4,7 +4,7 @@ import (
 	"github.com/bradfitz/http2"
 )
 
-func FrameSizeTestGroup() *TestGroup {
+func FrameSizeTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("4.2", "Frame Size")
 
 	tg.AddTestCase(NewTestCase(

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func Http2ConnectionPrefaceTestGroup() *TestGroup {
+func Http2ConnectionPrefaceTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("3.5", "HTTP/2 Connection Preface")
 
 	tg.AddTestCase(NewTestCase(

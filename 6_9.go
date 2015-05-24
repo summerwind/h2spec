@@ -8,7 +8,7 @@ import (
 	"syscall"
 )
 
-func WindowUpdateTestGroup() *TestGroup {
+func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.9", "WINDOW_UPDATE")
 
 	tg.AddTestCase(NewTestCase(
@@ -62,13 +62,13 @@ func WindowUpdateTestGroup() *TestGroup {
 		},
 	))
 
-	tg.AddTestGroup(TheFlowControlWindowTestGroup())
-	tg.AddTestGroup(InitialFlowControlWindowSizeTestGroup())
+	tg.AddTestGroup(TheFlowControlWindowTestGroup(ctx))
+	tg.AddTestGroup(InitialFlowControlWindowSizeTestGroup(ctx))
 
 	return tg
 }
 
-func TheFlowControlWindowTestGroup() *TestGroup {
+func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.9.1", "The Flow Control Window")
 
 	tg.AddTestCase(NewTestCase(
@@ -175,7 +175,7 @@ func TheFlowControlWindowTestGroup() *TestGroup {
 	return tg
 }
 
-func InitialFlowControlWindowSizeTestGroup() *TestGroup {
+func InitialFlowControlWindowSizeTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.9.2", "Initial Flow Control Window Size")
 
 	tg.AddTestCase(NewTestCase(

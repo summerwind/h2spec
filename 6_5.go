@@ -8,7 +8,7 @@ import (
 	"syscall"
 )
 
-func SettingsTestGroup() *TestGroup {
+func SettingsTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.5", "SETTINGS")
 
 	tg.AddTestCase(NewTestCase(
@@ -100,12 +100,12 @@ func SettingsTestGroup() *TestGroup {
 		},
 	))
 
-	tg.AddTestGroup(DefinedSettingsParametersTestGroup())
+	tg.AddTestGroup(DefinedSettingsParametersTestGroup(ctx))
 
 	return tg
 }
 
-func DefinedSettingsParametersTestGroup() *TestGroup {
+func DefinedSettingsParametersTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.5.2", "Defined SETTINGS Parameters")
 
 	tg.AddTestCase(NewTestCase(

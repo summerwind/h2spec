@@ -7,7 +7,7 @@ import (
 	"github.com/bradfitz/http2/hpack"
 )
 
-func HeadersTestGroup() *TestGroup {
+func HeadersTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.2", "HEADERS")
 
 	tg.AddTestCase(NewTestCase(

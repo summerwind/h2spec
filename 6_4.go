@@ -5,7 +5,7 @@ import (
 	"github.com/bradfitz/http2"
 )
 
-func RstStreamTestGroup() *TestGroup {
+func RstStreamTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.4", "RST_STREAM")
 
 	tg.AddTestCase(NewTestCase(

@@ -5,7 +5,7 @@ import (
 	"github.com/bradfitz/http2"
 )
 
-func GoawayTestGroup() *TestGroup {
+func GoawayTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.8", "GOAWAY")
 
 	tg.AddTestCase(NewTestCase(

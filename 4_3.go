@@ -5,7 +5,7 @@ import (
 	"github.com/bradfitz/http2"
 )
 
-func HeaderCompressionAndDecompressionTestGroup() *TestGroup {
+func HeaderCompressionAndDecompressionTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("4.3", "Header Compression and Decompression")
 
 	tg.AddTestCase(NewTestCase(
