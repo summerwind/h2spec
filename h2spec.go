@@ -71,12 +71,10 @@ type TestGroup struct {
 func (tg *TestGroup) Run(ctx *Context, level int) {
 	runMode := ctx.GetRunMode(tg.Section)
 
-	if runMode == ModeSkip {
-		tg.numSkipped += tg.numTestCases
-		return
+	if runMode != ModeSkip {
+		tg.PrintHeader(level)
 	}
 
-	tg.PrintHeader(level)
 	if runMode == ModeAll {
 		for _, testCase := range tg.testCases {
 			switch testCase.Run(ctx, level+1) {
@@ -87,19 +85,19 @@ func (tg *TestGroup) Run(ctx *Context, level int) {
 			}
 		}
 		tg.PrintFooter(level)
+	} else {
+		tg.numSkipped += tg.numTestCases
 	}
 
 	for _, testGroup := range tg.testGroups {
 		testGroup.Run(ctx, level+1)
-		tg.numSkipped += testGroup.numSkipped
-		tg.numFailed += testGroup.numFailed
 	}
 }
 
 // PrintFailedTestCase prints failed TestCase results under this
 // TestGroup.
 func (tg *TestGroup) PrintFailedTestCase(level int) {
-	if tg.numFailed == 0 {
+	if tg.CountFailed() == 0 {
 		return
 	}
 
@@ -107,11 +105,10 @@ func (tg *TestGroup) PrintFailedTestCase(level int) {
 
 	numTestCaseFailed := 0
 	for _, tc := range tg.testCases {
-		if tc.verdict {
-			continue
+		if tc.failed {
+			tc.PrintError(tc.expected, tc.actual, level+1)
+			numTestCaseFailed += 1
 		}
-		tc.PrintError(tc.expected, tc.actual, level+1)
-		numTestCaseFailed += 1
 	}
 
 	if numTestCaseFailed > 0 {
@@ -130,7 +127,33 @@ func (tg *TestGroup) AddTestCase(testCase *TestCase) {
 
 func (tg *TestGroup) AddTestGroup(testGroup *TestGroup) {
 	tg.testGroups = append(tg.testGroups, testGroup)
-	tg.numTestCases += testGroup.numTestCases
+}
+
+func (tg *TestGroup) CountTestCases() int {
+	num := tg.numTestCases
+	for _, testGroup := range tg.testGroups {
+		num += testGroup.CountTestCases()
+	}
+
+	return num
+}
+
+func (tg *TestGroup) CountSkipped() int {
+	num := tg.numSkipped
+	for _, testGroup := range tg.testGroups {
+		num += testGroup.CountSkipped()
+	}
+
+	return num
+}
+
+func (tg *TestGroup) CountFailed() int {
+	num := tg.numFailed
+	for _, testGroup := range tg.testGroups {
+		num += testGroup.CountFailed()
+	}
+
+	return num
 }
 
 func (tg *TestGroup) PrintHeader(level int) {
@@ -149,7 +172,7 @@ type TestCase struct {
 	Desc     string
 	Spec     string
 	handler  func(*Context) ([]Result, Result)
-	verdict  bool     // true if test passed
+	failed   bool     // true if test failed
 	expected []Result // expected result
 	actual   Result   // actual result
 }
@@ -179,10 +202,10 @@ func (tc *TestCase) Run(ctx *Context, level int) TestResult {
 	tc.actual = actual
 
 	if EvaluateResult(expected, actual) {
-		tc.verdict = true
 		tc.PrintResult(level)
 		return Passed
 	} else {
+		tc.failed = true
 		tc.PrintError(expected, actual, level)
 		return Failed
 	}
@@ -706,7 +729,17 @@ func pair(name, value string) hpack.HeaderField {
 }
 
 // printSummary prints out the test summary of all tests performed.
-func printSummary(groups []*TestGroup, numTestCases, numSkipped, numFailed int) {
+func printSummary(groups []*TestGroup) {
+	numTestCases := 0
+	numSkipped := 0
+	numFailed := 0
+
+	for _, tg := range groups {
+		numTestCases += tg.CountTestCases()
+		numSkipped += tg.CountSkipped()
+		numFailed += tg.CountFailed()
+	}
+
 	numPassed := numTestCases - numSkipped - numFailed
 
 	fmt.Printf("\x1b[90m")
@@ -755,16 +788,9 @@ func Run(ctx *Context) {
 		ServerPushTestGroup(),
 	}
 
-	numTestCases := 0
-	numSkipped := 0
-	numFailed := 0
-
 	for _, group := range groups {
 		group.Run(ctx, 1)
-		numTestCases += group.numTestCases
-		numSkipped += group.numSkipped
-		numFailed += group.numFailed
 	}
 
-	printSummary(groups, numTestCases, numSkipped, numFailed)
+	printSummary(groups)
 }
