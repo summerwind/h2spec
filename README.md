@@ -1,7 +1,7 @@
 # h2spec
 
 h2spec is a conformance testing tool for HTTP/2 implementation.  
-This tool comply with [draft-ietf-httpbis-http2-17](http://tools.ietf.org/html/draft-ietf-httpbis-http2-17).
+This.tool is compliant with [RFC 7540 (HTTP/2)](http://www.rfc-editor.org/rfc/rfc7540.txt).
 
 ## Install
 
@@ -21,13 +21,15 @@ $ h2spec --help
 Usage: h2spec [OPTIONS]
 
 Options:
-  -p:     Target port. (Default: 80)
-  -h:     Target host. (Default: 127.0.0.1)
-  -t:     Connect over TLS. (Default: false)
-  -k:     Don't verify server's certificate. (Default: false)
-  -o:     Maximum time allowed for test. (Default: 2)
-  -s:     Section number on which to run the test. (Example: -s 6.1 -s 6.2)
-  --help: Display this help and exit.
+  -p:        Target port. (Default: 80 or 443)
+  -h:        Target host. (Default: 127.0.0.1)
+  -t:        Connect over TLS. (Default: false)
+  -k:        Don't verify server's certificate. (Default: false)
+  -o:        Maximum time allowed for test. (Default: 2)
+  -s:        Section number on which to run the test. (Example: -s 6.1 -s 6.2)
+  -S:        Run the test cases marked as "strict".
+  --version: Display version information and exit.
+  --help:    Display this help and exit.
 ```
 
 ## Screenshot
