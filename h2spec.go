@@ -774,6 +774,7 @@ func Run(ctx *Context) {
 		FrameSizeTestGroup(ctx),
 		HeaderCompressionAndDecompressionTestGroup(ctx),
 		StreamStatesTestGroup(ctx),
+		StreamPriorityTestGroup(ctx),
 		ErrorHandlingTestGroup(ctx),
 		ExtendingHttp2TestGroup(ctx),
 		DataTestGroup(ctx),
