@@ -1,6 +1,7 @@
 package h2spec
 
 import (
+	"errors"
 	"fmt"
 	"github.com/bradfitz/http2"
 	"io"
@@ -10,6 +11,79 @@ import (
 
 func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("6.9", "WINDOW_UPDATE")
+
+	tg.AddTestCase(NewTestCase(
+		"Sends a WINDOW_UPDATE frame",
+		"The endpoint is expected to send the DATA frame based on the window size.",
+		func(ctx *Context) (expected []Result, actual Result) {
+			expected = []Result{
+				&ResultFrame{http2.FrameData, FlagDefault, ErrCodeDefault},
+			}
+
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			settings := http2.Setting{http2.SettingInitialWindowSize, 1}
+			http2Conn.fr.WriteSettings(settings)
+
+			hdrs := commonHeaderFields(ctx)
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = true
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp)
+
+			winUpdated := false
+
+		loop:
+			for {
+				f, err := http2Conn.ReadFrame(ctx.Timeout)
+				if err != nil {
+					opErr, ok := err.(*net.OpError)
+					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
+						actual = &ResultConnectionClose{}
+					} else if err == TIMEOUT {
+						if actual == nil {
+							actual = &ResultTestTimeout{}
+						}
+					} else {
+						actual = &ResultError{err}
+					}
+					break loop
+				}
+
+				switch f := f.(type) {
+				case *http2.DataFrame:
+
+					if winUpdated {
+						if f.FrameHeader.Length > 10 {
+							err := errors.New("The length of DATA frame is invalid.")
+							actual = &ResultError{err}
+							break loop
+						}
+
+						actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+						break loop
+					} else {
+						if f.FrameHeader.Length != 1 {
+							err := errors.New("The length of DATA frame is invalid.")
+							actual = &ResultError{err}
+							break loop
+						}
+
+						http2Conn.fr.WriteWindowUpdate(1, 10)
+						winUpdated = true
+					}
+				default:
+					actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+				}
+			}
+
+			return expected, actual
+		},
+	))
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a WINDOW_UPDATE frame with an flow control window increment of 0",
