@@ -401,7 +401,7 @@ func connectTls(ctx *Context) (net.Conn, error) {
 	}
 
 	if ctx.TlsConfig.NextProtos == nil {
-		ctx.TlsConfig.NextProtos = append(ctx.TlsConfig.NextProtos, "h2-14", "h2-15", "h2-16")
+		ctx.TlsConfig.NextProtos = append(ctx.TlsConfig.NextProtos, "h2-14", "h2-15", "h2-16", "h2")
 	}
 
 	conn, err := tls.Dial("tcp", ctx.Authority(), ctx.TlsConfig)
@@ -515,7 +515,7 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 
 		select {
 		case <-doneCh:
-			// Nothing to. do
+			// Nothing to do.
 		case <-errCh:
 			fmt.Println("HTTP/2 settings negotiation failed")
 			os.Exit(1)
@@ -541,6 +541,59 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 
 	return http2Conn
 }
+
+//func CreateHttp2ConnWithSettings(ctx *Context, settings ...http2.Setting) *Http2Conn {
+//	http2Conn := CreateHttp2Conn(ctx, false)
+//
+//	doneCh := make(chan bool, 1)
+//	errCh := make(chan error, 1)
+//	http2Conn.fr.WriteSettings(settings)
+//
+//	go func() {
+//		local := false
+//		remote := false
+//
+//		for {
+//			f, err := http2Conn.fr.ReadFrame()
+//			if err != nil {
+//				errCh <- err
+//				return
+//			}
+//
+//			switch f := f.(type) {
+//			case *http2.SettingsFrame:
+//				if f.IsAck() {
+//					local = true
+//				} else {
+//					f.ForeachSetting(func(setting http2.Setting) error {
+//						settings[setting.ID] = setting.Val
+//						return nil
+//					})
+//					http2Conn.fr.WriteSettingsAck()
+//					remote = true
+//				}
+//			}
+//
+//			if local && remote {
+//				doneCh <- true
+//				return
+//			}
+//		}
+//	}()
+//
+//	select {
+//	case <-doneCh:
+//		// Nothing to do.
+//	case <-errCh:
+//		fmt.Println("HTTP/2 settings negotiation failed")
+//		os.Exit(1)
+//	case <-time.After(ctx.Timeout):
+//		fmt.Println("HTTP/2 settings negotiation timeout")
+//		os.Exit(1)
+//	}
+//
+//	return http2Conn
+//}
 
 func TestConnectionError(ctx *Context, http2Conn *Http2Conn, codes []http2.ErrCode) (expected []Result, actual Result) {
 	for _, code := range codes {
