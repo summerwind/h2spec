@@ -15,7 +15,8 @@ func HeaderCompressionAndDecompressionTestGroup(ctx *Context) *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			fmt.Fprintf(http2Conn.conn, "\x00\x00\x14\x01\x05\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+			// Literal Header Field with Incremental Indexing without Length and String segment
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x01\x01\x05\x00\x00\x00\x01\x40")
 
 			actualCodes := []http2.ErrCode{http2.ErrCodeCompression}
 			return TestConnectionError(ctx, http2Conn, actualCodes)
