@@ -30,6 +30,8 @@ func DataTestGroup(ctx *Context) *TestGroup {
 			defer http2Conn.conn.Close()
 
 			hdrs := commonHeaderFields(ctx)
+			hdrs[0].Value = "POST"
+			hdrs = append(hdrs, pair("content-type", "4"))
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -52,16 +54,19 @@ func DataTestGroup(ctx *Context) *TestGroup {
 			defer http2Conn.conn.Close()
 
 			hdrs := commonHeaderFields(ctx)
+			hdrs[0].Value = "POST"
+			hdrs = append(hdrs, pair("content-type", "4"))
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
-			hp.EndStream = true
+			hp.EndStream = false
 			hp.EndHeaders = true
 			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 			http2Conn.fr.WriteHeaders(hp)
 
+			// Data length: 5, Pad length: 6
 			fmt.Fprintf(http2Conn.conn, "\x00\x00\x05\x00\x0b\x00\x00\x00\x01")
-			fmt.Fprintf(http2Conn.conn, "\x04\x54\x65\x73\x74")
+			fmt.Fprintf(http2Conn.conn, "\x06\x54\x65\x73\x74")
 
 			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed}
 			return TestStreamError(ctx, http2Conn, actualCodes)
