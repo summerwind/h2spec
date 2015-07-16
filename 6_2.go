@@ -95,9 +95,10 @@ func HeadersTestGroup(ctx *Context) *TestGroup {
 				_ = enc.WriteField(hf)
 			}
 
-			fmt.Fprintf(http2Conn.conn, "\x00\x00\x0f\x01\x0c\x00\x00\x00\x01")
+			// Payload length: 12, Pad length: 13
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x0c\x01\x0d\x00\x00\x00\x01")
+			fmt.Fprintf(http2Conn.conn, "\x0d")
 			http2Conn.conn.Write(buf.Bytes())
-			fmt.Fprintf(http2Conn.conn, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
 
 			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
 			return TestConnectionError(ctx, http2Conn, actualCodes)
