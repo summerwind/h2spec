@@ -3,10 +3,78 @@ package h2spec
 import (
 	"github.com/bradfitz/http2"
 	"github.com/bradfitz/http2/hpack"
+	"io"
+	"net"
+	"syscall"
 )
 
 func HttpRequestResponseExchangeTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("8.1", "HTTP Request/Response Exchange")
+
+	tg.AddTestCase(NewTestCase(
+		"Sends a HEADERS frame as HEAD request",
+		"The endpoint should respond with no DATA frame or empty DATA frame.",
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			pass = false
+			expected = []Result{
+				&ResultFrame{LengthDefault, http2.FrameHeaders, http2.FlagHeadersEndStream, ErrCodeDefault},
+				&ResultFrame{0, http2.FrameData, http2.FlagDataEndStream, ErrCodeDefault},
+			}
+
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := commonHeaderFields(ctx)
+			hdrs[0].Value = "HEAD"
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = true
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp)
+			hdrs = append(hdrs, pair("X-TEST", "test"))
+
+		loop:
+			for {
+				f, err := http2Conn.ReadFrame(ctx.Timeout)
+				if err != nil {
+					opErr, ok := err.(*net.OpError)
+					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
+						rf, ok := actual.(*ResultFrame)
+						if actual == nil || (ok && rf.Type != http2.FrameGoAway) {
+							actual = &ResultConnectionClose{}
+						}
+					} else if err == TIMEOUT {
+						if actual == nil {
+							actual = &ResultTestTimeout{}
+						}
+					} else {
+						actual = &ResultError{err}
+					}
+					break loop
+				}
+
+				switch f := f.(type) {
+				case *http2.DataFrame:
+					actual = CreateResultFrame(f)
+					if f.FrameHeader.Flags.Has(http2.FlagDataEndStream) && f.Header().Length == 0 {
+						pass = true
+						break loop
+					}
+				case *http2.HeadersFrame:
+					actual = CreateResultFrame(f)
+					if f.FrameHeader.Flags.Has(http2.FlagHeadersEndStream) {
+						pass = true
+						break loop
+					}
+				}
+				actual = CreateResultFrame(f)
+			}
+
+			return pass, expected, actual
+		},
+	))
 
 	tg.AddTestGroup(HttpHeaderFieldsTestGroup(ctx))
 
