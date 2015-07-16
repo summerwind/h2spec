@@ -8,6 +8,7 @@ import (
 	"github.com/bradfitz/http2"
 	"github.com/bradfitz/http2/hpack"
 	"io"
+	"math"
 	"net"
 	"os"
 	"strings"
@@ -172,7 +173,7 @@ func (tg *TestGroup) PrintFooter(level int) {
 type TestCase struct {
 	Desc     string
 	Spec     string
-	handler  func(*Context) ([]Result, Result)
+	handler  func(*Context) (bool, []Result, Result)
 	failed   bool     // true if test failed
 	expected []Result // expected result
 	actual   Result   // actual result
@@ -190,7 +191,7 @@ const (
 func (tc *TestCase) Run(ctx *Context, level int) TestResult {
 	tc.PrintEphemeralDesc(level)
 
-	expected, actual := tc.handler(ctx)
+	pass, expected, actual := tc.handler(ctx)
 	_, ok := actual.(*ResultSkipped)
 	if ok {
 		tc.PrintSkipped(actual, level)
@@ -202,7 +203,7 @@ func (tc *TestCase) Run(ctx *Context, level int) TestResult {
 	tc.expected = expected
 	tc.actual = actual
 
-	if EvaluateResult(expected, actual) {
+	if pass {
 		tc.PrintResult(level)
 		return Passed
 	} else {
@@ -212,7 +213,7 @@ func (tc *TestCase) Run(ctx *Context, level int) TestResult {
 	}
 }
 
-func (tc *TestCase) HandleFunc(handler func(*Context) ([]Result, Result)) {
+func (tc *TestCase) HandleFunc(handler func(*Context) (bool, []Result, Result)) {
 	tc.handler = handler
 }
 
@@ -266,7 +267,7 @@ func NewTestGroup(section, name string) *TestGroup {
 	}
 }
 
-func NewTestCase(desc, spec string, handler func(*Context) ([]Result, Result)) *TestCase {
+func NewTestCase(desc, spec string, handler func(*Context) (bool, []Result, Result)) *TestCase {
 	return &TestCase{
 		Desc:    desc,
 		Spec:    spec,
@@ -274,27 +275,32 @@ func NewTestCase(desc, spec string, handler func(*Context) ([]Result, Result)) *
 	}
 }
 
-var FlagDefault http2.Flags = 0x0
-var ErrCodeDefault http2.ErrCode = 0xff
+var LengthDefault uint32 = math.MaxUint32
+var FlagDefault http2.Flags = math.MaxUint8
+var ErrCodeDefault http2.ErrCode = math.MaxUint8
 
 type Result interface {
 	String() string
 }
 
 type ResultFrame struct {
-	Type  http2.FrameType
-	Flags http2.Flags
-	Code  http2.ErrCode
+	Length  uint32
+	Type    http2.FrameType
+	Flags   http2.Flags
+	ErrCode http2.ErrCode
 }
 
 func (rf *ResultFrame) String() string {
 	parts := []string{}
 
+	if rf.Length != LengthDefault {
+		parts = append(parts, fmt.Sprintf("Length: %d", rf.Length))
+	}
 	if rf.Flags != FlagDefault {
 		parts = append(parts, fmt.Sprintf("Flags: %d", rf.Flags))
 	}
-	if rf.Code != ErrCodeDefault {
-		parts = append(parts, fmt.Sprintf("ErrorCode: %s", rf.Code.String()))
+	if rf.ErrCode != ErrCodeDefault {
+		parts = append(parts, fmt.Sprintf("ErrorCode: %s", rf.ErrCode.String()))
 	}
 
 	res := fmt.Sprintf("%s frame", rf.Type.String())
@@ -595,9 +601,9 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 //	return http2Conn
 //}
 
-func TestConnectionError(ctx *Context, http2Conn *Http2Conn, codes []http2.ErrCode) (expected []Result, actual Result) {
+func TestConnectionError(ctx *Context, http2Conn *Http2Conn, codes []http2.ErrCode) (pass bool, expected []Result, actual Result) {
 	for _, code := range codes {
-		expected = append(expected, &ResultFrame{http2.FrameGoAway, FlagDefault, code})
+		expected = append(expected, &ResultFrame{LengthDefault, http2.FrameGoAway, FlagDefault, code})
 	}
 	expected = append(expected, &ResultConnectionClose{})
 
@@ -607,7 +613,11 @@ loop:
 		if err != nil {
 			opErr, ok := err.(*net.OpError)
 			if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
-				actual = &ResultConnectionClose{}
+				rf, ok := actual.(*ResultFrame)
+				if actual == nil || (ok && rf.Type != http2.FrameGoAway) {
+					actual = &ResultConnectionClose{}
+					pass = true
+				}
 			} else if err == TIMEOUT {
 				if actual == nil {
 					actual = &ResultTestTimeout{}
@@ -620,22 +630,25 @@ loop:
 
 		switch f := f.(type) {
 		case *http2.GoAwayFrame:
-			actual = &ResultFrame{f.Header().Type, FlagDefault, f.ErrCode}
+			actual = CreateResultFrame(f)
 			if TestErrorCode(f.ErrCode, codes) {
+				pass = true
 				break loop
 			}
 		default:
-			actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+			actual = CreateResultFrame(f)
 		}
 	}
 
-	return expected, actual
+	return pass, expected, actual
 }
 
-func TestStreamError(ctx *Context, http2Conn *Http2Conn, codes []http2.ErrCode) (expected []Result, actual Result) {
+func TestStreamError(ctx *Context, http2Conn *Http2Conn, codes []http2.ErrCode) (pass bool, expected []Result, actual Result) {
+	pass = false
+
 	for _, code := range codes {
-		expected = append(expected, &ResultFrame{http2.FrameGoAway, FlagDefault, code})
-		expected = append(expected, &ResultFrame{http2.FrameRSTStream, FlagDefault, code})
+		expected = append(expected, &ResultFrame{LengthDefault, http2.FrameGoAway, FlagDefault, code})
+		expected = append(expected, &ResultFrame{LengthDefault, http2.FrameRSTStream, FlagDefault, code})
 	}
 	expected = append(expected, &ResultConnectionClose{})
 
@@ -645,7 +658,11 @@ loop:
 		if err != nil {
 			opErr, ok := err.(*net.OpError)
 			if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
-				actual = &ResultConnectionClose{}
+				rf, ok := actual.(*ResultFrame)
+				if actual == nil || (ok && rf.Type != http2.FrameGoAway) {
+					actual = &ResultConnectionClose{}
+					pass = true
+				}
 			} else if err == TIMEOUT {
 				if actual == nil {
 					actual = &ResultTestTimeout{}
@@ -658,24 +675,27 @@ loop:
 
 		switch f := f.(type) {
 		case *http2.GoAwayFrame:
-			actual = &ResultFrame{f.Header().Type, FlagDefault, f.ErrCode}
+			actual = CreateResultFrame(f)
 			if TestErrorCode(f.ErrCode, codes) {
+				pass = true
 				break loop
 			}
 		case *http2.RSTStreamFrame:
-			actual = &ResultFrame{f.Header().Type, FlagDefault, f.ErrCode}
+			actual = CreateResultFrame(f)
 			if TestErrorCode(f.ErrCode, codes) {
+				pass = true
 				break loop
 			}
 		default:
-			actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+			actual = CreateResultFrame(f)
 		}
 	}
 
-	return expected, actual
+	return pass, expected, actual
 }
 
-func TestStreamClose(ctx *Context, http2Conn *Http2Conn) (expected []Result, actual Result) {
+func TestStreamClose(ctx *Context, http2Conn *Http2Conn) (pass bool, expected []Result, actual Result) {
+	pass = false
 	expected = append(expected, &ResultStreamClose{})
 
 loop:
@@ -684,7 +704,11 @@ loop:
 		if err != nil {
 			opErr, ok := err.(*net.OpError)
 			if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
-				actual = &ResultConnectionClose{}
+				rf, ok := actual.(*ResultFrame)
+				if actual == nil || (ok && rf.Type != http2.FrameGoAway) {
+					actual = &ResultConnectionClose{}
+					pass = true
+				}
 			} else if err == TIMEOUT {
 				if actual == nil {
 					actual = &ResultTestTimeout{}
@@ -698,24 +722,26 @@ loop:
 		switch f := f.(type) {
 		case *http2.DataFrame:
 			if f.StreamEnded() {
+				pass = true
 				actual = &ResultStreamClose{}
 				break loop
 			} else {
-				actual = &ResultFrame{f.Header().Type, f.Header().Flags, ErrCodeDefault}
+				actual = CreateResultFrame(f)
 			}
 		case *http2.HeadersFrame:
 			if f.StreamEnded() {
+				pass = true
 				actual = &ResultStreamClose{}
 				break loop
 			} else {
-				actual = &ResultFrame{f.Header().Type, f.Header().Flags, ErrCodeDefault}
+				actual = CreateResultFrame(f)
 			}
 		default:
-			actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+			actual = CreateResultFrame(f)
 		}
 	}
 
-	return expected, actual
+	return pass, expected, actual
 }
 
 func TestErrorCode(code http2.ErrCode, expected []http2.ErrCode) bool {
@@ -727,15 +753,23 @@ func TestErrorCode(code http2.ErrCode, expected []http2.ErrCode) bool {
 	return false
 }
 
-func EvaluateResult(expected []Result, actual Result) bool {
-	actualStr := actual.String()
-	for _, exp := range expected {
-		if exp.String() == actualStr {
-			return true
-		}
+func CreateResultFrame(f http2.Frame) (rf *ResultFrame) {
+	rf = &ResultFrame{
+		Type:   f.Header().Type,
+		Flags:  f.Header().Flags,
+		Length: f.Header().Length,
 	}
 
-	return false
+	switch f := f.(type) {
+	case *http2.GoAwayFrame:
+		rf.ErrCode = f.ErrCode
+	case *http2.RSTStreamFrame:
+		rf.ErrCode = f.ErrCode
+	default:
+		rf.ErrCode = ErrCodeDefault
+	}
+
+	return rf
 }
 
 func commonHeaderFields(ctx *Context) []hpack.HeaderField {

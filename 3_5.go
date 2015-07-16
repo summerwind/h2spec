@@ -14,7 +14,8 @@ func Http2ConnectionPrefaceTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends invalid connection preface",
 		"The endpoint MUST terminate the TCP connection.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			pass = false
 			expected = []Result{
 				&ResultConnectionClose{},
 			}
@@ -33,6 +34,7 @@ func Http2ConnectionPrefaceTestGroup(ctx *Context) *TestGroup {
 				case err := <-tcpConn.errCh:
 					opErr, ok := err.(*net.OpError)
 					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
+						pass = true
 						actual = &ResultConnectionClose{}
 					} else {
 						actual = &ResultError{err}
@@ -44,7 +46,7 @@ func Http2ConnectionPrefaceTestGroup(ctx *Context) *TestGroup {
 				}
 			}
 
-			return expected, actual
+			return pass, expected, actual
 		},
 	))
 

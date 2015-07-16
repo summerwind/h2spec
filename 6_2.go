@@ -13,7 +13,7 @@ func HeadersTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame followed by any frame other than CONTINUATION",
 		"The endpoint MUST treat the receipt of any other type of frame as a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -35,7 +35,7 @@ func HeadersTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame followed by a frame on a different stream",
 		"The endpoint MUST treat the receipt of a frame on a different stream as a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -63,7 +63,7 @@ func HeadersTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame with 0x0 stream identifier",
 		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -84,7 +84,7 @@ func HeadersTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame with invalid pad length",
 		"The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 

@@ -18,7 +18,7 @@ func StreamDependenciesTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends HEADERS frame that depend on itself",
 		"The endpoint MUST treat this as a stream error of type PROTOCOL_ERROR",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -45,7 +45,7 @@ func StreamDependenciesTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends PRIORITY frame that depend on itself",
 		"The endpoint MUST treat this as a stream error of type PROTOCOL_ERROR",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 

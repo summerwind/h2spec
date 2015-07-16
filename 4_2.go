@@ -10,7 +10,7 @@ func FrameSizeTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends large size frame that exceeds the SETTINGS_MAX_FRAME_SIZE",
 		"The endpoint MUST send a FRAME_SIZE_ERROR error.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 

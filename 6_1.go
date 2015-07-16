@@ -11,7 +11,7 @@ func DataTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a DATA frame with 0x0 stream identifier",
 		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -25,7 +25,7 @@ func DataTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a DATA frame on the stream that is not opend",
 		"The endpoint MUST respond with a stream error of type STREAM_CLOSED.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -49,7 +49,7 @@ func DataTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a DATA frame with invalid pad length",
 		"The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -68,7 +68,7 @@ func DataTestGroup(ctx *Context) *TestGroup {
 			fmt.Fprintf(http2Conn.conn, "\x00\x00\x05\x00\x0b\x00\x00\x00\x01")
 			fmt.Fprintf(http2Conn.conn, "\x06\x54\x65\x73\x74")
 
-			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed}
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
 			return TestStreamError(ctx, http2Conn, actualCodes)
 		},
 	))

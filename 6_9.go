@@ -15,9 +15,10 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a WINDOW_UPDATE frame",
 		"The endpoint is expected to send the DATA frame based on the window size.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			pass = false
 			expected = []Result{
-				&ResultFrame{http2.FrameData, FlagDefault, ErrCodeDefault},
+				&ResultFrame{LengthDefault, http2.FrameData, FlagDefault, ErrCodeDefault},
 			}
 
 			http2Conn := CreateHttp2Conn(ctx, true)
@@ -43,7 +44,10 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 				if err != nil {
 					opErr, ok := err.(*net.OpError)
 					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
-						actual = &ResultConnectionClose{}
+						rf, ok := actual.(*ResultFrame)
+						if actual == nil || (ok && rf.Type != http2.FrameGoAway) {
+							actual = &ResultConnectionClose{}
+						}
 					} else if err == TIMEOUT {
 						if actual == nil {
 							actual = &ResultTestTimeout{}
@@ -56,7 +60,6 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 
 				switch f := f.(type) {
 				case *http2.DataFrame:
-
 					if winUpdated {
 						if f.FrameHeader.Length > 10 {
 							err := errors.New("The length of DATA frame is invalid.")
@@ -64,7 +67,8 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 							break loop
 						}
 
-						actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+						actual = CreateResultFrame(f)
+						pass = true
 						break loop
 					} else {
 						if f.FrameHeader.Length != 1 {
@@ -77,18 +81,18 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 						winUpdated = true
 					}
 				default:
-					actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+					actual = CreateResultFrame(f)
 				}
 			}
 
-			return expected, actual
+			return pass, expected, actual
 		},
 	))
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a WINDOW_UPDATE frame with an flow control window increment of 0",
 		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -102,7 +106,7 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a WINDOW_UPDATE frame with an flow control window increment of 0 on a stream",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -124,7 +128,7 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a WINDOW_UPDATE frame with a length other than a multiple of 4 octets",
 		"The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -148,9 +152,10 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends multiple WINDOW_UPDATE frames on a connection increasing the flow control window to above 2^31-1",
 		"The endpoint MUST sends a GOAWAY frame with a FLOW_CONTROL_ERROR code.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			pass = false
 			expected = []Result{
-				&ResultFrame{http2.FrameGoAway, FlagDefault, http2.ErrCodeFlowControl},
+				&ResultFrame{LengthDefault, http2.FrameGoAway, FlagDefault, http2.ErrCodeFlowControl},
 			}
 
 			http2Conn := CreateHttp2Conn(ctx, true)
@@ -165,7 +170,10 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 				if err != nil {
 					opErr, ok := err.(*net.OpError)
 					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
-						actual = &ResultConnectionClose{}
+						rf, ok := actual.(*ResultFrame)
+						if actual == nil || (ok && rf.Type != http2.FrameGoAway) {
+							actual = &ResultConnectionClose{}
+						}
 					} else if err == TIMEOUT {
 						if actual == nil {
 							actual = &ResultTestTimeout{}
@@ -178,25 +186,27 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 
 				switch f := f.(type) {
 				case *http2.GoAwayFrame:
-					actual = &ResultFrame{f.Header().Type, FlagDefault, f.ErrCode}
+					actual = CreateResultFrame(f)
 					if f.ErrCode == http2.ErrCodeFlowControl {
+						pass = true
 						break loop
 					}
 				default:
-					actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+					actual = CreateResultFrame(f)
 				}
 			}
 
-			return expected, actual
+			return pass, expected, actual
 		},
 	))
 
 	tg.AddTestCase(NewTestCase(
 		"Sends multiple WINDOW_UPDATE frames on a stream increasing the flow control window to above 2^31-1",
 		"The endpoint MUST sends a RST_STREAM with the error code of FLOW_CONTROL_ERROR code.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			pass = false
 			expected = []Result{
-				&ResultFrame{http2.FrameRSTStream, FlagDefault, http2.ErrCodeFlowControl},
+				&ResultFrame{LengthDefault, http2.FrameRSTStream, FlagDefault, http2.ErrCodeFlowControl},
 			}
 
 			http2Conn := CreateHttp2Conn(ctx, true)
@@ -220,7 +230,10 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 				if err != nil {
 					opErr, ok := err.(*net.OpError)
 					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
-						actual = &ResultConnectionClose{}
+						rf, ok := actual.(*ResultFrame)
+						if actual == nil || (ok && rf.Type != http2.FrameGoAway) {
+							actual = &ResultConnectionClose{}
+						}
 					} else if err == TIMEOUT {
 						if actual == nil {
 							actual = &ResultTestTimeout{}
@@ -233,16 +246,17 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 
 				switch f := f.(type) {
 				case *http2.RSTStreamFrame:
-					actual = &ResultFrame{f.Header().Type, FlagDefault, f.ErrCode}
+					actual = CreateResultFrame(f)
 					if f.ErrCode == http2.ErrCodeFlowControl {
+						pass = true
 						break loop
 					}
 				default:
-					actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+					actual = CreateResultFrame(f)
 				}
 			}
 
-			return expected, actual
+			return pass, expected, actual
 		},
 	))
 
@@ -255,7 +269,7 @@ func InitialFlowControlWindowSizeTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a SETTINGS_INITIAL_WINDOW_SIZE settings with an exceeded maximum window size value",
 		"The endpoint MUST respond with a connection error of type FLOW_CONTROL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 

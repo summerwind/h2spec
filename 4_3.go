@@ -11,7 +11,7 @@ func HeaderCompressionAndDecompressionTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends invalid header block fragment",
 		"The endpoint MUST terminate the connection with a connection error of type COMPRESSION_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 

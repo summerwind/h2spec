@@ -23,7 +23,8 @@ func ConnectionErrorHandlingTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Receives a GOAWAY frame",
 		"After sending the GOAWAY frame, the endpoint MUST close the TCP connection.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			pass = false
 			expected = []Result{
 				&ResultConnectionClose{},
 			}
@@ -59,19 +60,20 @@ func ConnectionErrorHandlingTestGroup(ctx *Context) *TestGroup {
 						goaway = true
 					}
 				default:
-					actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+					actual = CreateResultFrame(f)
 				}
 			}
 
 			if goaway && closed && actual == nil {
 				actual = &ResultConnectionClose{}
+				pass = true
 			} else {
 				actual = &ResultError{
 					errors.New("Connection closed, but did not receive a GOAWAY Frame."),
 				}
 			}
 
-			return expected, actual
+			return pass, expected, actual
 		},
 	))
 

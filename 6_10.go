@@ -13,9 +13,10 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a CONTINUATION frame",
 		"The endpoint must accept the frame.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			pass = false
 			expected = []Result{
-				&ResultFrame{http2.FrameHeaders, FlagDefault, ErrCodeDefault},
+				&ResultFrame{LengthDefault, http2.FrameHeaders, FlagDefault, ErrCodeDefault},
 			}
 
 			http2Conn := CreateHttp2Conn(ctx, true)
@@ -41,7 +42,10 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 				if err != nil {
 					opErr, ok := err.(*net.OpError)
 					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
-						actual = &ResultConnectionClose{}
+						rf, ok := actual.(*ResultFrame)
+						if actual == nil || (ok && rf.Type != http2.FrameGoAway) {
+							actual = &ResultConnectionClose{}
+						}
 					} else if err == TIMEOUT {
 						if actual == nil {
 							actual = &ResultTestTimeout{}
@@ -52,23 +56,25 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 					break loop
 				}
 
-				actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+				actual = CreateResultFrame(f)
 				_, ok := f.(*http2.HeadersFrame)
 				if ok {
+					pass = true
 					break loop
 				}
 			}
 
-			return expected, actual
+			return pass, expected, actual
 		},
 	))
 
 	tg.AddTestCase(NewTestCase(
 		"Sends multiple CONTINUATION frames",
 		"The endpoint must accept the frames.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			pass = false
 			expected = []Result{
-				&ResultFrame{http2.FrameHeaders, FlagDefault, ErrCodeDefault},
+				&ResultFrame{LengthDefault, http2.FrameHeaders, FlagDefault, ErrCodeDefault},
 			}
 
 			http2Conn := CreateHttp2Conn(ctx, true)
@@ -99,7 +105,10 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 				if err != nil {
 					opErr, ok := err.(*net.OpError)
 					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
-						actual = &ResultConnectionClose{}
+						rf, ok := actual.(*ResultFrame)
+						if actual == nil || (ok && rf.Type != http2.FrameGoAway) {
+							actual = &ResultConnectionClose{}
+						}
 					} else if err == TIMEOUT {
 						if actual == nil {
 							actual = &ResultTestTimeout{}
@@ -110,21 +119,22 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 					break loop
 				}
 
-				actual = &ResultFrame{f.Header().Type, FlagDefault, ErrCodeDefault}
+				actual = CreateResultFrame(f)
 				_, ok := f.(*http2.HeadersFrame)
 				if ok {
+					pass = true
 					break loop
 				}
 			}
 
-			return expected, actual
+			return pass, expected, actual
 		},
 	))
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a CONTINUATION frame followed by any frame other than CONTINUATION",
 		"The endpoint MUST treat as a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -155,7 +165,7 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a CONTINUATION frame followed by a frame on a different stream",
 		"The endpoint MUST treat as a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -186,7 +196,7 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a CONTINUATION frame with the stream identifier that is 0x0",
 		"The endpoint MUST treat as a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -217,7 +227,7 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a CONTINUATION frame after the frame other than HEADERS, PUSH_PROMISE or CONTINUATION",
 		"The endpoint MUST treat as a connection error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 

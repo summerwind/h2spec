@@ -19,7 +19,7 @@ func HttpHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame that contains the header field name in uppercase letters",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -52,7 +52,7 @@ func PseudoHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame that contains the pseudo-header field defined for response",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -74,7 +74,7 @@ func PseudoHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame that contains the invalid pseudo-header field",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -96,7 +96,7 @@ func PseudoHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame that contains a pseudo-header field that appears in a header block after a regular header field",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -127,7 +127,7 @@ func ConnectionSpecificHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame that contains the connection-specific header field",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -149,7 +149,7 @@ func ConnectionSpecificHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame that contains the TE header field that contain any value other than \"trailers\"",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -178,7 +178,7 @@ func RequestPseudoHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame that omits mandatory pseudo-header fields",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -201,7 +201,7 @@ func RequestPseudoHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame containing more than one pseudo-header fields with the same name",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -230,7 +230,7 @@ func MalformedRequestsAndResponsesTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame that contains the \"content-length\" header field which does not equal the sum of the DATA frame payload lengths",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
@@ -254,7 +254,7 @@ func MalformedRequestsAndResponsesTestGroup(ctx *Context) *TestGroup {
 	tg.AddTestCase(NewTestCase(
 		"Sends a HEADERS frame that contains the \"content-length\" header field which does not equal the sum of the multiple DATA frame payload lengths",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
-		func(ctx *Context) (expected []Result, actual Result) {
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
