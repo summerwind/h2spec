@@ -70,7 +70,8 @@ type TestGroup struct {
 	numFailed    int // the number of failed test cases under this group
 }
 
-func (tg *TestGroup) Run(ctx *Context, level int) {
+func (tg *TestGroup) Run(ctx *Context, level int) bool {
+	pass := true
 	runMode := ctx.GetRunMode(tg.Section)
 
 	if runMode != ModeSkip {
@@ -81,6 +82,7 @@ func (tg *TestGroup) Run(ctx *Context, level int) {
 		for _, testCase := range tg.testCases {
 			switch testCase.Run(ctx, level+1) {
 			case Failed:
+				pass = false
 				tg.numFailed += 1
 			case Skipped:
 				tg.numSkipped += 1
@@ -92,8 +94,12 @@ func (tg *TestGroup) Run(ctx *Context, level int) {
 	}
 
 	for _, testGroup := range tg.testGroups {
-		testGroup.Run(ctx, level+1)
+		if !testGroup.Run(ctx, level+1) {
+			pass = false
+		}
 	}
+
+	return pass
 }
 
 // PrintFailedTestCase prints failed TestCase results under this
@@ -863,7 +869,9 @@ func printSummary(groups []*TestGroup) {
 	}
 }
 
-func Run(ctx *Context) {
+func Run(ctx *Context) bool {
+	pass := true
+
 	groups := []*TestGroup{
 		Http2ConnectionPrefaceTestGroup(ctx),
 		FrameSizeTestGroup(ctx),
@@ -886,8 +894,12 @@ func Run(ctx *Context) {
 	}
 
 	for _, group := range groups {
-		group.Run(ctx, 1)
+		if !group.Run(ctx, 1) {
+			pass = false
+		}
 	}
 
 	printSummary(groups)
+
+	return pass
 }

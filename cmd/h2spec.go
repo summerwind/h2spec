@@ -98,5 +98,7 @@ func main() {
 		}
 	}
 
-	h2spec.Run(&ctx)
+	if !h2spec.Run(&ctx) {
+		os.Exit(1)
+	}
 }
