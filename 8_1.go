@@ -33,7 +33,6 @@ func HttpRequestResponseExchangeTestGroup(ctx *Context) *TestGroup {
 			hp.EndHeaders = true
 			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 			http2Conn.fr.WriteHeaders(hp)
-			hdrs = append(hdrs, pair("X-TEST", "test"))
 
 		loop:
 			for {
@@ -65,6 +64,79 @@ func HttpRequestResponseExchangeTestGroup(ctx *Context) *TestGroup {
 				case *http2.HeadersFrame:
 					actual = CreateResultFrame(f)
 					if f.FrameHeader.Flags.Has(http2.FlagHeadersEndStream) {
+						pass = true
+						break loop
+					}
+				}
+				actual = CreateResultFrame(f)
+			}
+
+			return pass, expected, actual
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"Sends a HEADERS frame containing trailer part",
+		"The endpoint should respond with HEADERS frame.",
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			pass = false
+			expected = []Result{
+				&ResultFrame{LengthDefault, http2.FrameHeaders, http2.FlagHeadersEndStream, ErrCodeDefault},
+			}
+
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := commonHeaderFields(ctx)
+			hdrs[0].Value = "POST"
+			hdrs = append(hdrs, pair("content-length", "4"))
+			hdrs = append(hdrs, pair("content-type", "text/plain"))
+			hdrs = append(hdrs, pair("trailer", "x-test"))
+
+			var hp1 http2.HeadersFrameParam
+			hp1.StreamID = 1
+			hp1.EndStream = false
+			hp1.EndHeaders = true
+			hp1.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp1)
+
+			http2Conn.fr.WriteData(1, false, []byte("test"))
+
+			trailers := []hpack.HeaderField{
+				pair("x-test", "ok"),
+			}
+
+			var hp2 http2.HeadersFrameParam
+			hp2.StreamID = 1
+			hp2.EndStream = true
+			hp2.EndHeaders = true
+			hp2.BlockFragment = http2Conn.EncodeHeader(trailers)
+			http2Conn.fr.WriteHeaders(hp2)
+
+		loop:
+			for {
+				f, err := http2Conn.ReadFrame(ctx.Timeout)
+				if err != nil {
+					opErr, ok := err.(*net.OpError)
+					if err == io.EOF || (ok && opErr.Err == syscall.ECONNRESET) {
+						rf, ok := actual.(*ResultFrame)
+						if actual == nil || (ok && rf.Type != http2.FrameGoAway) {
+							actual = &ResultConnectionClose{}
+						}
+					} else if err == TIMEOUT {
+						if actual == nil {
+							actual = &ResultTestTimeout{}
+						}
+					} else {
+						actual = &ResultError{err}
+					}
+					break loop
+				}
+
+				switch f := f.(type) {
+				case *http2.HeadersFrame:
+					actual = CreateResultFrame(f)
+					if f.FrameHeader.Flags.Has(http2.FlagHeadersEndHeaders) {
 						pass = true
 						break loop
 					}
