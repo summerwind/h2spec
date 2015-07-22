@@ -114,7 +114,7 @@ func (tg *TestGroup) PrintFailedTestCase(level int) {
 	numTestCaseFailed := 0
 	for _, tc := range tg.testCases {
 		if tc.failed {
-			tc.PrintError(tc.expected, tc.actual, level+1)
+			tc.PrintFail(tc.expected, tc.actual, level+1)
 			numTestCaseFailed += 1
 		}
 	}
@@ -210,11 +210,11 @@ func (tc *TestCase) Run(ctx *Context, level int) TestResult {
 	tc.actual = actual
 
 	if pass {
-		tc.PrintResult(level)
+		tc.PrintPass(level)
 		return Passed
 	} else {
 		tc.failed = true
-		tc.PrintError(expected, actual, level)
+		tc.PrintFail(expected, actual, level)
 		return Failed
 	}
 }
@@ -228,13 +228,13 @@ func (tc *TestCase) PrintEphemeralDesc(level int) {
 	fmt.Printf("%s  \x1b[90m%s\x1b[0m", indent, tc.Desc)
 }
 
-func (tc *TestCase) PrintResult(level int) {
+func (tc *TestCase) PrintPass(level int) {
 	mark := "✓"
 	indent := strings.Repeat("  ", level)
 	fmt.Printf("\r%s\x1b[32m%s\x1b[0m \x1b[90m%s\x1b[0m\n", indent, mark, tc.Desc)
 }
 
-func (tc *TestCase) PrintError(expected []Result, actual Result, level int) {
+func (tc *TestCase) PrintFail(expected []Result, actual Result, level int) {
 	mark := "×"
 	indent := strings.Repeat("  ", level)
 
@@ -442,10 +442,7 @@ func CreateTcpConn(ctx *Context) *TcpConn {
 	}
 
 	if err != nil {
-		fmt.Printf("\x1b[31m")
-		fmt.Printf(" -> Unable to connect to the target server (%v)", err)
-		fmt.Printf("\x1b[0m")
-		fmt.Println("")
+		printError(fmt.Sprintf("Unable to connect to the target server (%v)", err))
 		os.Exit(1)
 	}
 
@@ -484,10 +481,7 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 	}
 
 	if err != nil {
-		fmt.Printf("\x1b[31m")
-		fmt.Printf(" -> Unable to connect to the target server (%v)", err)
-		fmt.Printf("\x1b[0m")
-		fmt.Println("")
+		printError(fmt.Sprintf("Unable to connect to the target server (%v)", err))
 		os.Exit(1)
 	}
 
@@ -537,10 +531,10 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 		case <-doneCh:
 			// Nothing to do.
 		case <-errCh:
-			fmt.Println("HTTP/2 settings negotiation failed")
+			printError("HTTP/2 settings negotiation failed")
 			os.Exit(1)
 		case <-time.After(ctx.Timeout):
-			fmt.Println("HTTP/2 settings negotiation timeout")
+			printError("HTTP/2 settings negotiation timeout")
 			os.Exit(1)
 		}
 	}
@@ -828,6 +822,12 @@ func dummyData(num int) string {
 
 func pair(name, value string) hpack.HeaderField {
 	return hpack.HeaderField{Name: name, Value: value}
+}
+
+func printError(err string) {
+	fmt.Printf("\n\n\x1b[31m")
+	fmt.Printf("ERROR: %s", err)
+	fmt.Printf("\x1b[0m\n")
 }
 
 // printSummary prints out the test summary of all tests performed.
