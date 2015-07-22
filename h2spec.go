@@ -436,7 +436,10 @@ func CreateTcpConn(ctx *Context) *TcpConn {
 	}
 
 	if err != nil {
-		fmt.Printf("Unable to connect to the target server: %v\n", err)
+		fmt.Printf("\x1b[31m")
+		fmt.Printf(" -> Unable to connect to the target server (%v)", err)
+		fmt.Printf("\x1b[0m")
+		fmt.Println("")
 		os.Exit(1)
 	}
 
@@ -475,7 +478,10 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 	}
 
 	if err != nil {
-		fmt.Printf("Unable to connect to the target server: %v\n", err)
+		fmt.Printf("\x1b[31m")
+		fmt.Printf(" -> Unable to connect to the target server (%v)", err)
+		fmt.Printf("\x1b[0m")
+		fmt.Println("")
 		os.Exit(1)
 	}
 
