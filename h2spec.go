@@ -410,7 +410,9 @@ func connectTls(ctx *Context) (net.Conn, error) {
 		ctx.TlsConfig.NextProtos = append(ctx.TlsConfig.NextProtos, "h2-14", "h2-15", "h2-16", "h2")
 	}
 
-	conn, err := tls.Dial("tcp", ctx.Authority(), ctx.TlsConfig)
+	dialer := new(net.Dialer)
+	dialer.Timeout = ctx.Timeout
+	conn, err := tls.DialWithDialer(dialer, "tcp", ctx.Authority(), ctx.TlsConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -430,7 +432,7 @@ func CreateTcpConn(ctx *Context) *TcpConn {
 	if ctx.Tls {
 		conn, err = connectTls(ctx)
 	} else {
-		conn, err = net.Dial("tcp", ctx.Authority())
+		conn, err = net.DialTimeout("tcp", ctx.Authority(), ctx.Timeout)
 	}
 
 	if err != nil {
@@ -469,7 +471,7 @@ func CreateHttp2Conn(ctx *Context, sn bool) *Http2Conn {
 	if ctx.Tls {
 		conn, err = connectTls(ctx)
 	} else {
-		conn, err = net.Dial("tcp", ctx.Authority())
+		conn, err = net.DialTimeout("tcp", ctx.Authority(), ctx.Timeout)
 	}
 
 	if err != nil {
