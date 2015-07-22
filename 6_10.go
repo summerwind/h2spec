@@ -240,7 +240,7 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
 			http2Conn.fr.WriteHeaders(hp)
 
-			http2Conn.fr.WriteData(1, true, []byte("test"))
+			http2Conn.fr.WriteData(1, false, []byte("test"))
 			http2Conn.fr.WriteContinuation(1, true, http2Conn.EncodeHeader(hdrs))
 
 			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
