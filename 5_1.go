@@ -127,20 +127,18 @@ func StreamStatesTestGroup(ctx *Context) *TestGroup {
 			defer http2Conn.conn.Close()
 
 			hdrs := commonHeaderFields(ctx)
-			hdrs = append(hdrs, pair("x-dummy1", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy2", dummyData(10000)))
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
 			hp.EndStream = true
 			hp.EndHeaders = true
-			hp.BlockFragment = blockFragment[0:16384]
+			hp.BlockFragment = blockFragment
 			http2Conn.fr.WriteHeaders(hp)
 
-			http2Conn.fr.WriteContinuation(1, true, blockFragment[16384:])
+			http2Conn.fr.WriteContinuation(1, true, blockFragment)
 
-			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed}
+			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed, http2.ErrCodeProtocol}
 			return TestStreamError(ctx, http2Conn, actualCodes)
 		},
 	))
@@ -235,7 +233,7 @@ func StreamStatesTestGroup(ctx *Context) *TestGroup {
 
 			http2Conn.fr.WriteContinuation(1, true, blockFragment[16384:])
 
-			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed}
+			actualCodes := []http2.ErrCode{http2.ErrCodeStreamClosed, http2.ErrCodeProtocol}
 			return TestStreamError(ctx, http2Conn, actualCodes)
 		},
 	))
