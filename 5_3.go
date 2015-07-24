@@ -25,12 +25,12 @@ func StreamDependenciesTestGroup(ctx *Context) *TestGroup {
 			hdrs := commonHeaderFields(ctx)
 
 			var pp http2.PriorityParam
-			pp.StreamDep = 2
+			pp.StreamDep = 3
 			pp.Exclusive = false
 			pp.Weight = 255
 
 			var hp http2.HeadersFrameParam
-			hp.StreamID = 2
+			hp.StreamID = 3
 			hp.EndStream = true
 			hp.EndHeaders = true
 			hp.Priority = pp
