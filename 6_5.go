@@ -23,8 +23,12 @@ func SettingsTestGroup(ctx *Context) *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			settings := http2.Setting{http2.SettingMaxConcurrentStreams, 100}
-			http2Conn.fr.WriteSettings(settings)
+			settings := []http2.Setting{
+				http2.Setting{http2.SettingMaxConcurrentStreams, 100},
+				// sends 4GiB size for sanity check
+				http2.Setting{http2.SettingHeaderTableSize, ^uint32(0)},
+			}
+			http2Conn.fr.WriteSettings(settings...)
 
 		loop:
 			for {
