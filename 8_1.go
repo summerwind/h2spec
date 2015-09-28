@@ -148,6 +148,37 @@ func HttpRequestResponseExchangeTestGroup(ctx *Context) *TestGroup {
 		},
 	))
 
+	tg.AddTestCase(NewTestCase(
+		"Sends a second HEADERS frame without the END_STREAM flag",
+		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := commonHeaderFields(ctx)
+			hdrs[0].Value = "POST"
+			hdrs = append(hdrs, pair("trailer", "x-test"))
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = false
+			hp.EndHeaders = true
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp)
+
+			http2Conn.fr.WriteData(1, false, []byte("test"))
+
+			trailers := []hpack.HeaderField{
+				pair("x-test", "ok"),
+			}
+			hp.BlockFragment = http2Conn.EncodeHeader(trailers)
+			http2Conn.fr.WriteHeaders(hp)
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
 	tg.AddTestGroup(HttpHeaderFieldsTestGroup(ctx))
 
 	return tg
