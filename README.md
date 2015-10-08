@@ -11,7 +11,7 @@ Go to the [releases page](https://github.com/summerwind/h2spec/releases), find t
 
 1. Make sure you have go 1.4 and set GOPATH appropriately
 2. Clone this repo and move to the cloned repo directory
-3. Run `go get github.com/bradfitz/http2`
+3. Run `go get golang.org/x/net/http2`
 4. Run `go build cmd/h2spec.go`
 
 ## Usage

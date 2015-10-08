@@ -1,7 +1,7 @@
 package h2spec
 
 import (
-	"github.com/bradfitz/http2"
+	"golang.org/x/net/http2"
 	"io"
 	"net"
 	"syscall"
