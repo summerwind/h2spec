@@ -3,8 +3,8 @@ package h2spec
 import (
 	"bytes"
 	"fmt"
-	"github.com/bradfitz/http2"
-	"github.com/bradfitz/http2/hpack"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/hpack"
 )
 
 func HeadersTestGroup(ctx *Context) *TestGroup {
