@@ -13,11 +13,11 @@ func PingTestGroup(ctx *Context) *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends a PING frame",
-		"The endpoint MUST sends a PING frame with ACK.",
+		"The endpoint MUST sends a PING frame with ACK, with an identical payload.",
 		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			pass = false
 			expected = []Result{
-				&ResultFrame{LengthDefault, http2.FramePing, http2.FlagPingAck, ErrCodeDefault},
+				&ResultFrame{8, http2.FramePing, http2.FlagPingAck, ErrCodeDefault},
 			}
 
 			http2Conn := CreateHttp2Conn(ctx, true)
@@ -48,7 +48,7 @@ func PingTestGroup(ctx *Context) *TestGroup {
 				switch f := f.(type) {
 				case *http2.PingFrame:
 					actual = CreateResultFrame(f)
-					if f.FrameHeader.Flags.Has(http2.FlagPingAck) {
+					if f.FrameHeader.Flags.Has(http2.FlagPingAck) && f.Data == data {
 						pass = true
 						break loop
 					}
