@@ -9,10 +9,13 @@ Go to the [releases page](https://github.com/summerwind/h2spec/releases), find t
 
 ## Build
 
-1. Make sure you have go 1.4 and set GOPATH appropriately
-2. Clone this repo and move to the cloned repo directory
-3. Run `go get golang.org/x/net/http2`
-4. Run `go build cmd/h2spec.go`
+1. Make sure you have go 1.5 and set GOPATH appropriately
+2. Run `go get github.com/summerwind/h2spec/cmd/h2spec`
+
+It is also possible to build specific version.
+
+1. Make sure you have go 1.5 and set GOPATH appropriately
+2. Run `go get gopkg.in/summerwind/h2spec.v1/cmd/h2spec`
 
 ## Usage
 
