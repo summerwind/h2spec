@@ -57,7 +57,7 @@ func (ctx *Context) GetRunMode(section string) RunMode {
 }
 
 type Test interface {
-	Run(*Context, int)
+	Run(*Context)
 }
 
 type TestGroup struct {
@@ -70,17 +70,19 @@ type TestGroup struct {
 	numFailed    int // the number of failed test cases under this group
 }
 
-func (tg *TestGroup) Run(ctx *Context, level int) bool {
+func (tg *TestGroup) Run(ctx *Context) bool {
 	pass := true
 	runMode := ctx.GetRunMode(tg.Section)
 
+	logger.LevelUp()
+
 	if runMode != ModeSkip {
-		tg.PrintHeader(level)
+		tg.PrintHeader()
 	}
 
 	if runMode == ModeAll {
 		for _, testCase := range tg.testCases {
-			switch testCase.Run(ctx, level+1) {
+			switch testCase.Run(ctx) {
 			case Failed:
 				pass = false
 				tg.numFailed += 1
@@ -88,44 +90,53 @@ func (tg *TestGroup) Run(ctx *Context, level int) bool {
 				tg.numSkipped += 1
 			}
 		}
-		tg.PrintFooter(level)
+		tg.PrintFooter()
 	} else {
 		tg.numSkipped += tg.numTestCases
 	}
 
 	for _, testGroup := range tg.testGroups {
-		if !testGroup.Run(ctx, level+1) {
+		if !testGroup.Run(ctx) {
 			pass = false
 		}
 	}
+
+	logger.LevelDown()
 
 	return pass
 }
 
 // PrintFailedTestCase prints failed TestCase results under this
 // TestGroup.
-func (tg *TestGroup) PrintFailedTestCase(level int) {
+func (tg *TestGroup) PrintFailedTestCase(ctx *Context) {
 	if tg.CountFailed() == 0 {
 		return
 	}
 
-	tg.PrintHeader(level)
+	logger.LevelUp()
+	tg.PrintHeader()
 
 	numTestCaseFailed := 0
 	for _, tc := range tg.testCases {
 		if tc.failed {
-			tc.PrintFail(tc.expected, tc.actual, level+1)
+			logger.LevelUp()
+
+			tc.PrintFail(tc.expected, tc.actual)
 			numTestCaseFailed += 1
+
+			logger.LevelDown()
 		}
 	}
 
 	if numTestCaseFailed > 0 {
-		fmt.Println("")
+		logger.WriteBlank()
 	}
 
 	for _, testGroup := range tg.testGroups {
-		testGroup.PrintFailedTestCase(level + 1)
+		testGroup.PrintFailedTestCase(ctx)
 	}
+
+	logger.LevelDown()
 }
 
 func (tg *TestGroup) AddTestCase(testCase *TestCase) {
@@ -164,25 +175,15 @@ func (tg *TestGroup) CountFailed() int {
 	return num
 }
 
-func (tg *TestGroup) PrintHeader(level int) {
-	indent := strings.Repeat("  ", level)
-	fmt.Printf("%s%s. %s\n", indent, tg.Section, tg.Name)
+func (tg *TestGroup) PrintHeader() {
+	logger.Write("%s. %s\n", tg.Section, tg.Name)
 }
 
-func (tg *TestGroup) PrintFooter(level int) {
+func (tg *TestGroup) PrintFooter() {
 	if len(tg.testCases) == 0 {
 		return
 	}
-	fmt.Println("")
-}
-
-type TestCase struct {
-	Desc     string
-	Spec     string
-	handler  func(*Context) (bool, []Result, Result)
-	failed   bool     // true if test failed
-	expected []Result // expected result
-	actual   Result   // actual result
+	logger.WriteBlank()
 }
 
 type TestResult int
@@ -194,13 +195,25 @@ const (
 	Passed
 )
 
-func (tc *TestCase) Run(ctx *Context, level int) TestResult {
-	tc.PrintEphemeralDesc(level)
+type TestCase struct {
+	Desc     string
+	Spec     string
+	handler  func(*Context) (bool, []Result, Result)
+	failed   bool     // true if test failed
+	expected []Result // expected result
+	actual   Result   // actual result
+}
+
+func (tc *TestCase) Run(ctx *Context) TestResult {
+	logger.LevelUp()
+
+	tc.PrintEphemeralDesc()
 
 	pass, expected, actual := tc.handler(ctx)
 	_, ok := actual.(*ResultSkipped)
 	if ok {
-		tc.PrintSkipped(actual, level)
+		tc.PrintSkipped(actual)
+		logger.LevelDown()
 		return Skipped
 	}
 
@@ -210,11 +223,13 @@ func (tc *TestCase) Run(ctx *Context, level int) TestResult {
 	tc.actual = actual
 
 	if pass {
-		tc.PrintPass(level)
+		tc.PrintPass()
+		logger.LevelDown()
 		return Passed
 	} else {
 		tc.failed = true
-		tc.PrintFail(expected, actual, level)
+		tc.PrintFail(expected, actual)
+		logger.LevelDown()
 		return Failed
 	}
 }
@@ -223,25 +238,28 @@ func (tc *TestCase) HandleFunc(handler func(*Context) (bool, []Result, Result)) 
 	tc.handler = handler
 }
 
-func (tc *TestCase) PrintEphemeralDesc(level int) {
-	indent := strings.Repeat("  ", level)
-	fmt.Printf("%s  \x1b[90m%s\x1b[0m", indent, tc.Desc)
+func (tc *TestCase) PrintEphemeralDesc() {
+	logger.SetColor("gray")
+	logger.Write("  %s", tc.Desc)
+	logger.ResetColor()
 }
 
-func (tc *TestCase) PrintPass(level int) {
+func (tc *TestCase) PrintPass() {
 	mark := "✓"
-	indent := strings.Repeat("  ", level)
-	fmt.Printf("\r%s\x1b[32m%s\x1b[0m \x1b[90m%s\x1b[0m\n", indent, mark, tc.Desc)
+	logger.Clear()
+	logger.Write("\x1b[32m%s\x1b[0m \x1b[90m%s\x1b[0m\n", mark, tc.Desc)
 }
 
-func (tc *TestCase) PrintFail(expected []Result, actual Result, level int) {
+func (tc *TestCase) PrintFail(expected []Result, actual Result) {
 	mark := "×"
-	indent := strings.Repeat("  ", level)
 
-	fmt.Printf("\r\x1b[31m")
-	fmt.Printf("%s%s %s\n", indent, mark, tc.Desc)
-	fmt.Printf("%s  - %s\n", indent, tc.Spec)
-	fmt.Printf("\x1b[32m")
+	logger.Clear()
+
+	logger.SetColor("red")
+	logger.Write("%s %s\n", mark, tc.Desc)
+	logger.Write("  - %s\n", tc.Spec)
+
+	logger.SetColor("green")
 	for i, exp := range expected {
 		var lavel string
 		if i == 0 {
@@ -249,21 +267,23 @@ func (tc *TestCase) PrintFail(expected []Result, actual Result, level int) {
 		} else {
 			lavel = strings.Repeat(" ", 9)
 		}
-		fmt.Printf("%s    %s %s\n", indent, lavel, exp)
+		logger.Write("    %s %s\n", lavel, exp)
 	}
-	fmt.Printf("\x1b[33m")
-	fmt.Printf("%s      Actual: %s\n", indent, actual)
-	fmt.Printf("\x1b[0m")
+
+	logger.SetColor("yellow")
+	logger.Write("      Actual: %s\n", actual)
+	logger.ResetColor()
 }
 
-func (tc *TestCase) PrintSkipped(actual Result, level int) {
+func (tc *TestCase) PrintSkipped(actual Result) {
 	mark := " "
-	indent := strings.Repeat("  ", level)
 
-	fmt.Printf("\r\x1b[36m")
-	fmt.Printf("%s%s %s\n", indent, mark, tc.Desc)
-	fmt.Printf("%s  - %s\n", indent, actual)
-	fmt.Printf("\x1b[0m")
+	logger.Clear()
+
+	logger.SetColor("cyan")
+	logger.Write("%s %s\n", mark, tc.Desc)
+	logger.Write("  - %s\n", actual)
+	logger.ResetColor()
 }
 
 func NewTestGroup(section, name string) *TestGroup {
@@ -280,6 +300,54 @@ func NewTestCase(desc, spec string, handler func(*Context) (bool, []Result, Resu
 		handler: handler,
 	}
 }
+
+type Logger struct {
+	IndentLevel int
+}
+
+func (log *Logger) Write(format string, a ...interface{}) {
+	indent := strings.Repeat("  ", log.IndentLevel)
+	fmt.Printf("%s%s", indent, fmt.Sprintf(format, a...))
+}
+
+func (log *Logger) WriteBlank() {
+	fmt.Println("")
+}
+
+func (log *Logger) Clear() {
+	fmt.Printf("\r")
+}
+
+func (Log *Logger) SetColor(color string) {
+	switch color {
+	case "green":
+		fmt.Printf("\x1b[32m")
+	case "red":
+		fmt.Printf("\x1b[31m")
+	case "yellow":
+		fmt.Printf("\x1b[33m")
+	case "cyan":
+		fmt.Printf("\x1b[36m")
+	case "gray":
+		fmt.Printf("\x1b[90m")
+	}
+}
+
+func (Log *Logger) ResetColor() {
+	fmt.Printf("\x1b[0m")
+}
+
+func (log *Logger) LevelUp() {
+	log.IndentLevel++
+}
+
+func (log *Logger) LevelDown() {
+	if log.IndentLevel > 0 {
+		log.IndentLevel--
+	}
+}
+
+var logger *Logger = &Logger{0}
 
 var LengthDefault uint32 = math.MaxUint32
 var FlagDefault http2.Flags = math.MaxUint8
@@ -825,13 +893,13 @@ func pair(name, value string) hpack.HeaderField {
 }
 
 func printError(err string) {
-	fmt.Printf("\n\n\x1b[31m")
-	fmt.Printf("ERROR: %s", err)
-	fmt.Printf("\x1b[0m\n")
+	logger.SetColor("red")
+	logger.Write("\n\nERROR: %s", err)
+	logger.ResetColor()
 }
 
 // printSummary prints out the test summary of all tests performed.
-func printSummary(groups []*TestGroup) {
+func printSummary(ctx *Context, groups []*TestGroup) {
 	numTestCases := 0
 	numSkipped := 0
 	numFailed := 0
@@ -844,26 +912,26 @@ func printSummary(groups []*TestGroup) {
 
 	numPassed := numTestCases - numSkipped - numFailed
 
-	fmt.Printf("\x1b[90m")
-	fmt.Printf("%v tests, %v passed, %v skipped, %v failed\n", numTestCases, numPassed, numSkipped, numFailed)
-	fmt.Printf("\x1b[0m")
+	logger.SetColor("gray")
+	logger.Write("%v tests, %v passed, %v skipped, %v failed\n", numTestCases, numPassed, numSkipped, numFailed)
+	logger.ResetColor()
 
 	if numFailed == 0 {
-		fmt.Printf("\x1b[90m")
-		fmt.Printf("All tests passed\n")
-		fmt.Printf("\x1b[0m")
+		logger.SetColor("gray")
+		logger.Write("All tests passed\n")
+		logger.ResetColor()
 	} else {
-		fmt.Println("")
-		fmt.Printf("\x1b[31m")
-		fmt.Println("===============================================================================")
-		fmt.Println("Failed tests")
-		fmt.Println("===============================================================================")
-		fmt.Printf("\x1b[0m")
-		fmt.Println("")
+		logger.WriteBlank()
+		logger.SetColor("red")
+		logger.Write("===============================================================================\n")
+		logger.Write("Failed tests\n")
+		logger.Write("===============================================================================\n")
+		logger.WriteBlank()
+		logger.ResetColor()
 
 		if numFailed > 0 {
 			for _, tg := range groups {
-				tg.PrintFailedTestCase(1)
+				tg.PrintFailedTestCase(ctx)
 			}
 		}
 	}
@@ -894,12 +962,12 @@ func Run(ctx *Context) bool {
 	}
 
 	for _, group := range groups {
-		if !group.Run(ctx, 1) {
+		if !group.Run(ctx) {
 			pass = false
 		}
 	}
 
-	printSummary(groups)
+	printSummary(ctx, groups)
 
 	return pass
 }
