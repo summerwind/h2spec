@@ -52,6 +52,9 @@ func PingTestGroup(ctx *Context) *TestGroup {
 						pass = true
 						break loop
 					}
+				case *http2.GoAwayFrame:
+					actual = CreateResultFrame(f)
+					break loop
 				default:
 					actual = CreateResultFrame(f)
 				}

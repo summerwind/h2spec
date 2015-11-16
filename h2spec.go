@@ -34,6 +34,7 @@ type Context struct {
 	TlsConfig *tls.Config
 	Sections  map[string]bool
 	Timeout   time.Duration
+	Verbose   bool
 }
 
 func (ctx *Context) Authority() string {
@@ -709,8 +710,8 @@ loop:
 			actual = CreateResultFrame(f)
 			if TestErrorCode(f.ErrCode, codes) {
 				pass = true
-				break loop
 			}
+			break loop
 		default:
 			actual = CreateResultFrame(f)
 		}
@@ -754,14 +755,14 @@ loop:
 			actual = CreateResultFrame(f)
 			if TestErrorCode(f.ErrCode, codes) {
 				pass = true
-				break loop
 			}
+			break loop
 		case *http2.RSTStreamFrame:
 			actual = CreateResultFrame(f)
 			if TestErrorCode(f.ErrCode, codes) {
 				pass = true
-				break loop
 			}
+			break loop
 		default:
 			actual = CreateResultFrame(f)
 		}

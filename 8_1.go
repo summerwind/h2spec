@@ -67,6 +67,12 @@ func HttpRequestResponseExchangeTestGroup(ctx *Context) *TestGroup {
 						pass = true
 						break loop
 					}
+				case *http2.GoAwayFrame:
+					actual = CreateResultFrame(f)
+					break loop
+				case *http2.RSTStreamFrame:
+					actual = CreateResultFrame(f)
+					break loop
 				}
 				actual = CreateResultFrame(f)
 			}
@@ -140,6 +146,12 @@ func HttpRequestResponseExchangeTestGroup(ctx *Context) *TestGroup {
 						pass = true
 						break loop
 					}
+				case *http2.GoAwayFrame:
+					actual = CreateResultFrame(f)
+					break loop
+				case *http2.RSTStreamFrame:
+					actual = CreateResultFrame(f)
+					break loop
 				}
 				actual = CreateResultFrame(f)
 			}

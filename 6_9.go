@@ -80,6 +80,12 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 						http2Conn.fr.WriteWindowUpdate(1, 10)
 						winUpdated = true
 					}
+				case *http2.GoAwayFrame:
+					actual = CreateResultFrame(f)
+					break loop
+				case *http2.RSTStreamFrame:
+					actual = CreateResultFrame(f)
+					break loop
 				default:
 					actual = CreateResultFrame(f)
 				}
@@ -189,8 +195,8 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 					actual = CreateResultFrame(f)
 					if f.ErrCode == http2.ErrCodeFlowControl {
 						pass = true
-						break loop
 					}
+					break loop
 				default:
 					actual = CreateResultFrame(f)
 				}
@@ -245,12 +251,15 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 				}
 
 				switch f := f.(type) {
+				case *http2.GoAwayFrame:
+					actual = CreateResultFrame(f)
+					break loop
 				case *http2.RSTStreamFrame:
 					actual = CreateResultFrame(f)
 					if f.ErrCode == http2.ErrCodeFlowControl {
 						pass = true
-						break loop
 					}
+					break loop
 				default:
 					actual = CreateResultFrame(f)
 				}
