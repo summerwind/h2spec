@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const VERSION = "v1.2.0"
+const VERSION = "v1.3.0"
 
 type sections []string
 
