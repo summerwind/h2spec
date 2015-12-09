@@ -61,7 +61,13 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 				switch f := f.(type) {
 				case *http2.DataFrame:
 					if winUpdated {
-						if f.FrameHeader.Length > 10 {
+						// Let's skip this test if the DATA frame has END_STREAM flag.
+						if f.FrameHeader.Flags.Has(http2.FlagDataEndStream) {
+							actual = &ResultSkipped{"The length of DATA frame is 0."}
+							return true, nil, actual
+						}
+
+						if f.FrameHeader.Length != 1 {
 							err := errors.New("The length of DATA frame is invalid.")
 							actual = &ResultError{err}
 							break loop
@@ -71,13 +77,19 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 						pass = true
 						break loop
 					} else {
+						// Let's skip this test if the DATA frame has END_STREAM flag.
+						if f.FrameHeader.Flags.Has(http2.FlagDataEndStream) {
+							actual = &ResultSkipped{"The length of DATA frame is 0."}
+							return true, nil, actual
+						}
+
 						if f.FrameHeader.Length != 1 {
 							err := errors.New("The length of DATA frame is invalid.")
 							actual = &ResultError{err}
 							break loop
 						}
 
-						http2Conn.fr.WriteWindowUpdate(1, 10)
+						http2Conn.fr.WriteWindowUpdate(1, 1)
 						winUpdated = true
 					}
 				case *http2.GoAwayFrame:
