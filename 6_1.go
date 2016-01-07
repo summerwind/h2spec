@@ -23,7 +23,7 @@ func DataTestGroup(ctx *Context) *TestGroup {
 	))
 
 	tg.AddTestCase(NewTestCase(
-		"Sends a DATA frame on the stream that is not opend",
+		"Sends a DATA frame on the stream that is not opened",
 		"The endpoint MUST respond with a stream error of type STREAM_CLOSED.",
 		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
