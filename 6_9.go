@@ -225,6 +225,7 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 			pass = false
 			expected = []Result{
 				&ResultFrame{LengthDefault, http2.FrameRSTStream, FlagDefault, http2.ErrCodeFlowControl},
+				&ResultFrame{LengthDefault, http2.FrameGoAway, FlagDefault, http2.ErrCodeFlowControl},
 			}
 
 			http2Conn := CreateHttp2Conn(ctx, true)
@@ -265,6 +266,9 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 				switch f := f.(type) {
 				case *http2.GoAwayFrame:
 					actual = CreateResultFrame(f)
+					if f.ErrCode == http2.ErrCodeFlowControl {
+						pass = true
+					}
 					break loop
 				case *http2.RSTStreamFrame:
 					actual = CreateResultFrame(f)
