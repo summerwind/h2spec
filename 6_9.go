@@ -220,7 +220,7 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends multiple WINDOW_UPDATE frames on a stream increasing the flow control window to above 2^31-1",
-		"The endpoint MUST sends a RST_STREAM with the error code of FLOW_CONTROL_ERROR code.",
+		"The endpoint MUST send a RST_STREAM with the error code of FLOW_CONTROL_ERROR code.",
 		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			pass = false
 			expected = []Result{
