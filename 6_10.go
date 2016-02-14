@@ -23,8 +23,11 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 			defer http2Conn.conn.Close()
 
 			hdrs := commonHeaderFields(ctx)
-			hdrs = append(hdrs, pair("x-dummy1", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy2", dummyData(10000)))
+			hdrs = append(hdrs, pair("x-dummy1", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy2", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy3", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy4", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy5", dummyData(4096)))
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
 			var hp http2.HeadersFrameParam
@@ -81,11 +84,16 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 			defer http2Conn.conn.Close()
 
 			hdrs := commonHeaderFields(ctx)
-			hdrs = append(hdrs, pair("x-dummy1", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy2", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy3", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy4", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy5", dummyData(10000)))
+			hdrs = append(hdrs, pair("x-dummy1", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy2", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy3", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy4", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy5", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy6", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy7", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy8", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy9", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy10", dummyData(4096)))
 
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
@@ -139,11 +147,16 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 			defer http2Conn.conn.Close()
 
 			hdrs := commonHeaderFields(ctx)
-			hdrs = append(hdrs, pair("x-dummy1", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy2", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy3", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy4", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy5", dummyData(10000)))
+			hdrs = append(hdrs, pair("x-dummy1", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy2", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy3", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy4", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy5", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy6", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy7", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy8", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy9", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy10", dummyData(4096)))
 
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
@@ -170,11 +183,16 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 			defer http2Conn.conn.Close()
 
 			hdrs := commonHeaderFields(ctx)
-			hdrs = append(hdrs, pair("x-dummy1", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy2", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy3", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy4", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy5", dummyData(10000)))
+			hdrs = append(hdrs, pair("x-dummy1", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy2", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy3", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy4", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy5", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy6", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy7", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy8", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy9", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy10", dummyData(4096)))
 
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
@@ -201,11 +219,16 @@ func ContinuationTestGroup(ctx *Context) *TestGroup {
 			defer http2Conn.conn.Close()
 
 			hdrs := commonHeaderFields(ctx)
-			hdrs = append(hdrs, pair("x-dummy1", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy2", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy3", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy4", dummyData(10000)))
-			hdrs = append(hdrs, pair("x-dummy5", dummyData(10000)))
+			hdrs = append(hdrs, pair("x-dummy1", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy2", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy3", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy4", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy5", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy6", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy7", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy8", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy9", dummyData(4096)))
+			hdrs = append(hdrs, pair("x-dummy10", dummyData(4096)))
 
 			blockFragment := http2Conn.EncodeHeader(hdrs)
 
