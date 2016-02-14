@@ -882,11 +882,11 @@ func commonHeaderFields(ctx *Context) []hpack.HeaderField {
 }
 
 func dummyData(num int) string {
-	var data string
+	var buffer bytes.Buffer
 	for i := 0; i < num; i++ {
-		data += "x"
+		buffer.WriteString("x")
 	}
-	return data
+	return buffer.String()
 }
 
 func pair(name, value string) hpack.HeaderField {
