@@ -220,11 +220,12 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 
 	tg.AddTestCase(NewTestCase(
 		"Sends multiple WINDOW_UPDATE frames on a stream increasing the flow control window to above 2^31-1",
-		"The endpoint MUST sends a RST_STREAM with the error code of FLOW_CONTROL_ERROR code.",
+		"The endpoint MUST send a RST_STREAM with the error code of FLOW_CONTROL_ERROR code.",
 		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			pass = false
 			expected = []Result{
 				&ResultFrame{LengthDefault, http2.FrameRSTStream, FlagDefault, http2.ErrCodeFlowControl},
+				&ResultFrame{LengthDefault, http2.FrameGoAway, FlagDefault, http2.ErrCodeFlowControl},
 			}
 
 			http2Conn := CreateHttp2Conn(ctx, true)
@@ -265,6 +266,9 @@ func TheFlowControlWindowTestGroup(ctx *Context) *TestGroup {
 				switch f := f.(type) {
 				case *http2.GoAwayFrame:
 					actual = CreateResultFrame(f)
+					if f.ErrCode == http2.ErrCodeFlowControl {
+						pass = true
+					}
 					break loop
 				case *http2.RSTStreamFrame:
 					actual = CreateResultFrame(f)
