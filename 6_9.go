@@ -59,6 +59,15 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 				}
 
 				switch f := f.(type) {
+				case *http2.HeadersFrame:
+					if f.StreamEnded() {
+						actual = &ResultSkipped{"Only received HEADERS frame."}
+						return true, nil, actual
+					}
+				case *http2.SettingsFrame:
+					if !f.IsAck() {
+						// What to do about unknown settings?
+					}
 				case *http2.DataFrame:
 					if winUpdated {
 						// Let's skip this test if the DATA frame has END_STREAM flag.
