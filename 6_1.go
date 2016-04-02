@@ -65,7 +65,7 @@ func DataTestGroup(ctx *Context) *TestGroup {
 			http2Conn.fr.WriteHeaders(hp)
 
 			// Data length: 5, Pad length: 6
-			fmt.Fprintf(http2Conn.conn, "\x00\x00\x05\x00\x0b\x00\x00\x00\x01")
+			fmt.Fprintf(http2Conn.conn, "\x00\x00\x05\x00\x09\x00\x00\x00\x01")
 			fmt.Fprintf(http2Conn.conn, "\x06\x54\x65\x73\x74")
 
 			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
