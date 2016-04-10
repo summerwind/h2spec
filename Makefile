@@ -11,21 +11,9 @@ all:
 	zip h2spec_linux_amd64.zip -r h2spec_linux_amd64
 	rm -rf h2spec_linux_amd64
 	
-	mkdir h2spec_linux_386
-	GOARCH=386 GOOS=linux go build cmd/h2spec/h2spec.go
-	mv h2spec h2spec_linux_386/h2spec
-	zip h2spec_linux_386.zip -r h2spec_linux_386
-	rm -rf h2spec_linux_386
-	
 	mkdir h2spec_windows_amd64
 	GOARCH=amd64 GOOS=windows go build cmd/h2spec/h2spec.go
 	mv h2spec.exe h2spec_windows_amd64/h2spec.exe
 	zip h2spec_windows_amd64.zip -r h2spec_windows_amd64
 	rm -rf h2spec_windows_amd64
-	
-	mkdir h2spec_windows_386
-	GOARCH=386 GOOS=windows go build cmd/h2spec/h2spec.go
-	mv h2spec.exe h2spec_windows_386/h2spec.exe
-	zip h2spec_windows_386.zip -r h2spec_windows_386
-	rm -rf h2spec_windows_386
 
