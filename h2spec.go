@@ -203,6 +203,7 @@ type TestCase struct {
 	failed   bool     // true if test failed
 	expected []Result // expected result
 	actual   Result   // actual result
+	testTime time.Duration  // length of test execution
 }
 
 func (tc *TestCase) Run(ctx *Context) TestResult {
@@ -210,7 +211,11 @@ func (tc *TestCase) Run(ctx *Context) TestResult {
 
 	tc.PrintEphemeralDesc()
 
+	startingTime := time.Now().UTC()
 	pass, expected, actual := tc.handler(ctx)
+	endingTime := time.Now().UTC()
+	tc.testTime = endingTime.Sub(startingTime)
+
 	_, ok := actual.(*ResultSkipped)
 	if ok {
 		tc.PrintSkipped(actual)
