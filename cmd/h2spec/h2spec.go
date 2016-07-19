@@ -30,6 +30,7 @@ func main() {
 	insecureSkipVerify := flag.Bool("k", false, "Don't verify server's certificate.")
 	timeout := flag.Int("o", 2, "Maximum time allowed for test.")
 	strict := flag.Bool("S", false, "Strict mode.")
+	junit := flag.String("j", "", "Create test report also in JUnit format.")
 	version := flag.Bool("version", false, "Display version information and exit.")
 
 	var sectionFlag sections
@@ -45,6 +46,7 @@ func main() {
 		fmt.Println("  -o:        Maximum time allowed for test. (Default: 2)")
 		fmt.Println("  -s:        Section number on which to run the test. (Example: -s 6.1 -s 6.2)")
 		fmt.Println("  -S:        Run the test cases marked as \"strict\".")
+		fmt.Println("  -j:        Creates report also in JUnit format into specified file.")
 		fmt.Println("  --version: Display version information and exit.")
 		fmt.Println("  --help:    Display this help and exit.")
 		os.Exit(1)
@@ -70,6 +72,7 @@ func main() {
 	ctx.Host = *host
 	ctx.Timeout = time.Duration(*timeout) * time.Second
 	ctx.Strict = *strict
+	ctx.Junit = *junit
 	ctx.Tls = *useTls
 	ctx.TlsConfig = &tls.Config{
 		InsecureSkipVerify: *insecureSkipVerify,
