@@ -93,6 +93,9 @@ func (tg *TestGroup) Run(ctx *Context) bool {
 		}
 		tg.PrintFooter()
 	} else {
+		for _, testCase := range tg.testCases {
+			testCase.skipped = true
+		}
 		tg.numSkipped += tg.numTestCases
 	}
 
@@ -201,6 +204,7 @@ type TestCase struct {
 	Spec     string
 	handler  func(*Context) (bool, []Result, Result)
 	failed   bool     // true if test failed
+	skipped  bool     // true if test has been skipped
 	expected []Result // expected result
 	actual   Result   // actual result
 	testTime time.Duration  // length of test execution
@@ -218,6 +222,8 @@ func (tc *TestCase) Run(ctx *Context) TestResult {
 
 	_, ok := actual.(*ResultSkipped)
 	if ok {
+		tc.skipped = true
+		tc.testTime = time.Duration(0)
 		tc.PrintSkipped(actual)
 		logger.LevelDown()
 		return Skipped
