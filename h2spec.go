@@ -8,11 +8,13 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
 	"io"
+	"io/ioutil"
 	"math"
 	"net"
 	"os"
 	"strings"
 	"syscall"
+	"strconv"
 	"time"
 )
 
@@ -30,6 +32,7 @@ type Context struct {
 	Port      int
 	Host      string
 	Strict    bool
+	Junit     string
 	Tls       bool
 	TlsConfig *tls.Config
 	Sections  map[string]bool
@@ -93,6 +96,9 @@ func (tg *TestGroup) Run(ctx *Context) bool {
 		}
 		tg.PrintFooter()
 	} else {
+		for _, testCase := range tg.testCases {
+			testCase.skipped = true
+		}
 		tg.numSkipped += tg.numTestCases
 	}
 
@@ -201,8 +207,10 @@ type TestCase struct {
 	Spec     string
 	handler  func(*Context) (bool, []Result, Result)
 	failed   bool     // true if test failed
+	skipped  bool     // true if test has been skipped
 	expected []Result // expected result
 	actual   Result   // actual result
+	testTime time.Duration  // length of test execution
 }
 
 func (tc *TestCase) Run(ctx *Context) TestResult {
@@ -210,9 +218,15 @@ func (tc *TestCase) Run(ctx *Context) TestResult {
 
 	tc.PrintEphemeralDesc()
 
+	startingTime := time.Now().UTC()
 	pass, expected, actual := tc.handler(ctx)
+	endingTime := time.Now().UTC()
+	tc.testTime = endingTime.Sub(startingTime)
+
 	_, ok := actual.(*ResultSkipped)
 	if ok {
+		tc.skipped = true
+		tc.testTime = time.Duration(0)
 		tc.PrintSkipped(actual)
 		logger.LevelDown()
 		return Skipped
@@ -938,6 +952,61 @@ func printSummary(ctx *Context, groups []*TestGroup) {
 	}
 }
 
+func processTestGroupJUnit(index *int, tg *TestGroup) string {
+	var fileContent string
+
+	fileContent += "<testsuite name=\"" + tg.Section + " " + tg.Name + "\""
+	fileContent += " package=\"" + tg.Section + " " + tg.Name + "\""
+	fileContent += " id=\"" + strconv.Itoa(*index) + "\""
+	fileContent += " tests=\"" + strconv.Itoa(tg.numTestCases) + "\""
+	fileContent += " skipped=\"" + strconv.Itoa(tg.numSkipped) + "\""
+	fileContent += " failures=\"" + strconv.Itoa(tg.numFailed) + "\""
+	fileContent += " errors=\"0\""
+	fileContent += ">"
+	for _, tc := range tg.testCases {
+		fileContent += "<testcase classname=\"" + tg.Section + " " + tg.Name + "\""
+		fileContent += " name=\"" + strings.Replace(tc.Desc, "\"", "'", -1) + "\""
+		fileContent += " time=\"" + tc.testTime.String() + "\">"
+		if tc.failed {
+			fileContent += "<failure message='" + tc.actual.String() + "'>Expected:\n"
+			for _, element := range tc.expected {
+				fileContent += element.String() + "\n"
+			}
+			fileContent += "Actual:\n" + tc.actual.String()
+			fileContent += "</failure>"
+		} else if tc.skipped {
+			fileContent += "<skipped/>"
+		}
+		fileContent += "</testcase><system-out/><system-err/>"
+	}
+	fileContent += "</testsuite>"
+
+	// There are also subgroups that must be processed too - let's do it regularly
+	for _, testSubGroup := range tg.testGroups {
+		fileContent += processTestGroupJUnit(index, testSubGroup)
+		*index++
+	}
+
+	return fileContent
+}
+
+func printSummaryJUnit(ctx *Context, groups []*TestGroup, jUnitReport string) {
+	var fileContent string
+	fileContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<testsuites>"
+
+	var index = 0
+	for _, tg := range groups {
+		fileContent += processTestGroupJUnit(&index, tg)
+		index++
+	}
+
+	fileContent += "</testsuites>"
+	err := ioutil.WriteFile(jUnitReport, []byte(fileContent), 0644)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func Run(ctx *Context) bool {
 	pass := true
 
@@ -969,6 +1038,9 @@ func Run(ctx *Context) bool {
 	}
 
 	printSummary(ctx, groups)
+	if ctx.Junit != "" {
+		printSummaryJUnit(ctx, groups, ctx.Junit)
+	}
 
 	return pass
 }
