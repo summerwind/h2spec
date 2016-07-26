@@ -31,6 +31,7 @@ Options:
   -o:        Maximum time allowed for test. (Default: 2)
   -s:        Section number on which to run the test. (Example: -s 6.1 -s 6.2)
   -S:        Run the test cases marked as "strict".
+  -j:        Creates report also in JUnit format into specified file.
   --version: Display version information and exit.
   --help:    Display this help and exit.
 ```
