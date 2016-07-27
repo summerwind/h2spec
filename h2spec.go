@@ -5,17 +5,18 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/hpack"
 	"io"
 	"io/ioutil"
 	"math"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"syscall"
-	"strconv"
 	"time"
+
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/hpack"
 )
 
 var TIMEOUT = errors.New("Timeout")
@@ -206,11 +207,11 @@ type TestCase struct {
 	Desc     string
 	Spec     string
 	handler  func(*Context) (bool, []Result, Result)
-	failed   bool     // true if test failed
-	skipped  bool     // true if test has been skipped
-	expected []Result // expected result
-	actual   Result   // actual result
-	testTime time.Duration  // length of test execution
+	failed   bool          // true if test failed
+	skipped  bool          // true if test has been skipped
+	expected []Result      // expected result
+	actual   Result        // actual result
+	testTime time.Duration // length of test execution
 }
 
 func (tc *TestCase) Run(ctx *Context) TestResult {
@@ -920,6 +921,9 @@ func printSummary(ctx *Context, groups []*TestGroup) {
 	numFailed := 0
 
 	for _, tg := range groups {
+		if tg == nil {
+			continue
+		}
 		numTestCases += tg.CountTestCases()
 		numSkipped += tg.CountSkipped()
 		numFailed += tg.CountFailed()
@@ -996,6 +1000,9 @@ func printSummaryJUnit(ctx *Context, groups []*TestGroup, jUnitReport string) {
 
 	var index = 0
 	for _, tg := range groups {
+		if tg == nil {
+			continue
+		}
 		fileContent += processTestGroupJUnit(&index, tg)
 		index++
 	}
@@ -1032,8 +1039,8 @@ func Run(ctx *Context) bool {
 	}
 
 	for _, group := range groups {
-		if !group.Run(ctx) {
-			pass = false
+		if group != nil {
+			pass = group.Run(ctx)
 		}
 	}
 

@@ -3,15 +3,19 @@ package h2spec
 import (
 	"errors"
 	"fmt"
-	"golang.org/x/net/http2"
 	"io"
 	"net"
 	"syscall"
+
+	"golang.org/x/net/http2"
 )
 
 func ErrorHandlingTestGroup(ctx *Context) *TestGroup {
-	tg := NewTestGroup("5.4", "Error Handling")
+	if !ctx.Strict {
+		return nil
+	}
 
+	tg := NewTestGroup("5.4", "Error Handling")
 	tg.AddTestGroup(ConnectionErrorHandlingTestGroup(ctx))
 
 	return tg
@@ -21,7 +25,7 @@ func ConnectionErrorHandlingTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("5.4.1", "Connection Error Handling")
 
 	tg.AddTestCase(NewTestCase(
-		"Receives a GOAWAY frame",
+		"Raise a connection error",
 		"After sending the GOAWAY frame, the endpoint MUST close the TCP connection.",
 		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			pass = false
