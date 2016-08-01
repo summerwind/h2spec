@@ -948,8 +948,8 @@ func printSummary(ctx *Context, groups []*TestGroup) {
 		logger.WriteBlank()
 		logger.ResetColor()
 
-		if numFailed > 0 {
-			for _, tg := range groups {
+		for _, tg := range groups {
+			if tg != nil {
 				tg.PrintFailedTestCase(ctx)
 			}
 		}
