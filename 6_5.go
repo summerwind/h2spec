@@ -2,10 +2,11 @@ package h2spec
 
 import (
 	"fmt"
-	"golang.org/x/net/http2"
 	"io"
 	"net"
 	"syscall"
+
+	"golang.org/x/net/http2"
 )
 
 func SettingsTestGroup(ctx *Context) *TestGroup {

@@ -3,10 +3,11 @@ package h2spec
 import (
 	"errors"
 	"fmt"
-	"golang.org/x/net/http2"
 	"io"
 	"net"
 	"syscall"
+
+	"golang.org/x/net/http2"
 )
 
 func WindowUpdateTestGroup(ctx *Context) *TestGroup {
@@ -117,7 +118,7 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 	))
 
 	tg.AddTestCase(NewTestCase(
-		"Sends a WINDOW_UPDATE frame with an flow control window increment of 0",
+		"Sends a WINDOW_UPDATE frame with a flow control window increment of 0",
 		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
 		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
@@ -131,7 +132,7 @@ func WindowUpdateTestGroup(ctx *Context) *TestGroup {
 	))
 
 	tg.AddTestCase(NewTestCase(
-		"Sends a WINDOW_UPDATE frame with an flow control window increment of 0 on a stream",
+		"Sends a WINDOW_UPDATE frame with a flow control window increment of 0 on a stream",
 		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
 		func(ctx *Context) (pass bool, expected []Result, actual Result) {
 			http2Conn := CreateHttp2Conn(ctx, true)
