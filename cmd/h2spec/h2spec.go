@@ -4,13 +4,14 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"github.com/summerwind/h2spec"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/summerwind/h2spec"
 )
 
-const VERSION = "v1.4.0"
+const VERSION = "v1.4.1"
 
 type sections []string
 
