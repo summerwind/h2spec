@@ -31,7 +31,7 @@ func DataTestGroup(ctx *Context) *TestGroup {
 
 			hdrs := commonHeaderFields(ctx)
 			hdrs[0].Value = "POST"
-			hdrs = append(hdrs, pair("content-type", "4"))
+			hdrs = append(hdrs, pair("content-length", "4"))
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
@@ -55,7 +55,7 @@ func DataTestGroup(ctx *Context) *TestGroup {
 
 			hdrs := commonHeaderFields(ctx)
 			hdrs[0].Value = "POST"
-			hdrs = append(hdrs, pair("content-type", "4"))
+			hdrs = append(hdrs, pair("content-length", "4"))
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
