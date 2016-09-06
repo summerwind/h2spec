@@ -864,19 +864,36 @@ func CreateResultFrame(f http2.Frame) (rf *ResultFrame) {
 	return rf
 }
 
-func commonHeaderFields(ctx *Context) []hpack.HeaderField {
-	var scheme, authority string
-	defaultPort := false
+func commonHeaderFieldMethod() hpack.HeaderField {
+	return pair(":method", "GET")
+}
+
+func commonHeaderFieldScheme(ctx *Context) hpack.HeaderField {
+
+	var scheme string
 
 	if ctx.Tls {
 		scheme = "https"
+	} else {
+		scheme = "http"
+	}
 
+	return pair(":scheme", scheme)
+}
+
+func commonHeaderFieldPath() hpack.HeaderField {
+	return pair(":path", "/")
+}
+
+func commonHeaderFieldAuthority(ctx *Context) hpack.HeaderField {
+	var authority string
+	defaultPort := false
+
+	if ctx.Tls {
 		if ctx.Port == 443 {
 			defaultPort = true
 		}
 	} else {
-		scheme = "http"
-
 		if ctx.Port == 80 {
 			defaultPort = true
 		}
@@ -888,11 +905,15 @@ func commonHeaderFields(ctx *Context) []hpack.HeaderField {
 		authority = ctx.Authority()
 	}
 
+	return pair(":authority", authority)
+}
+
+func commonHeaderFields(ctx *Context) []hpack.HeaderField {
 	return []hpack.HeaderField{
-		pair(":method", "GET"),
-		pair(":scheme", scheme),
-		pair(":path", "/"),
-		pair(":authority", authority),
+		commonHeaderFieldMethod(),
+		commonHeaderFieldScheme(ctx),
+		commonHeaderFieldPath(),
+		commonHeaderFieldAuthority(ctx),
 	}
 }
 
