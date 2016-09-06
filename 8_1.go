@@ -1,11 +1,12 @@
 package h2spec
 
 import (
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/hpack"
 	"io"
 	"net"
 	"syscall"
+
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/hpack"
 )
 
 func HttpRequestResponseExchangeTestGroup(ctx *Context) *TestGroup {
@@ -365,9 +366,84 @@ func RequestPseudoHeaderFieldsTestGroup(ctx *Context) *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
-			hdrs := commonHeaderFields(ctx)
-			tmp := hdrs[0:2]
-			hdrs = append(tmp, hdrs[3])
+			hdrs := []hpack.HeaderField{
+				commonHeaderFieldAuthority(ctx),
+			}
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = true
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp)
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"Sends a HEADERS frame that omits just ':method' pseudo-header field.",
+		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				commonHeaderFieldScheme(ctx),
+				commonHeaderFieldPath(),
+				commonHeaderFieldAuthority(ctx),
+			}
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = true
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp)
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"Sends a HEADERS frame that omits just ':scheme' pseudo-header field.",
+		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				commonHeaderFieldMethod(),
+				commonHeaderFieldPath(),
+				commonHeaderFieldAuthority(ctx),
+			}
+
+			var hp http2.HeadersFrameParam
+			hp.StreamID = 1
+			hp.EndStream = true
+			hp.EndHeaders = true
+			hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+			http2Conn.fr.WriteHeaders(hp)
+
+			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+			return TestStreamError(ctx, http2Conn, actualCodes)
+		},
+	))
+
+	tg.AddTestCase(NewTestCase(
+		"Sends a HEADERS frame that omits just ':path' pseudo-header field.",
+		"The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
+		func(ctx *Context) (pass bool, expected []Result, actual Result) {
+			http2Conn := CreateHttp2Conn(ctx, true)
+			defer http2Conn.conn.Close()
+
+			hdrs := []hpack.HeaderField{
+				commonHeaderFieldMethod(),
+				commonHeaderFieldScheme(ctx),
+				commonHeaderFieldAuthority(ctx),
+			}
 
 			var hp http2.HeadersFrameParam
 			hp.StreamID = 1
