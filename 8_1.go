@@ -168,6 +168,10 @@ func HttpRequestResponseExchangeTestGroup(ctx *Context) *TestGroup {
 			http2Conn := CreateHttp2Conn(ctx, true)
 			defer http2Conn.conn.Close()
 
+			// Set INITIAL_WINDOW_SIZE to zero to prevent the peer from closing the stream
+			settings := http2.Setting{http2.SettingInitialWindowSize, 0}
+			http2Conn.fr.WriteSettings(settings)
+
 			hdrs := commonHeaderFields(ctx)
 			hdrs[0].Value = "POST"
 			hdrs = append(hdrs, pair("trailer", "x-test"))
