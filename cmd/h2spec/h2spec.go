@@ -11,7 +11,7 @@ import (
 	"github.com/summerwind/h2spec"
 )
 
-const VERSION = "v1.4.2"
+const VERSION = "v1.5.0"
 
 type sections []string
 
