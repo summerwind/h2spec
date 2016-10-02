@@ -1,108 +1,178 @@
 package main
 
 import (
-	"crypto/tls"
-	"flag"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
 	"github.com/summerwind/h2spec"
+	"github.com/summerwind/h2spec/config"
 )
 
-const VERSION = "v1.4.1"
-
-type sections []string
-
-func (s *sections) String() string {
-	return fmt.Sprintf("%v", *s)
-}
-
-func (s *sections) Set(v string) error {
-	*s = append(*s, v)
-	return nil
-}
+var (
+	VERSION string = "0.0.0"
+	COMMIT  string = "(none)"
+)
 
 func main() {
-	port := flag.Int("p", 0, "Target port.")
-	host := flag.String("h", "127.0.0.1", "Target host.")
-	useTls := flag.Bool("t", false, "Connect over TLS.")
-	insecureSkipVerify := flag.Bool("k", false, "Don't verify server's certificate.")
-	timeout := flag.Int("o", 2, "Maximum time allowed for test.")
-	strict := flag.Bool("S", false, "Strict mode.")
-	junit := flag.String("j", "", "Create test report also in JUnit format.")
-	version := flag.Bool("version", false, "Display version information and exit.")
+	var cmd = &cobra.Command{
+		Use:   "h2spec [section...]",
+		Short: "Conformance testing tool for HTTP/2 implementation",
+		Long:  "Conformance testing tool for HTTP/2 implementation.",
+		RunE:  run,
+	}
 
-	var sectionFlag sections
-	flag.Var(&sectionFlag, "s", "Section number on which to run the test")
+	cmd.SilenceUsage = true
+	cmd.SilenceErrors = true
 
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS]\n\n", os.Args[0])
-		fmt.Println("Options:")
-		fmt.Println("  -p:        Target port. (Default: 80 or 443)")
-		fmt.Println("  -h:        Target host. (Default: 127.0.0.1)")
-		fmt.Println("  -t:        Connect over TLS. (Default: false)")
-		fmt.Println("  -k:        Don't verify server's certificate. (Default: false)")
-		fmt.Println("  -o:        Maximum time allowed for test. (Default: 2)")
-		fmt.Println("  -s:        Section number on which to run the test. (Example: -s 6.1 -s 6.2)")
-		fmt.Println("  -S:        Run the test cases marked as \"strict\".")
-		fmt.Println("  -j:        Creates report also in JUnit format into specified file.")
-		fmt.Println("  --version: Display version information and exit.")
-		fmt.Println("  --help:    Display this help and exit.")
+	flags := cmd.Flags()
+	flags.StringP("host", "h", "127.0.0.1", "Target host")
+	flags.IntP("port", "p", 0, "Target port")
+	flags.IntP("timeout", "o", 2, "Maximum time allowed for test")
+	flags.Int("max-header-length", 4000, "Maximum header length")
+	flags.String("junit-report", "", "Generate JUnit test reports")
+	flags.Bool("strict", false, "Strict mode")
+	flags.Bool("dryrun", false, "Dry-run mode")
+	flags.BoolP("tls", "t", false, "Connect over TLS")
+	flags.BoolP("insecure", "k", false, "Don't verify server's certificate")
+	flags.BoolP("verbose", "v", false, "Output verbose log")
+	flags.Bool("version", false, "Display version information and exit")
+	flags.Bool("help", false, "Display this help and exit")
+
+	err := cmd.Execute()
+	if err != nil {
+		fmt.Printf("Error: %s", err)
 		os.Exit(1)
 	}
+}
 
-	flag.Parse()
+func run(cmd *cobra.Command, args []string) error {
+	flags := cmd.Flags()
 
-	if *version {
-		fmt.Fprintf(os.Stderr, "h2spec %s\n", VERSION)
-		os.Exit(0)
+	v, err := flags.GetBool("version")
+	if err != nil {
+		return err
 	}
 
-	if *port == 0 {
-		if *useTls {
-			*port = 443
+	if v {
+		version()
+		return nil
+	}
+
+	host, err := flags.GetString("host")
+	if err != nil {
+		return err
+	}
+
+	port, err := flags.GetInt("port")
+	if err != nil {
+		return err
+	}
+
+	timeout, err := flags.GetInt("timeout")
+	if err != nil {
+		return err
+	}
+
+	maxHeaderLen, err := flags.GetInt("max-header-length")
+	if err != nil {
+		return err
+	}
+
+	junit, err := flags.GetString("junit-report")
+	if err != nil {
+		return err
+	}
+
+	strict, err := flags.GetBool("strict")
+	if err != nil {
+		return err
+	}
+
+	dryRun, err := flags.GetBool("dryrun")
+	if err != nil {
+		return err
+	}
+
+	tls, err := flags.GetBool("tls")
+	if err != nil {
+		return err
+	}
+
+	insecure, err := flags.GetBool("insecure")
+	if err != nil {
+		return err
+	}
+
+	verbose, err := flags.GetBool("verbose")
+	if err != nil {
+		return err
+	}
+
+	if port == 0 {
+		if tls {
+			port = 443
 		} else {
-			*port = 80
+			port = 80
 		}
 	}
 
-	var ctx h2spec.Context
-	ctx.Port = *port
-	ctx.Host = *host
-	ctx.Timeout = time.Duration(*timeout) * time.Second
-	ctx.Strict = *strict
-	ctx.Junit = *junit
-	ctx.Tls = *useTls
-	ctx.TlsConfig = &tls.Config{
-		InsecureSkipVerify: *insecureSkipVerify,
+	c := &config.Config{
+		Host:         host,
+		Port:         port,
+		Timeout:      time.Duration(timeout) * time.Second,
+		MaxHeaderLen: maxHeaderLen,
+		JUnit:        junit,
+		Strict:       strict,
+		DryRun:       dryRun,
+		TLS:          tls,
+		Insecure:     insecure,
+		Verbose:      verbose,
+		Sections:     args,
+		Targets:      buildTargets(args),
 	}
 
-	if len(sectionFlag) > 0 {
-		ctx.Sections = map[string]bool{}
-		for _, sec := range sectionFlag {
-			splitedSec := strings.Split(sec, ".")
-			lastIndex := len(splitedSec) - 1
+	return h2spec.Run(c)
+}
 
-			num := []string{}
-			for i, sec := range splitedSec {
-				num = append(num, sec)
-				if i != 0 {
-					key := strings.Join(num, ".")
+func buildTargets(sections []string) map[string]bool {
+	targets := map[string]bool{}
 
-					runAll := false
-					if i == lastIndex || ctx.Sections[key] {
-						runAll = true
-					}
+	for _, section := range sections {
+		comps := strings.Split(section, "/")
+		compLen := len(comps)
 
-					ctx.Sections[key] = runAll
-				}
+		// Invalid section
+		if compLen == 0 || compLen > 3 {
+			continue
+		}
+
+		// Root section
+		if compLen == 1 {
+			targets[comps[0]] = true
+			continue
+		}
+
+		targets[comps[0]] = false
+
+		nums := strings.Split(comps[1], ".")
+		for i, _ := range nums {
+			key := fmt.Sprintf("%s/%s", comps[0], strings.Join(nums[:i+1], "."))
+			_, ok := targets[key]
+			if !ok {
+				targets[key] = false
 			}
 		}
+
+		targets[section] = true
 	}
 
-	if !h2spec.Run(&ctx) {
-		os.Exit(1)
-	}
+	return targets
+}
+
+func version() {
+	fmt.Printf("Version: %s\n", VERSION)
+	fmt.Printf("Commit:  %s\n", COMMIT)
 }
