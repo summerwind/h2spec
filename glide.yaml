@@ -1,0 +1,12 @@
+package: github.com/summerwind/h2spec 
+import:
+- package: golang.org/x/net
+  subpackages:
+  - http2
+  - http2/hpack
+- package: github.com/spf13/cobra
+  version: 2bd8a730ae1986edcd19ee9ca686431cfe78bf2e
+- package: github.com/spf13/pflag
+  version: 08b1a584251b5b62f458943640fc8ebd4d50aaa5
+- package: github.com/spf13/viper
+- package: github.com/fatih/color

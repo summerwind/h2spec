@@ -1,0 +1,36 @@
+hash: 2951dfcd48b65b112760c6c6a388d881200deed5f4c24a02e93ae0483b024756
+updated: 2016-08-14T23:11:39.087051487+09:00
+imports:
+- name: github.com/cpuguy83/go-md2man
+  version: 2724a9c9051aa62e9cca11304e7dd518e9e41599
+  subpackages:
+  - md2man
+- name: github.com/fatih/color
+  version: 87d4004f2ab62d0d255e0a38f1680aa534549fe3
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/mattn/go-colorable
+  version: ed8eb9e318d7a84ce5915b495b7d35e0cfe7b5a8
+- name: github.com/mattn/go-isatty
+  version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+- name: github.com/russross/blackfriday
+  version: 93622da34e54fb6529bfb7c57e710f37a8d9cbd8
+- name: github.com/shurcooL/sanitized_anchor_name
+  version: 10ef21a441db47d8b13ebcc5fd2310f636973c77
+- name: github.com/spf13/cobra
+  version: 2bd8a730ae1986edcd19ee9ca686431cfe78bf2e
+- name: github.com/spf13/pflag
+  version: 08b1a584251b5b62f458943640fc8ebd4d50aaa5
+- name: github.com/spf13/viper
+  version: 346299ea79e446ebdddb834371ceba2e5926b732
+- name: golang.org/x/net
+  version: 07b51741c1d6423d4a6abab1c49940ec09cb1aaf
+  subpackages:
+  - http2
+  - http2/hpack
+  - lex/httplex
+- name: golang.org/x/sys
+  version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
+  subpackages:
+  - unix
+testImports: []
