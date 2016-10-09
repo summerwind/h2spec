@@ -21,7 +21,7 @@ type TestGroup struct {
 	Section     string
 	Name        string
 	Strict      bool
-	parent      *TestGroup
+	Parent      *TestGroup
 	groups      []*TestGroup
 	tests       []*TestCase
 	strictTests []*TestCase
@@ -36,13 +36,13 @@ func (tg *TestGroup) ID() string {
 }
 
 func (tg *TestGroup) AddTestGroup(stg *TestGroup) {
-	stg.parent = tg
+	stg.Parent = tg
 	stg.Strict = tg.Strict
 	tg.groups = append(tg.groups, stg)
 }
 
 func (tg *TestGroup) AddTestCase(tc *TestCase) {
-	tc.parent = tg
+	tc.Parent = tg
 	if tg.Strict {
 		tc.Strict = true
 		tg.strictTests = append(tg.strictTests, tc)
@@ -68,7 +68,7 @@ func (tg *TestGroup) IsTarget(targets map[string]bool) bool {
 	}
 
 	if !tg.IsRoot() {
-		nums := strings.Split(tg.parent.Section, ".")
+		nums := strings.Split(tg.Parent.Section, ".")
 		for i, _ := range nums {
 			id := fmt.Sprintf("%s/%s", key, strings.Join(nums[:i+1], "."))
 			val, ok := targets[id]
@@ -107,7 +107,7 @@ func (tg *TestGroup) IsTarget(targets map[string]bool) bool {
 //}
 
 func (tg *TestGroup) IsRoot() bool {
-	return tg.parent == nil
+	return tg.Parent == nil
 }
 
 func (tg *TestGroup) Title() string {
@@ -206,8 +206,8 @@ type TestCase struct {
 	Desc        string
 	Requirement string
 	Strict      bool
+	Parent      *TestGroup
 	Run         func(c *config.Config, conn *Conn) error
-	parent      *TestGroup
 }
 
 func (tc *TestCase) IsTarget(num int, targets map[string]bool) bool {
@@ -215,19 +215,19 @@ func (tc *TestCase) IsTarget(num int, targets map[string]bool) bool {
 		return true
 	}
 
-	id := fmt.Sprintf("%s/%d", tc.parent.ID(), num)
+	id := fmt.Sprintf("%s/%d", tc.Parent.ID(), num)
 	val, ok := targets[id]
 	if ok && val {
 		return true
 	}
 
-	key := tc.parent.Key
+	key := tc.Parent.Key
 	val, ok = targets[key]
 	if ok && val {
 		return true
 	}
 
-	nums := strings.Split(tc.parent.Section, ".")
+	nums := strings.Split(tc.Parent.Section, ".")
 	for i, _ := range nums {
 		id := fmt.Sprintf("%s/%s", key, strings.Join(nums[:i+1], "."))
 		val, ok := targets[id]

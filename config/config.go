@@ -11,7 +11,7 @@ type Config struct {
 	Port         int
 	Timeout      time.Duration
 	MaxHeaderLen int
-	JUnit        string
+	JUnitReport  string
 	Strict       bool
 	DryRun       bool
 	TLS          bool
