@@ -17,17 +17,72 @@ import (
 	"github.com/summerwind/h2spec/spec/log"
 )
 
+const DefaultWindowSize = 65535
+
 type Conn struct {
 	net.Conn
 
 	Settings map[http2.SettingID]uint32
-	Closed   bool
-	Verbose  bool
 	Timeout  time.Duration
+	Verbose  bool
+	Closed   bool
+
+	WindowUpdate bool
+	WindowSize   map[uint32]int
 
 	framer     *http2.Framer
 	encoder    *hpack.Encoder
 	encoderBuf *bytes.Buffer
+}
+
+func Dial(c *config.Config) (*Conn, error) {
+	var conn net.Conn
+	var err error
+
+	if c.TLS {
+		dialer := &net.Dialer{}
+		dialer.Timeout = c.Timeout
+
+		tconn, err := tls.DialWithDialer(dialer, "tcp", c.Addr(), c.TLSConfig())
+		if err != nil {
+			return nil, err
+		}
+
+		cs := tconn.ConnectionState()
+		if !cs.NegotiatedProtocolIsMutual {
+			return nil, errors.New("Protocol negotiation failed")
+		}
+
+		conn = tconn
+	} else {
+		conn, err = net.DialTimeout("tcp", c.Addr(), c.Timeout)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	settings := map[http2.SettingID]uint32{}
+
+	framer := http2.NewFramer(conn, conn)
+	framer.AllowIllegalWrites = true
+
+	var encoderBuf bytes.Buffer
+	encoder := hpack.NewEncoder(&encoderBuf)
+
+	return &Conn{
+		Conn:     conn,
+		Settings: settings,
+		Timeout:  c.Timeout,
+		Verbose:  c.Verbose,
+		Closed:   false,
+
+		WindowUpdate: true,
+		WindowSize:   map[uint32]int{0: DefaultWindowSize},
+
+		framer:     framer,
+		encoder:    encoder,
+		encoderBuf: &encoderBuf,
+	}, nil
 }
 
 func (conn *Conn) Handshake() error {
@@ -39,7 +94,11 @@ func (conn *Conn) Handshake() error {
 		local := false
 		remote := false
 
-		conn.framer.WriteSettings()
+		setting := http2.Setting{
+			ID:  http2.SettingInitialWindowSize,
+			Val: DefaultWindowSize,
+		}
+		conn.framer.WriteSettings(setting)
 
 		for !(local && remote) {
 			f, err := conn.framer.ReadFrame()
@@ -185,6 +244,7 @@ func (conn *Conn) WaitEvent() Event {
 	switch f := f.(type) {
 	case *http2.DataFrame:
 		ev = EventDataFrame{*f}
+		conn.updateWindowSize(f)
 	case *http2.HeadersFrame:
 		ev = EventHeadersFrame{*f}
 	case *http2.PriorityFrame:
@@ -212,6 +272,34 @@ func (conn *Conn) WaitEvent() Event {
 	return ev
 }
 
+func (conn *Conn) updateWindowSize(f http2.Frame) {
+	if !conn.WindowUpdate {
+		return
+	}
+
+	len := int(f.Header().Length)
+	streamID := f.Header().StreamID
+
+	_, ok := conn.WindowSize[streamID]
+	if !ok {
+		conn.WindowSize[streamID] = DefaultWindowSize
+	}
+
+	conn.WindowSize[streamID] -= len
+	if conn.WindowSize[streamID] <= 0 {
+		incr := DefaultWindowSize + (conn.WindowSize[streamID] * -1)
+		conn.WriteWindowUpdate(streamID, uint32(incr))
+		conn.WindowSize[streamID] += incr
+	}
+
+	conn.WindowSize[0] -= len
+	if conn.WindowSize[0] <= 0 {
+		incr := DefaultWindowSize + (conn.WindowSize[0] * -1)
+		conn.WriteWindowUpdate(0, uint32(incr))
+		conn.WindowSize[0] += incr
+	}
+}
+
 func (conn *Conn) vlog(ev Event, send bool) {
 	if conn.Verbose {
 		if send {
@@ -220,41 +308,4 @@ func (conn *Conn) vlog(ev Event, send bool) {
 			log.Verbose(fmt.Sprintf("recv: %s", ev))
 		}
 	}
-}
-
-func Dial(c *config.Config) (*Conn, error) {
-	var conn net.Conn
-	var err error
-
-	if c.TLS {
-		dialer := &net.Dialer{}
-		dialer.Timeout = c.Timeout
-
-		tconn, err := tls.DialWithDialer(dialer, "tcp", c.Addr(), c.TLSConfig())
-		if err != nil {
-			return nil, err
-		}
-
-		cs := tconn.ConnectionState()
-		if !cs.NegotiatedProtocolIsMutual {
-			return nil, errors.New("Protocol negotiation failed")
-		}
-
-		conn = tconn
-	} else {
-		conn, err = net.DialTimeout("tcp", c.Addr(), c.Timeout)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	settings := map[http2.SettingID]uint32{}
-
-	framer := http2.NewFramer(conn, conn)
-	framer.AllowIllegalWrites = true
-
-	var encoderBuf bytes.Buffer
-	encoder := hpack.NewEncoder(&encoderBuf)
-
-	return &Conn{conn, settings, false, c.Verbose, c.Timeout, framer, encoder, &encoderBuf}, nil
 }
