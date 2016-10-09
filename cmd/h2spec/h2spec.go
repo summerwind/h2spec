@@ -81,7 +81,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	junit, err := flags.GetString("junit-report")
+	junitReport, err := flags.GetString("junit-report")
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Port:         port,
 		Timeout:      time.Duration(timeout) * time.Second,
 		MaxHeaderLen: maxHeaderLen,
-		JUnit:        junit,
+		JUnitReport:  junitReport,
 		Strict:       strict,
 		DryRun:       dryRun,
 		TLS:          tls,

@@ -2,6 +2,8 @@ package h2spec
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/summerwind/h2spec/config"
@@ -33,6 +35,15 @@ func Run(c *config.Config) error {
 	s := summary(results)
 	tmp := "%d tests, %d passed, %d skipped, %d failed"
 	log.Info(fmt.Sprintf(tmp, s["total"], s["passed"], s["skipped"], s["failed"]))
+
+	if c.JUnitReport != "" {
+		reporter := NewJUnitReporter()
+		report, err := reporter.Export(results)
+		if err != nil {
+			return err
+		}
+		ioutil.WriteFile(c.JUnitReport, []byte(report), os.ModePerm)
+	}
 
 	return nil
 }
