@@ -4,9 +4,18 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/fatih/color"
 	"github.com/summerwind/h2spec/config"
 
 	"golang.org/x/net/http2/hpack"
+)
+
+var (
+	gray   = color.New(color.FgHiBlack).SprintFunc()
+	green  = color.New(color.FgGreen).SprintFunc()
+	red    = color.New(color.FgRed).SprintFunc()
+	yellow = color.New(color.FgYellow).SprintFunc()
+	cyan   = color.New(color.FgCyan).SprintFunc()
 )
 
 func DummyString(len int) string {
