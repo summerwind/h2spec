@@ -18,8 +18,19 @@ func VerifyConnectionClose(conn *Conn) error {
 
 	passed := false
 	for !conn.Closed {
-		actual = conn.WaitEvent()
-		_, passed = actual.(EventConnectionClosed)
+		event := conn.WaitEvent()
+
+		switch ev := event.(type) {
+		case EventConnectionClosed:
+			passed = true
+		case EventTimeout:
+			if actual == nil {
+				actual = ev
+			}
+		default:
+			actual = ev
+		}
+
 		if passed {
 			break
 		}
@@ -40,13 +51,19 @@ func VerifyConnectionError(conn *Conn, codes ...http2.ErrCode) error {
 
 	passed := false
 	for !conn.Closed {
-		actual = conn.WaitEvent()
+		ev := conn.WaitEvent()
 
-		switch ev := actual.(type) {
+		switch event := ev.(type) {
 		case EventConnectionClosed:
 			passed = true
 		case EventGoAwayFrame:
-			passed = VerifyErrorCode(codes, ev.ErrCode)
+			passed = VerifyErrorCode(codes, event.ErrCode)
+		case EventTimeout:
+			if actual == nil {
+				actual = event
+			}
+		default:
+			actual = event
 		}
 
 		if passed {
@@ -75,15 +92,21 @@ func VerifyStreamError(conn *Conn, codes ...http2.ErrCode) error {
 
 	passed := false
 	for !conn.Closed {
-		actual = conn.WaitEvent()
+		ev := conn.WaitEvent()
 
-		switch ev := actual.(type) {
+		switch event := ev.(type) {
 		case EventConnectionClosed:
 			passed = true
 		case EventGoAwayFrame:
-			passed = VerifyErrorCode(codes, ev.ErrCode)
+			passed = VerifyErrorCode(codes, event.ErrCode)
 		case EventRSTStreamFrame:
-			passed = VerifyErrorCode(codes, ev.ErrCode)
+			passed = VerifyErrorCode(codes, event.ErrCode)
+		case EventTimeout:
+			if actual == nil {
+				actual = event
+			}
+		default:
+			actual = event
 		}
 
 		if passed {
@@ -113,17 +136,23 @@ func VerifyStreamClose(conn *Conn) error {
 
 	passed := false
 	for !conn.Closed {
-		actual = conn.WaitEvent()
+		ev := conn.WaitEvent()
 
-		switch ev := actual.(type) {
+		switch event := ev.(type) {
 		case EventDataFrame:
-			if ev.StreamEnded() {
+			if event.StreamEnded() {
 				passed = true
 			}
 		case EventHeadersFrame:
-			if ev.StreamEnded() {
+			if event.StreamEnded() {
 				passed = true
 			}
+		case EventTimeout:
+			if actual == nil {
+				actual = event
+			}
+		default:
+			actual = event
 		}
 
 		if passed {

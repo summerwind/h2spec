@@ -1,6 +1,7 @@
-package: github.com/summerwind/h2spec 
+package: github.com/summerwind/h2spec
 import:
 - package: golang.org/x/net
+  varsion: 55a3084c9119aeb9ba2437d595b0a7e9cb635da9
   subpackages:
   - http2
   - http2/hpack

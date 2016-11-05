@@ -14,7 +14,7 @@ import (
 	"golang.org/x/net/http2/hpack"
 
 	"github.com/summerwind/h2spec/config"
-	"github.com/summerwind/h2spec/spec/log"
+	"github.com/summerwind/h2spec/log"
 )
 
 const DefaultWindowSize = 65535
@@ -33,29 +33,32 @@ type Conn struct {
 	framer     *http2.Framer
 	encoder    *hpack.Encoder
 	encoderBuf *bytes.Buffer
+
+	debugFramer    *http2.Framer
+	debugFramerBuf *bytes.Buffer
 }
 
 func Dial(c *config.Config) (*Conn, error) {
-	var conn net.Conn
+	var baseConn net.Conn
 	var err error
 
 	if c.TLS {
 		dialer := &net.Dialer{}
 		dialer.Timeout = c.Timeout
 
-		tconn, err := tls.DialWithDialer(dialer, "tcp", c.Addr(), c.TLSConfig())
+		tlsConn, err := tls.DialWithDialer(dialer, "tcp", c.Addr(), c.TLSConfig())
 		if err != nil {
 			return nil, err
 		}
 
-		cs := tconn.ConnectionState()
+		cs := tlsConn.ConnectionState()
 		if !cs.NegotiatedProtocolIsMutual {
 			return nil, errors.New("Protocol negotiation failed")
 		}
 
-		conn = tconn
+		baseConn = tlsConn
 	} else {
-		conn, err = net.DialTimeout("tcp", c.Addr(), c.Timeout)
+		baseConn, err = net.DialTimeout("tcp", c.Addr(), c.Timeout)
 		if err != nil {
 			return nil, err
 		}
@@ -63,14 +66,15 @@ func Dial(c *config.Config) (*Conn, error) {
 
 	settings := map[http2.SettingID]uint32{}
 
-	framer := http2.NewFramer(conn, conn)
+	framer := http2.NewFramer(baseConn, baseConn)
 	framer.AllowIllegalWrites = true
+	framer.AllowIllegalReads = true
 
 	var encoderBuf bytes.Buffer
 	encoder := hpack.NewEncoder(&encoderBuf)
 
-	return &Conn{
-		Conn:     conn,
+	conn := Conn{
+		Conn:     baseConn,
 		Settings: settings,
 		Timeout:  c.Timeout,
 		Verbose:  c.Verbose,
@@ -82,7 +86,16 @@ func Dial(c *config.Config) (*Conn, error) {
 		framer:     framer,
 		encoder:    encoder,
 		encoderBuf: &encoderBuf,
-	}, nil
+	}
+
+	if conn.Verbose {
+		conn.debugFramerBuf = new(bytes.Buffer)
+		conn.debugFramer = http2.NewFramer(conn.debugFramerBuf, conn.debugFramerBuf)
+		conn.debugFramer.AllowIllegalWrites = true
+		conn.debugFramer.AllowIllegalReads = true
+	}
+
+	return &conn, nil
 }
 
 func (conn *Conn) Handshake() error {
@@ -98,7 +111,7 @@ func (conn *Conn) Handshake() error {
 			ID:  http2.SettingInitialWindowSize,
 			Val: DefaultWindowSize,
 		}
-		conn.framer.WriteSettings(setting)
+		conn.WriteSettings(setting)
 
 		for !(local && remote) {
 			f, err := conn.framer.ReadFrame()
@@ -106,6 +119,9 @@ func (conn *Conn) Handshake() error {
 				done <- err
 				return
 			}
+
+			ev := getEventByFrame(f)
+			conn.vlog(ev, false)
 
 			sf, ok := f.(*http2.SettingsFrame)
 			if !ok {
@@ -121,7 +137,7 @@ func (conn *Conn) Handshake() error {
 					conn.Settings[setting.ID] = setting.Val
 					return nil
 				})
-				conn.framer.WriteSettingsAck()
+				conn.WriteSettingsAck()
 			}
 		}
 
@@ -165,42 +181,81 @@ func (conn *Conn) EncodeHeaders(headers []hpack.HeaderField) []byte {
 }
 
 func (conn *Conn) Send(payload string) error {
-	_, err := conn.Write([]byte(payload))
+	p := []byte(payload)
+	conn.vlog(EventRawData{p}, true)
+	_, err := conn.Write(p)
 	return err
 }
 
 func (conn *Conn) WriteData(streamID uint32, endStream bool, data []byte) error {
-	conn.vlog(EventDataFrame{}, true)
+	if conn.Verbose {
+		conn.debugFramer.WriteData(streamID, endStream, data)
+		conn.logFrameSend()
+	}
+
 	return conn.framer.WriteData(streamID, endStream, data)
 }
 
 func (conn *Conn) WriteHeaders(p http2.HeadersFrameParam) error {
-	conn.vlog(EventHeadersFrame{}, true)
+	if conn.Verbose {
+		conn.debugFramer.WriteHeaders(p)
+		conn.logFrameSend()
+	}
+
 	return conn.framer.WriteHeaders(p)
 }
 
 func (conn *Conn) WritePriority(streamID uint32, p http2.PriorityParam) error {
-	conn.vlog(EventPriorityFrame{}, true)
+	if conn.Verbose {
+		conn.debugFramer.WritePriority(streamID, p)
+		conn.logFrameSend()
+	}
+
 	return conn.framer.WritePriority(streamID, p)
 }
 
 func (conn *Conn) WriteRSTStream(streamID uint32, code http2.ErrCode) error {
-	conn.vlog(EventRSTStreamFrame{}, true)
+	if conn.Verbose {
+		conn.debugFramer.WriteRSTStream(streamID, code)
+		conn.logFrameSend()
+	}
+
 	return conn.framer.WriteRSTStream(streamID, code)
 }
 
 func (conn *Conn) WriteSettings(settings ...http2.Setting) error {
-	conn.vlog(EventSettingsFrame{}, true)
+	if conn.Verbose {
+		conn.debugFramer.WriteSettings(settings...)
+		conn.logFrameSend()
+	}
+
 	return conn.framer.WriteSettings(settings...)
 }
 
+func (conn *Conn) WriteSettingsAck() error {
+	if conn.Verbose {
+		conn.debugFramer.WriteSettingsAck()
+		conn.logFrameSend()
+	}
+
+	return conn.framer.WriteSettingsAck()
+}
+
 func (conn *Conn) WriteWindowUpdate(streamID, incr uint32) error {
-	conn.vlog(EventWindowUpdateFrame{}, true)
+	if conn.Verbose {
+		conn.debugFramer.WriteWindowUpdate(streamID, incr)
+		conn.logFrameSend()
+	}
+
 	return conn.framer.WriteWindowUpdate(streamID, incr)
 }
 
 func (conn *Conn) WriteContinuation(streamID uint32, endHeaders bool, headerBlockFragment []byte) error {
-	conn.vlog(EventContinuationFrame{}, true)
+	if conn.Verbose {
+		conn.debugFramer.WriteContinuation(streamID, endHeaders, headerBlockFragment)
+		conn.logFrameSend()
+	}
+
 	return conn.framer.WriteContinuation(streamID, endHeaders, headerBlockFragment)
 }
 
@@ -241,32 +296,12 @@ func (conn *Conn) WaitEvent() Event {
 		return ev
 	}
 
-	switch f := f.(type) {
-	case *http2.DataFrame:
-		ev = EventDataFrame{*f}
+	_, ok := f.(*http2.DataFrame)
+	if ok {
 		conn.updateWindowSize(f)
-	case *http2.HeadersFrame:
-		ev = EventHeadersFrame{*f}
-	case *http2.PriorityFrame:
-		ev = EventPriorityFrame{*f}
-	case *http2.RSTStreamFrame:
-		ev = EventRSTStreamFrame{*f}
-	case *http2.SettingsFrame:
-		ev = EventSettingsFrame{*f}
-	case *http2.PushPromiseFrame:
-		ev = EventPushPromiseFrame{*f}
-	case *http2.PingFrame:
-		ev = EventPingFrame{*f}
-	case *http2.GoAwayFrame:
-		ev = EventGoAwayFrame{*f}
-	case *http2.WindowUpdateFrame:
-		ev = EventWindowUpdateFrame{*f}
-	case *http2.ContinuationFrame:
-		ev = EventContinuationFrame{*f}
-		//default:
-		//	ev = EventUnknownFrame(f)
 	}
 
+	ev = getEventByFrame(f)
 	conn.vlog(ev, false)
 
 	return ev
@@ -300,12 +335,55 @@ func (conn *Conn) updateWindowSize(f http2.Frame) {
 	}
 }
 
-func (conn *Conn) vlog(ev Event, send bool) {
-	if conn.Verbose {
-		if send {
-			log.Verbose(fmt.Sprintf("send: %s", ev))
-		} else {
-			log.Verbose(fmt.Sprintf("recv: %s", ev))
-		}
+func (conn *Conn) logFrameSend() {
+	f, err := conn.debugFramer.ReadFrame()
+	if err != nil {
+		return
 	}
+
+	ev := getEventByFrame(f)
+	conn.vlog(ev, true)
+}
+
+func (conn *Conn) vlog(ev Event, send bool) {
+	if !conn.Verbose {
+		return
+	}
+
+	if send {
+		log.Println(gray(fmt.Sprintf("     <-- [send] %s", ev)))
+	} else {
+		log.Println(gray(fmt.Sprintf("     --> [recv] %s", ev)))
+	}
+}
+
+func getEventByFrame(f http2.Frame) Event {
+	var ev Event
+
+	switch f := f.(type) {
+	case *http2.DataFrame:
+		ev = EventDataFrame{*f}
+	case *http2.HeadersFrame:
+		ev = EventHeadersFrame{*f}
+	case *http2.PriorityFrame:
+		ev = EventPriorityFrame{*f}
+	case *http2.RSTStreamFrame:
+		ev = EventRSTStreamFrame{*f}
+	case *http2.SettingsFrame:
+		ev = EventSettingsFrame{*f}
+	case *http2.PushPromiseFrame:
+		ev = EventPushPromiseFrame{*f}
+	case *http2.PingFrame:
+		ev = EventPingFrame{*f}
+	case *http2.GoAwayFrame:
+		ev = EventGoAwayFrame{*f}
+	case *http2.WindowUpdateFrame:
+		ev = EventWindowUpdateFrame{*f}
+	case *http2.ContinuationFrame:
+		ev = EventContinuationFrame{*f}
+		//default:
+		//	ev = EventUnknownFrame(f)
+	}
+
+	return ev
 }

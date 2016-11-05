@@ -1,6 +1,7 @@
 package spec
 
 import (
+	"fmt"
 	"math"
 
 	"golang.org/x/net/http2"
@@ -36,12 +37,20 @@ func (ev EventTimeout) String() string {
 	return "Timeout"
 }
 
+type EventRawData struct {
+	Payload []byte
+}
+
+func (ev EventRawData) String() string {
+	return fmt.Sprintf("Raw Data (0x%x)", ev.Payload)
+}
+
 type EventDataFrame struct {
 	http2.DataFrame
 }
 
 func (ev EventDataFrame) String() string {
-	return "DATA Frame"
+	return frameString(ev.Header())
 }
 
 type EventHeadersFrame struct {
@@ -49,7 +58,7 @@ type EventHeadersFrame struct {
 }
 
 func (ev EventHeadersFrame) String() string {
-	return "HEADERS Frame"
+	return frameString(ev.Header())
 }
 
 type EventPriorityFrame struct {
@@ -57,7 +66,7 @@ type EventPriorityFrame struct {
 }
 
 func (ev EventPriorityFrame) String() string {
-	return "PRIORITY Frame"
+	return frameString(ev.Header())
 }
 
 type EventRSTStreamFrame struct {
@@ -65,7 +74,7 @@ type EventRSTStreamFrame struct {
 }
 
 func (ev EventRSTStreamFrame) String() string {
-	return "RST_STREAM Frame"
+	return frameString(ev.Header())
 }
 
 type EventSettingsFrame struct {
@@ -73,7 +82,7 @@ type EventSettingsFrame struct {
 }
 
 func (ev EventSettingsFrame) String() string {
-	return "SETTINGS Frame"
+	return frameString(ev.Header())
 }
 
 type EventPushPromiseFrame struct {
@@ -81,7 +90,7 @@ type EventPushPromiseFrame struct {
 }
 
 func (ev EventPushPromiseFrame) String() string {
-	return "PUSH_PROMISE Frame"
+	return frameString(ev.Header())
 }
 
 type EventPingFrame struct {
@@ -89,7 +98,7 @@ type EventPingFrame struct {
 }
 
 func (ev EventPingFrame) String() string {
-	return "PING Frame"
+	return frameString(ev.Header())
 }
 
 type EventGoAwayFrame struct {
@@ -97,7 +106,7 @@ type EventGoAwayFrame struct {
 }
 
 func (ev EventGoAwayFrame) String() string {
-	return "GOAWAY Frame"
+	return frameString(ev.Header())
 }
 
 type EventWindowUpdateFrame struct {
@@ -105,7 +114,7 @@ type EventWindowUpdateFrame struct {
 }
 
 func (ev EventWindowUpdateFrame) String() string {
-	return "WINDOW_UPDATE Frame"
+	return frameString(ev.Header())
 }
 
 type EventContinuationFrame struct {
@@ -113,5 +122,15 @@ type EventContinuationFrame struct {
 }
 
 func (ev EventContinuationFrame) String() string {
-	return "CONTINUATION Frame"
+	return frameString(ev.Header())
+}
+
+func frameString(header http2.FrameHeader) string {
+	return fmt.Sprintf(
+		"%s Frame (length:%d, flags:0x%02x, stream_id:%d)",
+		header.Type,
+		header.Length,
+		header.Flags,
+		header.StreamID,
+	)
 }

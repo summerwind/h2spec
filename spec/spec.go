@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/summerwind/h2spec/config"
-	"github.com/summerwind/h2spec/spec/log"
+	"github.com/summerwind/h2spec/log"
 )
 
 var (
@@ -22,9 +22,13 @@ type TestGroup struct {
 	Name        string
 	Strict      bool
 	Parent      *TestGroup
-	groups      []*TestGroup
-	tests       []*TestCase
-	strictTests []*TestCase
+	Groups      []*TestGroup
+	Tests       []*TestCase
+	StrictTests []*TestCase
+}
+
+func (tg *TestGroup) IsRoot() bool {
+	return tg.Parent == nil
 }
 
 func (tg *TestGroup) ID() string {
@@ -33,22 +37,6 @@ func (tg *TestGroup) ID() string {
 	}
 
 	return fmt.Sprintf("%s/%s", tg.Key, tg.Section)
-}
-
-func (tg *TestGroup) AddTestGroup(stg *TestGroup) {
-	stg.Parent = tg
-	stg.Strict = tg.Strict
-	tg.groups = append(tg.groups, stg)
-}
-
-func (tg *TestGroup) AddTestCase(tc *TestCase) {
-	tc.Parent = tg
-	if tg.Strict {
-		tc.Strict = true
-		tg.strictTests = append(tg.strictTests, tc)
-	} else {
-		tg.tests = append(tg.tests, tc)
-	}
 }
 
 func (tg *TestGroup) IsTarget(targets map[string]bool) bool {
@@ -81,35 +69,6 @@ func (tg *TestGroup) IsTarget(targets map[string]bool) bool {
 	return false
 }
 
-//func (tg *TestGroup) IsTarget(targets []string) bool {
-//	if len(targets) == 0 {
-//		return true
-//	}
-//
-//	id := tg.ID()
-//	for _, target := range targets {
-//		var base, prefix string
-//
-//		if len(target) > len(id) {
-//			base = target
-//			prefix = id
-//		} else {
-//			base = id
-//			prefix = target
-//		}
-//
-//		if strings.HasPrefix(base, prefix) {
-//			return true
-//		}
-//	}
-//
-//	return false
-//}
-
-func (tg *TestGroup) IsRoot() bool {
-	return tg.Parent == nil
-}
-
 func (tg *TestGroup) Title() string {
 	if tg.IsRoot() {
 		return fmt.Sprintf("%s", tg.Name)
@@ -126,80 +85,58 @@ func (tg *TestGroup) Level() int {
 	return strings.Count(tg.Section, ".") + 1
 }
 
-func (tg *TestGroup) Test(c *config.Config) []*TestResult {
-	results := []*TestResult{}
+func (tg *TestGroup) Test(c *config.Config) {
 	level := tg.Level()
 
 	if tg.Strict && !c.Strict {
-		return nil
+		return
 	}
 
 	if !tg.IsTarget(c.Targets) {
-		return nil
+		return
 	}
 
 	log.SetIndentLevel(level)
 	log.Println(tg.Title())
 	log.SetIndentLevel(level + 1)
 
-	tests := append(tg.tests, tg.strictTests...)
-	tested := 0
+	tests := append(tg.Tests, tg.StrictTests...)
+	tested := false
 
 	for i, tc := range tests {
-		num := i + 1
+		seq := i + 1
 
-		if c.DryRun {
-			log.DescDryRun(num, tc.Desc)
-			tested += 1
-			continue
-		}
-
-		if tc.Strict && !c.Strict {
-			continue
-		}
-
-		if !tc.IsTarget(num, c.Targets) {
-			continue
-		}
-
-		if !c.Verbose {
-			log.DescRunning(num, tc.Desc)
-		}
-
-		r, err := tc.Test(c)
+		err := tc.Test(c, seq)
 		if err != nil {
-			log.ResetLine()
-			log.DescError(num, tc.Desc, err)
 			os.Exit(1)
 		}
 
-		log.ResetLine()
-		if r.Skipped() {
-			log.DescSkipped(num, tc.Desc)
-		} else if r.Failed() {
-			err, ok := r.Error.(*TestError)
-			if ok {
-				log.DescFailed(num, tc.Desc, tc.Requirement, err.Expected, err.Actual)
-			} else {
-				log.DescError(num, tc.Desc, r.Error)
-			}
-		} else {
-			log.DescPassed(num, tc.Desc)
-		}
-
-		results = append(results, r)
-		tested += 1
+		tested = true
 	}
 
-	if tested > 0 {
-		log.Println("")
+	if tested {
+		log.PrintBlankLine()
 	}
 
-	for _, g := range tg.groups {
-		results = append(results, g.Test(c)...)
+	for _, g := range tg.Groups {
+		g.Test(c)
 	}
+}
 
-	return results
+func (tg *TestGroup) AddTestGroup(stg *TestGroup) {
+	stg.Parent = tg
+	stg.Strict = tg.Strict
+	tg.Groups = append(tg.Groups, stg)
+}
+
+func (tg *TestGroup) AddTestCase(tc *TestCase) {
+	tc.Parent = tg
+	if tg.Strict {
+		tc.Strict = true
+		tg.StrictTests = append(tg.StrictTests, tc)
+	} else {
+		tg.Tests = append(tg.Tests, tc)
+	}
 }
 
 type TestCase struct {
@@ -207,6 +144,7 @@ type TestCase struct {
 	Requirement string
 	Strict      bool
 	Parent      *TestGroup
+	Result      *TestResult
 	Run         func(c *config.Config, conn *Conn) error
 }
 
@@ -239,10 +177,32 @@ func (tc *TestCase) IsTarget(num int, targets map[string]bool) bool {
 	return false
 }
 
-func (tc *TestCase) Test(c *config.Config) (*TestResult, error) {
+func (tc *TestCase) Test(c *config.Config, seq int) error {
+	if c.DryRun {
+		msg := fmt.Sprintf("%s %s", seqStr(seq), tc.Desc)
+		log.Println(msg)
+		return nil
+	}
+
+	if tc.Strict && !c.Strict {
+		return nil
+	}
+
+	if !tc.IsTarget(seq, c.Targets) {
+		return nil
+	}
+
+	if !c.Verbose {
+		msg := gray(fmt.Sprintf("  %s %s", seqStr(seq), tc.Desc))
+		log.Print(msg)
+	}
+
 	conn, err := Dial(c)
 	if err != nil {
-		return nil, err
+		msg := red(fmt.Sprintf("  %s %s %s", "×", seqStr(seq), tc.Desc))
+		log.ResetLine()
+		log.Println(msg)
+		return err
 	}
 	defer conn.Close()
 
@@ -250,27 +210,13 @@ func (tc *TestCase) Test(c *config.Config) (*TestResult, error) {
 	err = tc.Run(c, conn)
 	end := time.Now()
 
-	d := end.Sub(start)
+	log.ResetLine()
 
-	return &TestResult{
-		TestCase: tc,
-		Error:    err,
-		Duration: d,
-	}, nil
-}
+	tr := NewTestResult(tc, seq, err, end.Sub(start))
+	tr.Print()
+	tc.Result = tr
 
-type TestResult struct {
-	TestCase *TestCase
-	Error    error
-	Duration time.Duration
-}
-
-func (tr *TestResult) Skipped() bool {
-	return tr.Error != nil && tr.Error == ErrSkipped
-}
-
-func (tr *TestResult) Failed() bool {
-	return tr.Error != nil && tr.Error != ErrSkipped
+	return nil
 }
 
 type TestError struct {
@@ -280,4 +226,82 @@ type TestError struct {
 
 func (e TestError) Error() string {
 	return fmt.Sprintf("%s\n%s", strings.Join(e.Expected, "\n"), e.Actual)
+}
+
+type TestResult struct {
+	TestCase *TestCase
+	Sequence int
+	Error    error
+	Duration time.Duration
+
+	Skipped bool
+	Failed  bool
+}
+
+func NewTestResult(tc *TestCase, seq int, err error, d time.Duration) *TestResult {
+	skipped := false
+	failed := false
+
+	if err != nil {
+		if err == ErrSkipped {
+			skipped = true
+		} else {
+			failed = true
+		}
+	}
+
+	tr := TestResult{
+		TestCase: tc,
+		Sequence: seq,
+		Error:    err,
+		Duration: d,
+		Skipped:  skipped,
+		Failed:   failed,
+	}
+
+	return &tr
+}
+
+func (tr *TestResult) Print() {
+	tc := tr.TestCase
+	desc := tc.Desc
+	seq := seqStr(tr.Sequence)
+
+	if tr.Skipped {
+		log.Println(cyan(fmt.Sprintf("%s %s", seq, desc)))
+		return
+	}
+
+	if !tr.Failed {
+		log.Println(fmt.Sprintf("%s %s %s", green("✔"), gray(seq), gray(desc)))
+		return
+	}
+
+	log.Println(red(fmt.Sprintf("%s %s %s", "×", seq, desc)))
+	err, ok := tr.Error.(*TestError)
+	if ok {
+		level := log.IndentLevel
+		log.SetIndentLevel(level + 1)
+		defer func() {
+			log.SetIndentLevel(level)
+		}()
+
+		log.Println(red(fmt.Sprintf("-> %s", tc.Requirement)))
+		label := "Expected: "
+		for i, ex := range err.Expected {
+			if i != 0 {
+				label = strings.Repeat(" ", len(label))
+			}
+			log.Println(yellow(fmt.Sprintf("   %s%s", label, ex)))
+		}
+		log.Println(green(fmt.Sprintf("     Actual: %s", err.Actual)))
+
+		return
+	}
+
+	log.Println(red(fmt.Sprintf("Error: %v", err)))
+}
+
+func seqStr(seq int) string {
+	return fmt.Sprintf("%d:", seq)
 }

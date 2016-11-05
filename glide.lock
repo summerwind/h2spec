@@ -1,36 +1,37 @@
 hash: 2951dfcd48b65b112760c6c6a388d881200deed5f4c24a02e93ae0483b024756
-updated: 2016-08-14T23:11:39.087051487+09:00
+updated: 2016-11-05T22:35:17.810086239+09:00
 imports:
 - name: github.com/cpuguy83/go-md2man
-  version: 2724a9c9051aa62e9cca11304e7dd518e9e41599
+  version: a65d4d2de4d5f7c74868dfa9b202a3c8be315aaa
   subpackages:
   - md2man
 - name: github.com/fatih/color
-  version: 87d4004f2ab62d0d255e0a38f1680aa534549fe3
+  version: bf82308e8c8546dc2b945157173eb8a959ae9505
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/mattn/go-colorable
-  version: ed8eb9e318d7a84ce5915b495b7d35e0cfe7b5a8
+  version: d228849504861217f796da67fae4f6e347643f15
 - name: github.com/mattn/go-isatty
   version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
 - name: github.com/russross/blackfriday
-  version: 93622da34e54fb6529bfb7c57e710f37a8d9cbd8
+  version: 5f33e7b7878355cd2b7e6b8eefc48a5472c69f70
 - name: github.com/shurcooL/sanitized_anchor_name
-  version: 10ef21a441db47d8b13ebcc5fd2310f636973c77
+  version: 1dba4b3954bc059efc3991ec364f9f9a35f597d2
 - name: github.com/spf13/cobra
   version: 2bd8a730ae1986edcd19ee9ca686431cfe78bf2e
 - name: github.com/spf13/pflag
   version: 08b1a584251b5b62f458943640fc8ebd4d50aaa5
 - name: github.com/spf13/viper
-  version: 346299ea79e446ebdddb834371ceba2e5926b732
+  version: 651d9d916abc3c3d6a91a12549495caba5edffd2
 - name: golang.org/x/net
-  version: 07b51741c1d6423d4a6abab1c49940ec09cb1aaf
+  version: 55a3084c9119aeb9ba2437d595b0a7e9cb635da9
   subpackages:
   - http2
   - http2/hpack
+  - idna
   - lex/httplex
 - name: golang.org/x/sys
-  version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
+  version: c200b10b5d5e122be351b67af224adc6128af5bf
   subpackages:
   - unix
 testImports: []
