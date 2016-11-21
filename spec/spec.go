@@ -39,36 +39,6 @@ func (tg *TestGroup) ID() string {
 	return fmt.Sprintf("%s/%s", tg.Key, tg.Section)
 }
 
-func (tg *TestGroup) IsTarget(targets map[string]bool) bool {
-	if len(targets) == 0 {
-		return true
-	}
-
-	_, ok := targets[tg.ID()]
-	if ok {
-		return true
-	}
-
-	key := tg.Key
-	val, ok := targets[key]
-	if ok && val {
-		return true
-	}
-
-	if !tg.IsRoot() {
-		nums := strings.Split(tg.Parent.Section, ".")
-		for i, _ := range nums {
-			id := fmt.Sprintf("%s/%s", key, strings.Join(nums[:i+1], "."))
-			val, ok := targets[id]
-			if ok && val {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
 func (tg *TestGroup) Title() string {
 	if tg.IsRoot() {
 		return fmt.Sprintf("%s", tg.Name)
@@ -92,7 +62,8 @@ func (tg *TestGroup) Test(c *config.Config) {
 		return
 	}
 
-	if !tg.IsTarget(c.Targets) {
+	mode := c.RunMode(tg.ID())
+	if mode == config.RunModeNone {
 		return
 	}
 
@@ -148,35 +119,6 @@ type TestCase struct {
 	Run         func(c *config.Config, conn *Conn) error
 }
 
-func (tc *TestCase) IsTarget(num int, targets map[string]bool) bool {
-	if len(targets) == 0 {
-		return true
-	}
-
-	id := fmt.Sprintf("%s/%d", tc.Parent.ID(), num)
-	val, ok := targets[id]
-	if ok && val {
-		return true
-	}
-
-	key := tc.Parent.Key
-	val, ok = targets[key]
-	if ok && val {
-		return true
-	}
-
-	nums := strings.Split(tc.Parent.Section, ".")
-	for i, _ := range nums {
-		id := fmt.Sprintf("%s/%s", key, strings.Join(nums[:i+1], "."))
-		val, ok := targets[id]
-		if ok && val {
-			return true
-		}
-	}
-
-	return false
-}
-
 func (tc *TestCase) Test(c *config.Config, seq int) error {
 	if c.DryRun {
 		msg := fmt.Sprintf("%s %s", seqStr(seq), tc.Desc)
@@ -188,7 +130,8 @@ func (tc *TestCase) Test(c *config.Config, seq int) error {
 		return nil
 	}
 
-	if !tc.IsTarget(seq, c.Targets) {
+	mode := c.RunMode(fmt.Sprintf("%s/%d", tc.Parent.ID(), seq))
+	if mode == config.RunModeNone {
 		return nil
 	}
 

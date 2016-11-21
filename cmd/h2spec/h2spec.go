@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -131,45 +130,9 @@ func run(cmd *cobra.Command, args []string) error {
 		Insecure:     insecure,
 		Verbose:      verbose,
 		Sections:     args,
-		Targets:      buildTargets(args),
 	}
 
 	return h2spec.Run(c)
-}
-
-func buildTargets(sections []string) map[string]bool {
-	targets := map[string]bool{}
-
-	for _, section := range sections {
-		comps := strings.Split(section, "/")
-		compLen := len(comps)
-
-		// Invalid section
-		if compLen == 0 || compLen > 3 {
-			continue
-		}
-
-		// Root section
-		if compLen == 1 {
-			targets[comps[0]] = true
-			continue
-		}
-
-		targets[comps[0]] = false
-
-		nums := strings.Split(comps[1], ".")
-		for i, _ := range nums {
-			key := fmt.Sprintf("%s/%s", comps[0], strings.Join(nums[:i+1], "."))
-			_, ok := targets[key]
-			if !ok {
-				targets[key] = false
-			}
-		}
-
-		targets[section] = true
-	}
-
-	return targets
 }
 
 func version() {
