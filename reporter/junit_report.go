@@ -98,13 +98,20 @@ func convertJUnitReport(groups []*spec.TestGroup) []*JUnitTestSuite {
 				jtc.Skipped = &JUnitSkipped{}
 			} else if tc.Result.Failed {
 				jts.Failures += 1
+				switch tc.Result.Error.(type) {
+				case spec.TestError:
+					err := tc.Result.Error.(*spec.TestError)
+					expected := strings.Join(err.Expected, "\n")
+					actual := err.Actual
 
-				err := tc.Result.Error.(*spec.TestError)
-				expected := strings.Join(err.Expected, "\n")
-				actual := err.Actual
-
-				jtc.Failure = &JUnitFailure{
-					Content: fmt.Sprintf("Expect:\n%s\nActual:\n%s", expected, actual),
+					jtc.Failure = &JUnitFailure{
+						Content: fmt.Sprintf("Expect:\n%s\nActual:\n%s", expected, actual),
+					}
+				default:
+					err := tc.Result.Error
+					jtc.Failure = &JUnitFailure{
+						Content: fmt.Sprintf("Test in Error: %s", err),
+					}
 				}
 			}
 
