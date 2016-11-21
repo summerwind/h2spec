@@ -10,4 +10,6 @@ import:
 - package: github.com/spf13/pflag
   version: 08b1a584251b5b62f458943640fc8ebd4d50aaa5
 - package: github.com/spf13/viper
+  version: 651d9d916abc3c3d6a91a12549495caba5edffd2
 - package: github.com/fatih/color
+  version: bf82308e8c8546dc2b945157173eb8a959ae9505
