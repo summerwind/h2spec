@@ -51,8 +51,7 @@ func aggregateSummary(groups []*spec.TestGroup) map[string]int {
 }
 
 func FailedReport(groups []*spec.TestGroup) {
-	log.Println("\n--------------------\n")
-	log.Println("Failed tests: \n")
+	log.Println("Failures: \n")
 
 	for _, tg := range groups {
 		log.Println(tg.Title())

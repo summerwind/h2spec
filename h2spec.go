@@ -28,10 +28,11 @@ func Run(c *config.Config) error {
 	}
 
 	log.SetIndentLevel(0)
-	log.Println(fmt.Sprintf("Finished in %.4f seconds", d.Seconds()))
-
-	reporter.Summary(specs)
 	reporter.FailedReport(specs)
+
+	log.SetIndentLevel(0)
+	log.Println(fmt.Sprintf("Finished in %.4f seconds", d.Seconds()))
+	reporter.Summary(specs)
 
 	if c.JUnitReport != "" {
 		err := reporter.JUnitReport(specs, c.JUnitReport)
