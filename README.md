@@ -21,19 +21,26 @@ It is also possible to build specific version.
 
 ```
 $ h2spec --help
-Usage: h2spec [OPTIONS]
+Usage: h2spec [ARGS] [OPTIONS]
 
 Options:
-  -p:        Target port. (Default: 80 or 443)
-  -h:        Target host. (Default: 127.0.0.1)
-  -t:        Connect over TLS. (Default: false)
-  -k:        Don't verify server's certificate. (Default: false)
-  -o:        Maximum time allowed for test. (Default: 2)
-  -s:        Section number on which to run the test. (Example: -s 6.1 -s 6.2)
-  -S:        Run the test cases marked as "strict".
-  -j:        Creates report also in JUnit format into specified file.
-  --version: Display version information and exit.
-  --help:    Display this help and exit.
+    -p:                   Target port. (Default: 80 or 443)
+    -h:                   Target host. (Default: 127.0.0.1)
+    -t:                   Connect over TLS. (Default: false)
+    -k:                   Don't verify server's certificate. (Default: false)
+    -o:                   Maximum time allowed for test. (Default: 2)
+    -S:                   Run the test cases marked as "strict".
+    -j:                   Creates report also in JUnit format into specified file.
+    -v:                   Display version information and exit.
+    --max-header-length:  Maximum header length (Default: 4000)
+    --dryrun:             Dry-run mode
+    --help:               Display this help and exit.
+
+Args:
+    "<spec>/<chapter.section>/<test>", e.g. "http2/3.3/1"
+
+Example:
+    ./h2spec "http2/3.5/1" -h 192.168.122.204 -k --junit-report "junit.report" -p 3443 -t -v
 ```
 
 ## Screenshot
