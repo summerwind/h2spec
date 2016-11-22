@@ -241,8 +241,11 @@ func (tr *TestResult) Print() {
 
 		return
 	}
-
-	log.Println(red(fmt.Sprintf("Error: %v", err)))
+	if (err == nil) {
+		log.Println(red(fmt.Sprintf("Error: %v", tr.Error.Error())))
+	} else {
+		log.Println(red(fmt.Sprintf("Error: %v", err)))
+	}
 }
 
 func seqStr(seq int) string {
