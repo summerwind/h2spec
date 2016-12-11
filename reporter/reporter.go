@@ -7,6 +7,8 @@ import (
 	"github.com/summerwind/h2spec/spec"
 )
 
+// Summary outputs the summary of test result that includes
+// the number of passsed, skipped and failed.
 func Summary(groups []*spec.TestGroup) {
 	var passed, failed, skipped, total int
 
@@ -21,19 +23,8 @@ func Summary(groups []*spec.TestGroup) {
 	log.Println(fmt.Sprintf(tmp, total, passed, skipped, failed))
 }
 
-func FailedReport(groups []*spec.TestGroup) {
-	failed := false
-
-	for _, tg := range groups {
-		if tg.FailedCount > 0 {
-			failed = true
-		}
-	}
-
-	if !failed {
-		return
-	}
-
+// FailedTests outputs the report of failed tests.
+func FailedTests(groups []*spec.TestGroup) {
 	log.Println("Failures: \n")
 
 	for _, tg := range groups {

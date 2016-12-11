@@ -10,11 +10,13 @@ import (
 	"github.com/summerwind/h2spec/spec"
 )
 
+// JUnitReport represents the JUnit XML format.
 type JUnitTestReport struct {
 	XMLName    xml.Name          `xml:"testsuites"`
 	TestSuites []*JUnitTestSuite `xml:"testsuite"`
 }
 
+// JUnitTestSuite represents the testsuite element of JUnit XML format.
 type JUnitTestSuite struct {
 	XMLName   xml.Name         `xml:"testsuite"`
 	Name      string           `xml:"name,attr"`
@@ -27,6 +29,7 @@ type JUnitTestSuite struct {
 	TestCases []*JUnitTestCase `xml:"testcase"`
 }
 
+// JUnitTestCase represents the testcase element of JUnit XML format.
 type JUnitTestCase struct {
 	XMLName   xml.Name      `xml:"testcase"`
 	Package   string        `xml:"package,attr"`
@@ -34,18 +37,29 @@ type JUnitTestCase struct {
 	Time      string        `xml:"time,attr"`
 	Failure   *JUnitFailure `xml:"failure"`
 	Skipped   *JUnitSkipped `xml:"skipped"`
+	Error     *JUnitError   `xml:"error"`
 }
 
+// JUnitFailure represents the failure element of JUnit XML format.
 type JUnitFailure struct {
 	XMLName xml.Name `xml:"failure"`
 	Content string   `xml:",innerxml"`
 }
 
+// JUnitSkipped represents the skipped element of JUnit XML format.
 type JUnitSkipped struct {
 	XMLName xml.Name `xml:"skipped"`
 	Content string   `xml:",innerxml"`
 }
 
+// JUnitSkipped represents the error element of JUnit XML format.
+type JUnitError struct {
+	XMLName xml.Name `xml:"error"`
+	Content string   `xml:",innerxml"`
+}
+
+// JUnitReport writes a file which contains the JUnit report generated
+// by test result of h2spec.
 func JUnitReport(groups []*spec.TestGroup, filePath string) error {
 	report := JUnitTestReport{
 		TestSuites: convertJUnitReport(groups),
@@ -97,9 +111,10 @@ func convertJUnitReport(groups []*spec.TestGroup) []*JUnitTestSuite {
 				jts.Skipped += 1
 				jtc.Skipped = &JUnitSkipped{}
 			} else if tc.Result.Failed {
-				jts.Failures += 1
 				switch tc.Result.Error.(type) {
 				case spec.TestError:
+					jts.Failures += 1
+
 					err := tc.Result.Error.(*spec.TestError)
 					expected := strings.Join(err.Expected, "\n")
 					actual := err.Actual
@@ -108,9 +123,11 @@ func convertJUnitReport(groups []*spec.TestGroup) []*JUnitTestSuite {
 						Content: fmt.Sprintf("Expect:\n%s\nActual:\n%s", expected, actual),
 					}
 				default:
+					jts.Errors += 1
+
 					err := tc.Result.Error
-					jtc.Failure = &JUnitFailure{
-						Content: fmt.Sprintf("Test in Error: %s", err),
+					jtc.Error = &JUnitError{
+						Content: err.Error(),
 					}
 				}
 			}

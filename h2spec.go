@@ -12,6 +12,8 @@ import (
 )
 
 func Run(c *config.Config) error {
+	failed := false
+
 	specs := []*spec.TestGroup{
 		http2.Spec(),
 	}
@@ -19,6 +21,9 @@ func Run(c *config.Config) error {
 	start := time.Now()
 	for _, s := range specs {
 		s.Test(c)
+		if s.FailedCount > 0 {
+			failed = true
+		}
 	}
 	end := time.Now()
 	d := end.Sub(start)
@@ -27,8 +32,10 @@ func Run(c *config.Config) error {
 		return nil
 	}
 
-	log.SetIndentLevel(0)
-	reporter.FailedReport(specs)
+	if failed {
+		log.SetIndentLevel(0)
+		reporter.FailedTests(specs)
+	}
 
 	log.SetIndentLevel(0)
 	log.Println(fmt.Sprintf("Finished in %.4f seconds", d.Seconds()))
