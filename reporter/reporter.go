@@ -8,49 +8,32 @@ import (
 )
 
 func Summary(groups []*spec.TestGroup) {
-	s := aggregateSummary(groups)
-	tmp := "%d tests, %d passed, %d skipped, %d failed"
-	log.Println(fmt.Sprintf(tmp, s["total"], s["passed"], s["skipped"], s["failed"]))
-}
-
-func aggregateSummary(groups []*spec.TestGroup) map[string]int {
-	data := map[string]int{
-		"total":   0,
-		"passed":  0,
-		"failed":  0,
-		"skipped": 0,
-	}
+	var passed, failed, skipped, total int
 
 	for _, tg := range groups {
-		tests := append(tg.Tests, tg.StrictTests...)
-		for _, tc := range tests {
-			if tc.Result == nil {
-				continue
-			}
-
-			data["total"] += 1
-			if tc.Result.Failed {
-				data["failed"] += 1
-			} else if tc.Result.Skipped {
-				data["skipped"] += 1
-			} else {
-				data["passed"] += 1
-			}
-		}
-
-		if tg.Groups != nil {
-			d := aggregateSummary(tg.Groups)
-			data["total"] += d["total"]
-			data["failed"] += d["failed"]
-			data["skipped"] += d["skipped"]
-			data["passed"] += d["passed"]
-		}
+		passed += tg.PassedCount
+		failed += tg.FailedCount
+		skipped += tg.SkippedCount
 	}
 
-	return data
+	total = passed + failed + skipped
+	tmp := "%d tests, %d passed, %d skipped, %d failed"
+	log.Println(fmt.Sprintf(tmp, total, passed, skipped, failed))
 }
 
 func FailedReport(groups []*spec.TestGroup) {
+	failed := false
+
+	for _, tg := range groups {
+		if tg.FailedCount > 0 {
+			failed = true
+		}
+	}
+
+	if !failed {
+		return
+	}
+
 	log.Println("Failures: \n")
 
 	for _, tg := range groups {

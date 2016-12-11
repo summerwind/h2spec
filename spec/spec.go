@@ -25,6 +25,10 @@ type TestGroup struct {
 	Groups      []*TestGroup
 	Tests       []*TestCase
 	StrictTests []*TestCase
+
+	PassedCount  int
+	FailedCount  int
+	SkippedCount int
 }
 
 func (tg *TestGroup) IsRoot() bool {
@@ -82,6 +86,16 @@ func (tg *TestGroup) Test(c *config.Config) {
 			os.Exit(1)
 		}
 
+		if tc.Result != nil {
+			if tc.Result.Failed {
+				tg.FailedCount += 1
+			} else if tc.Result.Skipped {
+				tg.SkippedCount += 1
+			} else {
+				tg.PassedCount += 1
+			}
+		}
+
 		tested = true
 	}
 
@@ -91,6 +105,9 @@ func (tg *TestGroup) Test(c *config.Config) {
 
 	for _, g := range tg.Groups {
 		g.Test(c)
+		tg.FailedCount += g.FailedCount
+		tg.SkippedCount += g.SkippedCount
+		tg.PassedCount += g.PassedCount
 	}
 }
 
@@ -241,7 +258,7 @@ func (tr *TestResult) Print() {
 
 		return
 	}
-	if (err == nil) {
+	if err == nil {
 		log.Println(red(fmt.Sprintf("Error: %v", tr.Error.Error())))
 	} else {
 		log.Println(red(fmt.Sprintf("Error: %v", err)))
