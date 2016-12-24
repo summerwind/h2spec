@@ -13,6 +13,7 @@ const (
 	RunModeNone
 )
 
+// Config represents the configuration of h2spec.
 type Config struct {
 	Host         string
 	Port         int
@@ -28,10 +29,12 @@ type Config struct {
 	targetMap    map[string]bool
 }
 
+// Addr returns the string concatinated with hostname and port number.
 func (c *Config) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
 
+// TLSConfig returns a tls.Config based on the configuration of h2spec.
 func (c *Config) TLSConfig() *tls.Config {
 	if !c.TLS {
 		return nil
@@ -48,6 +51,8 @@ func (c *Config) TLSConfig() *tls.Config {
 	return &config
 }
 
+// RunMode returns a run mode of specified the section number.
+// This is used to decide whether to run test cases.
 func (c *Config) RunMode(section string) int {
 	if c.targetMap == nil {
 		c.buildTargetMap()
@@ -101,13 +106,13 @@ func (c *Config) buildTargetMap() {
 		comps := strings.Split(section, "/")
 		compLen := len(comps)
 
-		// Invalid section
+		// Validate the format of the section string.
 		if compLen == 0 || compLen > 3 {
 			fmt.Println("Invalid section: %s", section)
 			continue
 		}
 
-		// Root section
+		// Check the section string is root section or not.
 		if compLen == 1 {
 			c.targetMap[comps[0]] = true
 			continue
@@ -118,12 +123,15 @@ func (c *Config) buildTargetMap() {
 			c.targetMap[comps[0]] = false
 		}
 
+		// The parent group of the test case associated with this section
+		// must only run test cases included in the group.
 		nums := strings.Split(comps[1], ".")
 		for i, _ := range nums {
 			key := fmt.Sprintf("%s/%s", comps[0], strings.Join(nums[:i+1], "."))
 			c.targetMap[key] = false
 		}
 
+		// The test case associated with this section string must be run.
 		c.targetMap[section] = true
 	}
 }

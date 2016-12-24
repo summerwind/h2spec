@@ -18,6 +18,7 @@ var (
 	cyan   = color.New(color.FgCyan).SprintFunc()
 )
 
+// DummyString returns a dummy string with specified length.
 func DummyString(len int) string {
 	var buffer bytes.Buffer
 	for i := 0; i < len; i++ {
@@ -26,6 +27,7 @@ func DummyString(len int) string {
 	return buffer.String()
 }
 
+// DummyBytes returns a array of byte with specified length.
 func DummyBytes(len int) []byte {
 	var buffer bytes.Buffer
 	for i := 0; i < len; i++ {
@@ -34,10 +36,14 @@ func DummyBytes(len int) []byte {
 	return buffer.Bytes()
 }
 
+// HeaderField returns a header field of HPACK with specified
+// name and value.
 func HeaderField(name, value string) hpack.HeaderField {
 	return hpack.HeaderField{Name: name, Value: value}
 }
 
+// CommonHeaders returns a array of header field of HPACK contained
+// common http headers used in various test case.
 func CommonHeaders(c *config.Config) []hpack.HeaderField {
 	var scheme, authority string
 	defaultPort := false
@@ -68,6 +74,8 @@ func CommonHeaders(c *config.Config) []hpack.HeaderField {
 	}
 }
 
+// DummyHeaders returns a array of header field of HPACK contained
+// dummy string values.
 func DummyHeaders(c *config.Config, len int) []hpack.HeaderField {
 	headers := make([]hpack.HeaderField, len)
 	dummy := DummyString(c.MaxHeaderLen)

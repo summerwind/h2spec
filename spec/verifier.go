@@ -13,6 +13,7 @@ const (
 	ExpectedRSTStreamFrame   = "RST_STREAM Frame (Error Code: %s)"
 )
 
+// VerifyConnectionClose verifies whether the connection was closed.
 func VerifyConnectionClose(conn *Conn) error {
 	var actual Event
 
@@ -46,6 +47,8 @@ func VerifyConnectionClose(conn *Conn) error {
 	return nil
 }
 
+// VerifyConnectionError verifies whether a connection error of HTTP/2
+// has occurred.
 func VerifyConnectionError(conn *Conn, codes ...http2.ErrCode) error {
 	var actual Event
 
@@ -87,6 +90,8 @@ func VerifyConnectionError(conn *Conn, codes ...http2.ErrCode) error {
 	return nil
 }
 
+// VerifyStreamError verifies whether a stream error of HTTP/2
+// has occurred.
 func VerifyStreamError(conn *Conn, codes ...http2.ErrCode) error {
 	var actual Event
 
@@ -131,6 +136,8 @@ func VerifyStreamError(conn *Conn, codes ...http2.ErrCode) error {
 	return nil
 }
 
+// VerifyStreamClose verifies whether a stream close of HTTP/2
+// has occurred.
 func VerifyStreamClose(conn *Conn) error {
 	var actual Event
 
@@ -170,6 +177,8 @@ func VerifyStreamClose(conn *Conn) error {
 	return nil
 }
 
+// VerifyErrorCode verifies whether the specified error code is
+// the expected error code.
 func VerifyErrorCode(codes []http2.ErrCode, code http2.ErrCode) bool {
 	for _, c := range codes {
 		if c == code {
