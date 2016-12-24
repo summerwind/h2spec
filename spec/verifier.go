@@ -177,6 +177,53 @@ func VerifyStreamClose(conn *Conn) error {
 	return nil
 }
 
+// VerifyFrameType verifies whether a frame with specified type
+// has received.
+func VerifyFrameType(conn *Conn, frameTypes ...http2.FrameType) error {
+	var actual Event
+
+	passed := false
+	for !conn.Closed {
+		ev := conn.WaitEvent()
+
+		switch event := ev.(type) {
+		case EventTimeout:
+			if actual == nil {
+				actual = event
+			}
+		default:
+			actual = ev
+
+			ef, ok := event.(EventFrame)
+			if ok {
+				for _, ft := range frameTypes {
+					if ef.Header().Type == ft {
+						passed = true
+					}
+				}
+			}
+		}
+
+		if passed {
+			break
+		}
+	}
+
+	if !passed {
+		expected := []string{}
+		for _, ft := range frameTypes {
+			expected = append(expected, fmt.Sprintf("%s frame", ft))
+		}
+
+		return &TestError{
+			Expected: expected,
+			Actual:   actual.String(),
+		}
+	}
+
+	return nil
+}
+
 // VerifyErrorCode verifies whether the specified error code is
 // the expected error code.
 func VerifyErrorCode(codes []http2.ErrCode, code http2.ErrCode) bool {

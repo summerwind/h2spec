@@ -17,6 +17,11 @@ type Event interface {
 	String() string
 }
 
+type EventFrame interface {
+	String() string
+	Header() http2.FrameHeader
+}
+
 type EventConnectionClosed struct{}
 
 func (ev EventConnectionClosed) String() string {
