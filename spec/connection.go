@@ -241,6 +241,15 @@ func (conn *Conn) WriteSettingsAck() error {
 	return conn.framer.WriteSettingsAck()
 }
 
+func (conn *Conn) WritePing(ack bool, data [8]byte) error {
+	if conn.Verbose {
+		conn.debugFramer.WritePing(ack, data)
+		conn.logFrameSend()
+	}
+
+	return conn.framer.WritePing(ack, data)
+}
+
 func (conn *Conn) WriteWindowUpdate(streamID, incr uint32) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteWindowUpdate(streamID, incr)
