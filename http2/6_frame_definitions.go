@@ -6,6 +6,7 @@ func FrameDefinitions() *spec.TestGroup {
 	tg := NewTestGroup("6", "Frame Definitions")
 
 	tg.AddTestGroup(Data())
+	tg.AddTestGroup(Headers())
 
 	return tg
 }
