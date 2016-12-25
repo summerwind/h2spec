@@ -21,6 +21,7 @@ func Spec() *spec.TestGroup {
 	tg.AddTestGroup(StartingHTTP2())
 	tg.AddTestGroup(HTTPFrames())
 	tg.AddTestGroup(StreamsAndMultiplexing())
+	tg.AddTestGroup(FrameDefinitions())
 
 	return tg
 }
