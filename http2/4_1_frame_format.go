@@ -16,19 +16,9 @@ func FrameFormat() *spec.TestGroup {
 		Desc:        "Sends a frame with unknown type",
 		Requirement: "The endpoint MUST ignore and discard any frame that has a type that is unknown.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
-			var streamID uint32 = 1
-
 			err := conn.Handshake()
 			if err != nil {
 				return err
-			}
-
-			headers := spec.CommonHeaders(c)
-			hp := http2.HeadersFrameParam{
-				StreamID:      streamID,
-				EndStream:     true,
-				EndHeaders:    true,
-				BlockFragment: conn.EncodeHeaders(headers),
 			}
 
 			// UNKONWN Frame:
@@ -36,9 +26,9 @@ func FrameFormat() *spec.TestGroup {
 			conn.Send("\x00\x00\x08\x16\x00\x00\x00\x00\x00")
 			conn.Send("\x00\x00\x00\x00\x00\x00\x00\x00")
 
-			conn.WriteHeaders(hp)
+			conn.WritePing(false, [8]byte{})
 
-			return spec.VerifyFrameType(conn, http2.FrameHeaders)
+			return spec.VerifyFrameType(conn, http2.FramePing)
 		},
 	})
 
