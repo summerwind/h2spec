@@ -7,6 +7,7 @@ func FrameDefinitions() *spec.TestGroup {
 
 	tg.AddTestGroup(Data())
 	tg.AddTestGroup(Headers())
+	tg.AddTestGroup(Priority())
 
 	return tg
 }
