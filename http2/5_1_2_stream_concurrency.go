@@ -9,29 +9,34 @@ import (
 func StreamConcurrency() *spec.TestGroup {
 	tg := NewTestGroup("5.1.2", "Stream Concurrency")
 
+	// An endpoint that receives a HEADERS frame that causes
+	// its advertised concurrent stream limit to be exceeded
+	// MUST treat this as a stream error (Section 5.4.2) of
+	// type PROTOCOL_ERROR or REFUSED_STREAM.
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends HEADERS frames that causes their advertised concurrent stream limit to be exceeded",
 		Requirement: "The endpoint MUST treat this as a stream error of type PROTOCOL_ERROR or REFUSED_STREAM.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
+			var streamID uint32 = 1
+
 			err := conn.Handshake()
 			if err != nil {
 				return err
 			}
 
-			// Skip this when SETTINGS_MAX_CONCURRENT_STREAMS is unlimited.
+			// Skip this test case when SETTINGS_MAX_CONCURRENT_STREAMS is unlimited.
 			maxStreams, ok := conn.Settings[http2.SettingMaxConcurrentStreams]
 			if !ok {
 				return spec.ErrSkipped
 			}
 
-			// Set INITIAL_WINDOW_SIZE to zero to prevent the peer from closing the stream
+			// Set INITIAL_WINDOW_SIZE to zero to prevent the peer from closing the stream.
 			settings := http2.Setting{http2.SettingInitialWindowSize, 0}
 			conn.WriteSettings(settings)
 
 			headers := spec.CommonHeaders(c)
 			blockFragment := conn.EncodeHeaders(headers)
 
-			var streamID uint32 = 1
 			for i := 0; i <= int(maxStreams); i++ {
 				hp := http2.HeadersFrameParam{
 					StreamID:      streamID,
@@ -43,7 +48,11 @@ func StreamConcurrency() *spec.TestGroup {
 				streamID += 2
 			}
 
-			return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol, http2.ErrCodeRefusedStream)
+			codes := []http2.ErrCode{
+				http2.ErrCodeProtocol,
+				http2.ErrCodeRefusedStream,
+			}
+			return spec.VerifyConnectionError(conn, codes...)
 		},
 	})
 

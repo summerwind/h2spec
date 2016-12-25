@@ -9,6 +9,9 @@ import (
 func StreamIdentifiers() *spec.TestGroup {
 	tg := NewTestGroup("5.1.1", "Stream Identifiers")
 
+	// An endpoint that receives an unexpected stream identifier
+	// MUST respond with a connection error (Section 5.4.1) of
+	// type PROTOCOL_ERROR.
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends even-numbered stream identifier",
 		Requirement: "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
@@ -31,6 +34,9 @@ func StreamIdentifiers() *spec.TestGroup {
 		},
 	})
 
+	// An endpoint that receives an unexpected stream identifier
+	// MUST respond with a connection error (Section 5.4.1) of
+	// type PROTOCOL_ERROR.
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends stream identifier that is numerically smaller than previous",
 		Requirement: "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
