@@ -180,10 +180,9 @@ func (conn *Conn) EncodeHeaders(headers []hpack.HeaderField) []byte {
 	return dst
 }
 
-func (conn *Conn) Send(payload string) error {
-	p := []byte(payload)
-	conn.vlog(EventRawData{p}, true)
-	_, err := conn.Write(p)
+func (conn *Conn) Send(payload []byte) error {
+	conn.vlog(EventRawData{payload}, true)
+	_, err := conn.Write(payload)
 	return err
 }
 

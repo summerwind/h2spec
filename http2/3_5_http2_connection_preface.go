@@ -21,7 +21,7 @@ func HTTP2ConnectionPreface() *spec.TestGroup {
 				Val: spec.DefaultWindowSize,
 			}
 
-			conn.Send("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")
+			conn.Send([]byte("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"))
 			conn.WriteSettings(setting)
 
 			return spec.VerifyFrameType(conn, http2.FrameSettings)
@@ -34,7 +34,7 @@ func HTTP2ConnectionPreface() *spec.TestGroup {
 		Desc:        "Sends invalid connection preface",
 		Requirement: "The endpoint MUST terminate the TCP connection.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
-			err := conn.Send("INVALID CONNECTION PREFACE\r\n\r\n")
+			err := conn.Send([]byte("INVALID CONNECTION PREFACE\r\n\r\n"))
 			if err != nil {
 				return err
 			}

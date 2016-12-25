@@ -22,7 +22,7 @@ func HeaderCompressionAndDecompression() *spec.TestGroup {
 
 			// Literal Header Field with Incremental Indexing without
 			// Length and String segment.
-			err = conn.Send("\x00\x00\x01\x01\x05\x00\x00\x00\x01\x40")
+			err = conn.Send([]byte("\x00\x00\x01\x01\x05\x00\x00\x00\x01\x40"))
 			if err != nil {
 				return err
 			}

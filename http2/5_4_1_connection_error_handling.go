@@ -24,8 +24,8 @@ func ConnectionErrorHandling() *spec.TestGroup {
 			}
 
 			// PING frame with invalid stream ID
-			conn.Send("\x00\x00\x08\x06\x00\x00\x00\x00\x03")
-			conn.Send("\x00\x00\x00\x00\x00\x00\x00\x00")
+			conn.Send([]byte("\x00\x00\x08\x06\x00\x00\x00\x00\x03"))
+			conn.Send([]byte("\x00\x00\x00\x00\x00\x00\x00\x00"))
 
 			return spec.VerifyConnectionClose(conn)
 		},
@@ -47,8 +47,8 @@ func ConnectionErrorHandling() *spec.TestGroup {
 			}
 
 			// PING frame with invalid stream ID
-			conn.Send("\x00\x00\x08\x06\x00\x00\x00\x00\x03")
-			conn.Send("\x00\x00\x00\x00\x00\x00\x00\x00")
+			conn.Send([]byte("\x00\x00\x08\x06\x00\x00\x00\x00\x03"))
+			conn.Send([]byte("\x00\x00\x00\x00\x00\x00\x00\x00"))
 
 			passed := false
 			for !conn.Closed {

@@ -23,8 +23,8 @@ func FrameFormat() *spec.TestGroup {
 
 			// UNKONWN Frame:
 			// Length: 8, Type: 255, Flags: 0, R: 0, StreamID: 0
-			conn.Send("\x00\x00\x08\x16\x00\x00\x00\x00\x00")
-			conn.Send("\x00\x00\x00\x00\x00\x00\x00\x00")
+			conn.Send([]byte("\x00\x00\x08\x16\x00\x00\x00\x00\x00"))
+			conn.Send([]byte("\x00\x00\x00\x00\x00\x00\x00\x00"))
 
 			conn.WritePing(false, [8]byte{})
 
@@ -47,8 +47,8 @@ func FrameFormat() *spec.TestGroup {
 
 			// PING Frame:
 			// Length: 8, Type: 6, Flags: 255, R: 0, StreamID: 0
-			conn.Send("\x00\x00\x08\x06\x16\x00\x00\x00\x00")
-			conn.Send("\x00\x00\x00\x00\x00\x00\x00\x00")
+			conn.Send([]byte("\x00\x00\x08\x06\x16\x00\x00\x00\x00"))
+			conn.Send([]byte("\x00\x00\x00\x00\x00\x00\x00\x00"))
 
 			return spec.VerifyFrameType(conn, http2.FramePing)
 		},
@@ -68,8 +68,8 @@ func FrameFormat() *spec.TestGroup {
 
 			// PING Frame:
 			// Length: 8, Type: 6, Flags: 255, R: 1, StreamID: 0
-			conn.Send("\x00\x00\x08\x06\x16\x80\x00\x00\x00")
-			conn.Send("\x00\x00\x00\x00\x00\x00\x00\x00")
+			conn.Send([]byte("\x00\x00\x08\x06\x16\x80\x00\x00\x00"))
+			conn.Send([]byte("\x00\x00\x00\x00\x00\x00\x00\x00"))
 
 			return spec.VerifyFrameType(conn, http2.FramePing)
 		},

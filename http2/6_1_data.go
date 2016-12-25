@@ -91,8 +91,8 @@ func Data() *spec.TestGroup {
 
 			// DATA frame:
 			// frame length: 5, pad length: 6
-			conn.Send("\x00\x00\x05\x00\x09\x00\x00\x00\x01")
-			conn.Send("\x06\x54\x65\x73\x74")
+			conn.Send([]byte("\x00\x00\x05\x00\x09\x00\x00\x00\x01"))
+			conn.Send([]byte("\x06\x54\x65\x73\x74"))
 
 			return spec.VerifyStreamError(conn, http2.ErrCodeProtocol)
 		},
