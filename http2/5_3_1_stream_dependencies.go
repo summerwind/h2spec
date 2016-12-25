@@ -9,10 +9,14 @@ import (
 func StreamDependencies() *spec.TestGroup {
 	tg := NewTestGroup("5.3.1", "Stream Dependencies")
 
+	// A stream cannot depend on itself. An endpoint MUST treat this
+	// as a stream error (Section 5.4.2) of type PROTOCOL_ERROR.
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends HEADERS frame that depend on itself",
 		Requirement: "The endpoint MUST treat this as a stream error of type PROTOCOL_ERROR.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
+			var streamID uint32 = 1
+
 			err := conn.Handshake()
 			if err != nil {
 				return err
@@ -20,12 +24,12 @@ func StreamDependencies() *spec.TestGroup {
 
 			headers := spec.CommonHeaders(c)
 			hp := http2.HeadersFrameParam{
-				StreamID:      2,
+				StreamID:      streamID,
 				EndStream:     true,
 				EndHeaders:    true,
 				BlockFragment: conn.EncodeHeaders(headers),
 				Priority: http2.PriorityParam{
-					StreamDep: 3,
+					StreamDep: streamID,
 					Exclusive: false,
 					Weight:    255,
 				},
@@ -36,16 +40,19 @@ func StreamDependencies() *spec.TestGroup {
 		},
 	})
 
+	// A stream cannot depend on itself. An endpoint MUST treat this
+	// as a stream error (Section 5.4.2) of type PROTOCOL_ERROR.
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends PRIORITY frame that depend on itself",
 		Requirement: "The endpoint MUST treat this as a stream error of type PROTOCOL_ERROR.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
+			var streamID uint32 = 1
+
 			err := conn.Handshake()
 			if err != nil {
 				return err
 			}
 
-			var streamID uint32 = 2
 			priorityParam := http2.PriorityParam{
 				StreamDep: streamID,
 				Exclusive: false,
