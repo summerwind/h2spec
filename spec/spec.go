@@ -83,6 +83,7 @@ func (tg *TestGroup) Test(c *config.Config) {
 
 		err := tc.Test(c, seq)
 		if err != nil {
+			fmt.Printf("\nError: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -159,7 +160,7 @@ func (tc *TestCase) Test(c *config.Config, seq int) error {
 
 	conn, err := Dial(c)
 	if err != nil {
-		msg := red(fmt.Sprintf("  %s %s %s", "×", seqStr(seq), tc.Desc))
+		msg := red(fmt.Sprintf("%s %s %s", "×", seqStr(seq), tc.Desc))
 		log.ResetLine()
 		log.Println(msg)
 		return err
