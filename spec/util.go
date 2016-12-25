@@ -77,7 +77,7 @@ func CommonHeaders(c *config.Config) []hpack.HeaderField {
 // DummyHeaders returns a array of header field of HPACK contained
 // dummy string values.
 func DummyHeaders(c *config.Config, len int) []hpack.HeaderField {
-	headers := make([]hpack.HeaderField, len)
+	headers := make([]hpack.HeaderField, 0, len)
 	dummy := DummyString(c.MaxHeaderLen)
 
 	for i := 0; i < len; i++ {
