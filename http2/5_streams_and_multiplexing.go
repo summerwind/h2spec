@@ -8,6 +8,7 @@ func StreamsAndMultiplexing() *spec.TestGroup {
 	tg.AddTestGroup(StreamStates())
 	tg.AddTestGroup(StreamPriority())
 	tg.AddTestGroup(ErrorHandling())
+	tg.AddTestGroup(ExtendingHTTP2())
 
 	return tg
 }
