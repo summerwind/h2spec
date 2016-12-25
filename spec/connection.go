@@ -347,6 +347,11 @@ func (conn *Conn) updateWindowSize(f http2.Frame) {
 func (conn *Conn) logFrameSend() {
 	f, err := conn.debugFramer.ReadFrame()
 	if err != nil {
+		// http2 package does not parse DATA frame with stream ID: 0x0.
+		// So we are going to log the information that sent some frame.
+		if conn.Verbose {
+			log.Println(gray(fmt.Sprintf("     <-- [send] ??? Frame (Failed to parse the frame)")))
+		}
 		return
 	}
 
