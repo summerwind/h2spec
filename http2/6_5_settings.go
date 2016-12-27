@@ -89,6 +89,7 @@ func Settings() *spec.TestGroup {
 	})
 
 	tg.AddTestGroup(DefinedSETTINGSParameters())
+	tg.AddTestGroup(SettingsSynchronization())
 
 	return tg
 }
