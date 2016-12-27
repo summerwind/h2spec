@@ -10,6 +10,7 @@ func FrameDefinitions() *spec.TestGroup {
 	tg.AddTestGroup(Priority())
 	tg.AddTestGroup(RSTStream())
 	tg.AddTestGroup(Settings())
+	tg.AddTestGroup(Ping())
 
 	return tg
 }
