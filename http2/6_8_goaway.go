@@ -15,7 +15,7 @@ func GoAway() *spec.TestGroup {
 	// PROTOCOL_ERROR.
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends a GOAWAY frame with a stream identifier other than 0x0",
-		Requirement: "The endpoint MUST treated as a connection error of type PROTOCOL_ERROR.",
+		Requirement: "The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			err := conn.Handshake()
 			if err != nil {

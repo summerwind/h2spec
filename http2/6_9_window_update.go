@@ -17,7 +17,7 @@ func WindowUpdate() *spec.TestGroup {
 	// (Section 5.4.1).
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends a WINDOW_UPDATE frame with a flow control window increment of 0",
-		Requirement: "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+		Requirement: "The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			err := conn.Handshake()
 			if err != nil {
@@ -37,7 +37,7 @@ func WindowUpdate() *spec.TestGroup {
 	// (Section 5.4.1).
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends a WINDOW_UPDATE frame with a flow control window increment of 0 on a stream",
-		Requirement: "The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
+		Requirement: "The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			var streamID uint32 = 1
 
@@ -66,7 +66,7 @@ func WindowUpdate() *spec.TestGroup {
 	// FRAME_SIZE_ERROR.
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends a WINDOW_UPDATE frame with a length other than 4 octets",
-		Requirement: "The endpoint MUST treated as a connection error of type FRAME_SIZE_ERROR.",
+		Requirement: "The endpoint MUST treat this as a connection error of type FRAME_SIZE_ERROR.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			err := conn.Handshake()
 			if err != nil {

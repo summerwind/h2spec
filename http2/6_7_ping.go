@@ -155,7 +155,7 @@ func Ping() *spec.TestGroup {
 	// FRAME_SIZE_ERROR.
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends a PING frame with a length field value other than 8",
-		Requirement: "The endpoint MUST treated as a connection error of type FRAME_SIZE_ERROR.",
+		Requirement: "The endpoint MUST treat this as a connection error of type FRAME_SIZE_ERROR.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			err := conn.Handshake()
 			if err != nil {
