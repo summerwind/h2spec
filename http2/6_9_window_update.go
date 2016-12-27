@@ -83,6 +83,7 @@ func WindowUpdate() *spec.TestGroup {
 	})
 
 	tg.AddTestGroup(TheFlowControlWindow())
+	tg.AddTestGroup(InitialFlowControlWindowSize())
 
 	return tg
 }
