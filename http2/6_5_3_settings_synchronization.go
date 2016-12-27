@@ -15,7 +15,7 @@ func SettingsSynchronization() *spec.TestGroup {
 	// The values in the SETTINGS frame MUST be processed in the order
 	// they appear, with no other frame processing between values.
 	tg.AddTestCase(&spec.TestCase{
-		Desc:        "Sends multiple values of MAX_CONCURRENT_STREAMS",
+		Desc:        "Sends multiple values of SETTINGS_INITIAL_WINDOW_SIZE",
 		Requirement: "The endpoint MUST process the values in the settings in the order they apper.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			var streamID uint32 = 1
