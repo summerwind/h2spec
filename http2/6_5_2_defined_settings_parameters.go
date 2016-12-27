@@ -109,7 +109,7 @@ func DefinedSETTINGSParameters() *spec.TestGroup {
 	// An endpoint that receives a SETTINGS frame with any unknown
 	// or unsupported identifier MUST ignore that setting.
 	tg.AddTestCase(&spec.TestCase{
-		Desc:        "Sends a setting with unknown identifier",
+		Desc:        "Sends a SETTINGS frame with unknown identifier",
 		Requirement: "The endpoint MUST ignore that setting.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			err := conn.Handshake()
