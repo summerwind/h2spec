@@ -167,7 +167,7 @@ func Ping() *spec.TestGroup {
 			conn.Send([]byte("\x00\x00\x06\x06\x00\x00\x00\x00\x01"))
 			conn.Send([]byte("\x00\x00\x00\x00\x00\x00"))
 
-			return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol)
+			return spec.VerifyConnectionError(conn, http2.ErrCodeFrameSize)
 		},
 	})
 
