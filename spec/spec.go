@@ -95,9 +95,9 @@ func (tg *TestGroup) Test(c *config.Config) {
 			} else {
 				tg.PassedCount += 1
 			}
-		}
 
-		tested = true
+			tested = true
+		}
 	}
 
 	if tested {
