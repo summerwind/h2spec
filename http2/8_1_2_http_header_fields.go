@@ -12,7 +12,9 @@ func HTTPHeaderFields() *spec.TestGroup {
 	// Just as in HTTP/1.x, header field names are strings of ASCII
 	// characters that are compared in a case-insensitive fashion.
 	// However, header field names MUST be converted to lowercase
-	// prior to their encoding in HTTP/2.
+	// prior to their encoding in HTTP/2. A request or response
+	// containing uppercase header field names MUST be treated as
+	// malformed (Section 8.1.2.6).
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends a HEADERS frame that contains the header field name in uppercase letters",
 		Requirement: "The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
@@ -39,6 +41,8 @@ func HTTPHeaderFields() *spec.TestGroup {
 			return spec.VerifyStreamError(conn, http2.ErrCodeProtocol)
 		},
 	})
+
+	tg.AddTestGroup(PseudoHeaderFields())
 
 	return tg
 }
