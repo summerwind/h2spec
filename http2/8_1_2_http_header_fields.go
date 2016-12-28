@@ -45,6 +45,7 @@ func HTTPHeaderFields() *spec.TestGroup {
 	tg.AddTestGroup(PseudoHeaderFields())
 	tg.AddTestGroup(ConnectionSpecificHeaderFields())
 	tg.AddTestGroup(RequestPseudoHeaderFields())
+	tg.AddTestGroup(MalformedRequestsAndResponses())
 
 	return tg
 }
