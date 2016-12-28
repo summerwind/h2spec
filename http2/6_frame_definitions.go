@@ -13,6 +13,7 @@ func FrameDefinitions() *spec.TestGroup {
 	tg.AddTestGroup(Ping())
 	tg.AddTestGroup(GoAway())
 	tg.AddTestGroup(WindowUpdate())
+	tg.AddTestGroup(Continuation())
 
 	return tg
 }
