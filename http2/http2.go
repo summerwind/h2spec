@@ -23,6 +23,7 @@ func Spec() *spec.TestGroup {
 	tg.AddTestGroup(StreamsAndMultiplexing())
 	tg.AddTestGroup(FrameDefinitions())
 	tg.AddTestGroup(ErrorCodes())
+	tg.AddTestGroup(HTTPMessageExchanges())
 
 	return tg
 }
