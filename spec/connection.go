@@ -239,6 +239,15 @@ func (conn *Conn) WriteSettingsAck() error {
 	return conn.framer.WriteSettingsAck()
 }
 
+func (conn *Conn) WritePushPromise(p http2.PushPromiseParam) error {
+	if conn.Verbose {
+		conn.debugFramer.WritePushPromise(p)
+		conn.logFrameSend()
+	}
+
+	return conn.framer.WritePushPromise(p)
+}
+
 func (conn *Conn) WritePing(ack bool, data [8]byte) error {
 	if conn.Verbose {
 		conn.debugFramer.WritePing(ack, data)
