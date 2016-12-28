@@ -28,36 +28,40 @@ func FailedTests(groups []*spec.TestGroup) {
 	log.Println("Failures: \n")
 
 	for _, tg := range groups {
-		log.Println(tg.Title())
-		printFailed(tg.Groups)
+		printFailed(tg)
 	}
 }
 
-func printFailed(groups []*spec.TestGroup) {
-	for _, tg := range groups {
-		failed := false
+func printFailed(tg *spec.TestGroup) {
+	if tg.FailedCount == 0 {
+		return
+	}
 
-		tests := append(tg.Tests, tg.StrictTests...)
-		for _, tc := range tests {
-			if tc.Result == nil {
-				continue
-			}
+	level := tg.Level()
 
-			if tc.Result.Failed {
-				log.SetIndentLevel(1)
-				log.Println(tc.Parent.Title())
-				log.SetIndentLevel(2)
-				tc.Result.Print()
-				failed = true
-			}
+	log.SetIndentLevel(level)
+	log.Println(tg.Title())
+	log.SetIndentLevel(level + 1)
+
+	tests := append(tg.Tests, tg.StrictTests...)
+	failed := false
+
+	for _, tc := range tests {
+		if tc.Result == nil {
+			continue
 		}
 
-		if failed {
-			log.PrintBlankLine()
+		if tc.Result.Failed {
+			tc.Result.Print()
+			failed = true
 		}
+	}
 
-		if tg.Groups != nil {
-			printFailed(tg.Groups)
-		}
+	if failed {
+		log.PrintBlankLine()
+	}
+
+	for _, g := range tg.Groups {
+		printFailed(g)
 	}
 }
