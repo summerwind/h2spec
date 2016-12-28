@@ -43,6 +43,7 @@ func HTTPHeaderFields() *spec.TestGroup {
 	})
 
 	tg.AddTestGroup(PseudoHeaderFields())
+	tg.AddTestGroup(ConnectionSpecificHeaderFields())
 
 	return tg
 }
