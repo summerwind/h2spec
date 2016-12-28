@@ -12,6 +12,7 @@ import (
 )
 
 func Run(c *config.Config) error {
+	total := 0
 	failed := false
 
 	specs := []*spec.TestGroup{
@@ -21,14 +22,25 @@ func Run(c *config.Config) error {
 	start := time.Now()
 	for _, s := range specs {
 		s.Test(c)
+
 		if s.FailedCount > 0 {
 			failed = true
 		}
+
+		total += s.FailedCount
+		total += s.SkippedCount
+		total += s.PassedCount
 	}
 	end := time.Now()
 	d := end.Sub(start)
 
 	if c.DryRun {
+		return nil
+	}
+
+	if total == 0 {
+		log.SetIndentLevel(0)
+		log.Println("No matched tests found.")
 		return nil
 	}
 
