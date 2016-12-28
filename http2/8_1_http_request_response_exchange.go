@@ -55,5 +55,7 @@ func HTTPRequestResponseExchange() *spec.TestGroup {
 		},
 	})
 
+	tg.AddTestGroup(HTTPHeaderFields())
+
 	return tg
 }
