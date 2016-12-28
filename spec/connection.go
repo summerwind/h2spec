@@ -248,6 +248,15 @@ func (conn *Conn) WritePing(ack bool, data [8]byte) error {
 	return conn.framer.WritePing(ack, data)
 }
 
+func (conn *Conn) WriteGoAway(maxStreamID uint32, code http2.ErrCode, debugData []byte) error {
+	if conn.Verbose {
+		conn.debugFramer.WriteGoAway(maxStreamID, code, debugData)
+		conn.logFrameSend()
+	}
+
+	return conn.framer.WriteGoAway(maxStreamID, code, debugData)
+}
+
 func (conn *Conn) WriteWindowUpdate(streamID, incr uint32) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteWindowUpdate(streamID, incr)
