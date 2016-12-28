@@ -436,11 +436,8 @@ func StreamStates() *spec.TestGroup {
 				return err
 			}
 
-			frameSize := conn.MaxFrameSize()
-			dummyHeaders := spec.DummyHeaders(c, (frameSize/c.MaxHeaderLen)+1)
-			blockFragment := conn.EncodeHeaders(dummyHeaders)
-
-			conn.WriteContinuation(streamID, true, blockFragment[:frameSize])
+			dummyHeaders := spec.DummyHeaders(c, 1)
+			conn.WriteContinuation(streamID, true, conn.EncodeHeaders(dummyHeaders))
 
 			codes := []http2.ErrCode{
 				http2.ErrCodeStreamClosed,

@@ -49,16 +49,12 @@ func ExtendingHTTP2() *spec.TestGroup {
 			}
 
 			headers := spec.CommonHeaders(c)
-			headers = append(headers, spec.DummyHeaders(c, 5)...)
-			blockFragment := conn.EncodeHeaders(headers)
-
 			hp := http2.HeadersFrameParam{
 				StreamID:      streamID,
 				EndStream:     true,
 				EndHeaders:    false,
-				BlockFragment: blockFragment[:conn.MaxFrameSize()],
+				BlockFragment: conn.EncodeHeaders(headers),
 			}
-
 			conn.WriteHeaders(hp)
 
 			// UNKONWN Frame:
