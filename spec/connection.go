@@ -125,8 +125,7 @@ func (conn *Conn) Handshake() error {
 
 			sf, ok := f.(*http2.SettingsFrame)
 			if !ok {
-				done <- errors.New("handshake failed: unexpeced frame")
-				return
+				continue
 			}
 
 			if sf.IsAck() {
