@@ -1,6 +1,7 @@
 package http2
 
 import (
+	"fmt"
 	"reflect"
 
 	"golang.org/x/net/http2"
@@ -115,13 +116,22 @@ func Ping() *spec.TestGroup {
 			}
 
 			if !passed {
+				var actualStr string
+
 				expected := []string{
-					"PING Frame (length:8, flags:0x01, stream_id:0)",
+					fmt.Sprintf("PING Frame (opaque_data: %s)", expectedData),
+				}
+
+				f, ok := actual.(spec.EventPingFrame)
+				if ok {
+					actualStr = fmt.Sprintf("PING Frame (opaque_data: %s)", f.Data)
+				} else {
+					actualStr = actual.String()
 				}
 
 				return &spec.TestError{
 					Expected: expected,
-					Actual:   actual.String(),
+					Actual:   actualStr,
 				}
 			}
 
