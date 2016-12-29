@@ -316,7 +316,7 @@ func (conn *Conn) WaitEvent() Event {
 			}
 		}
 
-		ev = EventError{}
+		ev = EventError{err}
 		conn.vlog(ev, false)
 		return ev
 	}

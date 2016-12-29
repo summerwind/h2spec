@@ -28,10 +28,12 @@ func (ev EventConnectionClosed) String() string {
 	return "Connection closed"
 }
 
-type EventError struct{}
+type EventError struct {
+	Error error
+}
 
 func (ev EventError) String() string {
-	return "Error"
+	return fmt.Sprintf("Error: %v", ev.Error)
 }
 
 type EventTimeout struct {
