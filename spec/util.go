@@ -2,11 +2,13 @@ package spec
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	"github.com/fatih/color"
 	"github.com/summerwind/h2spec/config"
 
+	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
 )
 
@@ -86,4 +88,50 @@ func DummyHeaders(c *config.Config, len int) []hpack.HeaderField {
 	}
 
 	return headers
+}
+
+// ServerDataLength returns the total length of the DATA frame of /.
+func ServerDataLength(c *config.Config) (int, error) {
+	conn, err := Dial(c)
+	if err != nil {
+		return 0, err
+	}
+
+	err = conn.Handshake()
+	if err != nil {
+		return 0, err
+	}
+
+	headers := CommonHeaders(c)
+	hp := http2.HeadersFrameParam{
+		StreamID:      1,
+		EndStream:     true,
+		EndHeaders:    true,
+		BlockFragment: conn.EncodeHeaders(headers),
+	}
+	conn.WriteHeaders(hp)
+
+	len := 0
+	done := false
+	for !conn.Closed {
+		ev := conn.WaitEvent()
+
+		switch event := ev.(type) {
+		case EventDataFrame:
+			len += int(event.Header().Length)
+			done = event.StreamEnded()
+		case EventHeadersFrame:
+			done = event.StreamEnded()
+		}
+
+		if done {
+			break
+		}
+	}
+
+	if !done {
+		return 0, errors.New("Unable to get server data length")
+	}
+
+	return len, nil
 }
