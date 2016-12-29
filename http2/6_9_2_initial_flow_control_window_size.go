@@ -125,34 +125,18 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			var streamID uint32 = 1
 			var actual spec.Event
 
-			err := conn.Handshake()
+			// Skip this test case when the length of data is 0.
+			dataLen, err := spec.ServerDataLength(c)
 			if err != nil {
 				return err
 			}
-
-			headers := spec.CommonHeaders(c)
-			hp1 := http2.HeadersFrameParam{
-				StreamID:      streamID,
-				EndStream:     true,
-				EndHeaders:    true,
-				BlockFragment: conn.EncodeHeaders(headers),
-			}
-			conn.WriteHeaders(hp1)
-
-			// Get the length of response body.
-			resLen := -1
-			for resLen == -1 {
-				ev := conn.WaitEvent()
-
-				switch event := ev.(type) {
-				case spec.EventDataFrame:
-					resLen = int(event.Header().Length)
-				}
-			}
-
-			// Skip this test case when the length of response body is 0.
-			if resLen < 5 {
+			if dataLen < 5 {
 				return spec.ErrSkipped
+			}
+
+			err = conn.Handshake()
+			if err != nil {
+				return err
 			}
 
 			// Set SETTINGS_INITIAL_WINDOW_SIZE to 3 to prevent sending
@@ -171,14 +155,14 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 
 			// Send a HEADERS frame.
-			streamID += 2
-			hp2 := http2.HeadersFrameParam{
+			headers := spec.CommonHeaders(c)
+			hp := http2.HeadersFrameParam{
 				StreamID:      streamID,
 				EndStream:     true,
 				EndHeaders:    true,
 				BlockFragment: conn.EncodeHeaders(headers),
 			}
-			conn.WriteHeaders(hp2)
+			conn.WriteHeaders(hp)
 
 			// Verify reception of DATA frame.
 			err = spec.VerifyFrameType(conn, http2.FrameData)
