@@ -22,9 +22,9 @@ func VerifyConnectionClose(conn *Conn) error {
 		event := conn.WaitEvent()
 
 		switch ev := event.(type) {
-		case EventConnectionClosed:
+		case ConnectionClosedEvent:
 			passed = true
-		case EventTimeout:
+		case TimeoutEvent:
 			if actual == nil {
 				actual = ev
 			}
@@ -57,11 +57,11 @@ func VerifyConnectionError(conn *Conn, codes ...http2.ErrCode) error {
 		ev := conn.WaitEvent()
 
 		switch event := ev.(type) {
-		case EventConnectionClosed:
+		case ConnectionClosedEvent:
 			passed = true
-		case EventGoAwayFrame:
+		case GoAwayFrameEvent:
 			passed = VerifyErrorCode(codes, event.ErrCode)
-		case EventTimeout:
+		case TimeoutEvent:
 			if actual == nil {
 				actual = event
 			}
@@ -100,13 +100,13 @@ func VerifyStreamError(conn *Conn, codes ...http2.ErrCode) error {
 		ev := conn.WaitEvent()
 
 		switch event := ev.(type) {
-		case EventConnectionClosed:
+		case ConnectionClosedEvent:
 			passed = true
-		case EventGoAwayFrame:
+		case GoAwayFrameEvent:
 			passed = VerifyErrorCode(codes, event.ErrCode)
-		case EventRSTStreamFrame:
+		case RSTStreamFrameEvent:
 			passed = VerifyErrorCode(codes, event.ErrCode)
-		case EventTimeout:
+		case TimeoutEvent:
 			if actual == nil {
 				actual = event
 			}
@@ -146,15 +146,15 @@ func VerifyStreamClose(conn *Conn) error {
 		ev := conn.WaitEvent()
 
 		switch event := ev.(type) {
-		case EventDataFrame:
+		case DataFrameEvent:
 			if event.StreamEnded() {
 				passed = true
 			}
-		case EventHeadersFrame:
+		case HeadersFrameEvent:
 			if event.StreamEnded() {
 				passed = true
 			}
-		case EventTimeout:
+		case TimeoutEvent:
 			if actual == nil {
 				actual = event
 			}
@@ -187,7 +187,7 @@ func VerifyFrameType(conn *Conn, frameTypes ...http2.FrameType) error {
 		ev := conn.WaitEvent()
 
 		switch event := ev.(type) {
-		case EventTimeout:
+		case TimeoutEvent:
 			if actual == nil {
 				actual = event
 			}

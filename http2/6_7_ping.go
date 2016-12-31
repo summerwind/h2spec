@@ -20,8 +20,6 @@ func Ping() *spec.TestGroup {
 		Desc:        "Sends a PING frame",
 		Requirement: "The endpoint MUST sends a PING frame with ACK, with an identical payload.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
-			var actual spec.Event
-
 			err := conn.Handshake()
 			if err != nil {
 				return err
@@ -30,27 +28,14 @@ func Ping() *spec.TestGroup {
 			data := [8]byte{'h', '2', 's', 'p', 'e', 'c'}
 			conn.WritePing(false, data)
 
-			passed := false
-			for !conn.Closed {
-				ev := conn.WaitEvent()
-
-				switch event := ev.(type) {
-				case spec.EventPingFrame:
-					actual = event
-					if event.IsAck() && reflect.DeepEqual(event.Data, data) {
-						passed = true
-					}
-				case spec.EventTimeout:
-					if actual == nil {
-						actual = event
-					}
-				default:
-					actual = ev
+			actual, passed := conn.WaitEventByType(spec.EventPingFrame)
+			switch event := actual.(type) {
+			case spec.PingFrameEvent:
+				if event.IsAck() && reflect.DeepEqual(event.Data, data) {
+					passed = true
 				}
-
-				if passed {
-					break
-				}
+			default:
+				passed = false
 			}
 
 			if !passed {
@@ -77,8 +62,6 @@ func Ping() *spec.TestGroup {
 		Desc:        "Sends a PING frame with ACK",
 		Requirement: "The endpoint MUST NOT respond to PING frames with ACK.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
-			var actual spec.Event
-
 			err := conn.Handshake()
 			if err != nil {
 				return err
@@ -89,30 +72,16 @@ func Ping() *spec.TestGroup {
 			conn.WritePing(true, unexpectedData)
 			conn.WritePing(false, expectedData)
 
-			passed := false
-			invalid := false
-			for !conn.Closed {
-				ev := conn.WaitEvent()
-
-				switch event := ev.(type) {
-				case spec.EventPingFrame:
-					actual = event
-					if reflect.DeepEqual(event.Data, unexpectedData) {
-						invalid = true
-					} else if event.IsAck() && reflect.DeepEqual(event.Data, expectedData) {
-						passed = true
-					}
-				case spec.EventTimeout:
-					if actual == nil {
-						actual = event
-					}
-				default:
-					actual = ev
+			actual, passed := conn.WaitEventByType(spec.EventPingFrame)
+			switch event := actual.(type) {
+			case spec.PingFrameEvent:
+				if reflect.DeepEqual(event.Data, unexpectedData) {
+					passed = false
+				} else if event.IsAck() && reflect.DeepEqual(event.Data, expectedData) {
+					passed = true
 				}
-
-				if passed || invalid {
-					break
-				}
+			default:
+				passed = false
 			}
 
 			if !passed {
@@ -122,7 +91,7 @@ func Ping() *spec.TestGroup {
 					fmt.Sprintf("PING Frame (opaque_data: %s)", expectedData),
 				}
 
-				f, ok := actual.(spec.EventPingFrame)
+				f, ok := actual.(spec.PingFrameEvent)
 				if ok {
 					actualStr = fmt.Sprintf("PING Frame (opaque_data: %s)", f.Data)
 				} else {

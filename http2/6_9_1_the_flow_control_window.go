@@ -58,25 +58,12 @@ func TheFlowControlWindow() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			passed := false
-			for !conn.Closed {
-				ev := conn.WaitEvent()
-
-				switch event := ev.(type) {
-				case spec.EventDataFrame:
-					actual = event
-					passed = (event.Header().Length == 1)
-				case spec.EventTimeout:
-					if actual == nil {
-						actual = event
-					}
-				default:
-					actual = ev
-				}
-
-				if passed {
-					break
-				}
+			actual, passed := conn.WaitEventByType(spec.EventDataFrame)
+			switch event := actual.(type) {
+			case spec.DataFrameEvent:
+				passed = (event.Header().Length == 1)
+			default:
+				passed = false
 			}
 
 			if !passed {
@@ -115,25 +102,12 @@ func TheFlowControlWindow() *spec.TestGroup {
 			conn.WriteWindowUpdate(0, 2147483647)
 			conn.WriteWindowUpdate(0, 2147483647)
 
-			passed := false
-			for !conn.Closed {
-				ev := conn.WaitEvent()
-
-				switch event := ev.(type) {
-				case spec.EventGoAwayFrame:
-					actual = event
-					passed = (event.ErrCode == http2.ErrCodeFlowControl)
-				case spec.EventTimeout:
-					if actual == nil {
-						actual = event
-					}
-				default:
-					actual = ev
-				}
-
-				if passed {
-					break
-				}
+			actual, passed := conn.WaitEventByType(spec.EventGoAwayFrame)
+			switch event := actual.(type) {
+			case spec.GoAwayFrameEvent:
+				passed = (event.ErrCode == http2.ErrCodeFlowControl)
+			default:
+				passed = false
 			}
 
 			if !passed {
@@ -182,27 +156,14 @@ func TheFlowControlWindow() *spec.TestGroup {
 			conn.WriteWindowUpdate(streamID, 2147483647)
 			conn.WriteWindowUpdate(streamID, 2147483647)
 
-			passed := false
-			for !conn.Closed {
-				ev := conn.WaitEvent()
-
-				switch event := ev.(type) {
-				case spec.EventRSTStreamFrame:
-					actual = event
-					if event.Header().StreamID == streamID {
-						passed = (event.ErrCode == http2.ErrCodeFlowControl)
-					}
-				case spec.EventTimeout:
-					if actual == nil {
-						actual = event
-					}
-				default:
-					actual = ev
+			actual, passed := conn.WaitEventByType(spec.EventRSTStreamFrame)
+			switch event := actual.(type) {
+			case spec.RSTStreamFrameEvent:
+				if event.Header().StreamID == streamID {
+					passed = (event.ErrCode == http2.ErrCodeFlowControl)
 				}
-
-				if passed {
-					break
-				}
+			default:
+				passed = false
 			}
 
 			if !passed {

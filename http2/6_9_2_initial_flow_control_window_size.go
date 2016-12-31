@@ -78,25 +78,12 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 
 			// Wait for DATA frame...
-			passed := false
-			for !conn.Closed {
-				ev := conn.WaitEvent()
-
-				switch event := ev.(type) {
-				case spec.EventDataFrame:
-					actual = event
-					passed = (event.Header().Length == 1)
-				case spec.EventTimeout:
-					if actual == nil {
-						actual = event
-					}
-				default:
-					actual = ev
-				}
-
-				if passed {
-					break
-				}
+			actual, passed := conn.WaitEventByType(spec.EventDataFrame)
+			switch event := actual.(type) {
+			case spec.DataFrameEvent:
+				passed = (event.Header().Length == 1)
+			default:
+				passed = false
 			}
 
 			if !passed {
@@ -189,25 +176,12 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			conn.WriteWindowUpdate(streamID, 2)
 
 			// Wait for DATA frame...
-			passed := false
-			for !conn.Closed {
-				ev := conn.WaitEvent()
-
-				switch event := ev.(type) {
-				case spec.EventDataFrame:
-					actual = event
-					passed = (event.Header().Length == 1)
-				case spec.EventTimeout:
-					if actual == nil {
-						actual = event
-					}
-				default:
-					actual = ev
-				}
-
-				if passed {
-					break
-				}
+			actual, passed := conn.WaitEventByType(spec.EventDataFrame)
+			switch event := actual.(type) {
+			case spec.DataFrameEvent:
+				passed = (event.Header().Length == 1)
+			default:
+				passed = false
 			}
 
 			if !passed {

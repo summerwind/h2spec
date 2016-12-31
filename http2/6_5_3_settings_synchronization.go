@@ -19,7 +19,6 @@ func SettingsSynchronization() *spec.TestGroup {
 		Requirement: "The endpoint MUST process the values in the settings in the order they apper.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			var streamID uint32 = 1
-			var actual spec.Event
 
 			// Skip this test case when the length of data is 0.
 			dataLen, err := spec.ServerDataLength(c)
@@ -61,25 +60,12 @@ func SettingsSynchronization() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			passed := false
-			for !conn.Closed {
-				ev := conn.WaitEvent()
-
-				switch event := ev.(type) {
-				case spec.EventDataFrame:
-					actual = event
-					passed = (event.Header().Length == 1)
-				case spec.EventTimeout:
-					if actual == nil {
-						actual = event
-					}
-				default:
-					actual = ev
-				}
-
-				if passed {
-					break
-				}
+			actual, passed := conn.WaitEventByType(spec.EventDataFrame)
+			switch event := actual.(type) {
+			case spec.DataFrameEvent:
+				passed = (event.Header().Length == 1)
+			default:
+				passed = false
 			}
 
 			if !passed {
@@ -103,8 +89,6 @@ func SettingsSynchronization() *spec.TestGroup {
 		Desc:        "Sends a SETTINGS frame without ACK flag",
 		Requirement: "The endpoint MUST immediately emit a SETTINGS frame with the ACK flag set.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
-			var actual spec.Event
-
 			err := conn.Handshake()
 			if err != nil {
 				return err
@@ -116,25 +100,12 @@ func SettingsSynchronization() *spec.TestGroup {
 			}
 			conn.WriteSettings(setting)
 
-			passed := false
-			for !conn.Closed {
-				ev := conn.WaitEvent()
-
-				switch event := ev.(type) {
-				case spec.EventSettingsFrame:
-					actual = event
-					passed = event.IsAck()
-				case spec.EventTimeout:
-					if actual == nil {
-						actual = event
-					}
-				default:
-					actual = ev
-				}
-
-				if passed {
-					break
-				}
+			actual, passed := conn.WaitEventByType(spec.EventSettingsFrame)
+			switch event := actual.(type) {
+			case spec.SettingsFrameEvent:
+				passed = event.IsAck()
+			default:
+				passed = false
 			}
 
 			if !passed {

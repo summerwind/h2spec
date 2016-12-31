@@ -180,7 +180,7 @@ func (conn *Conn) EncodeHeaders(headers []hpack.HeaderField) []byte {
 }
 
 func (conn *Conn) Send(payload []byte) error {
-	conn.vlog(EventRawData{payload}, true)
+	conn.vlog(RawDataEvent{payload}, true)
 	_, err := conn.Write(payload)
 	return err
 }
@@ -293,7 +293,7 @@ func (conn *Conn) WaitEvent() Event {
 	f, err := conn.framer.ReadFrame()
 	if err != nil {
 		if err == io.EOF {
-			ev = EventConnectionClosed{}
+			ev = ConnectionClosedEvent{}
 			conn.vlog(ev, false)
 			conn.Closed = true
 			return ev
@@ -302,21 +302,21 @@ func (conn *Conn) WaitEvent() Event {
 		opErr, ok := err.(*net.OpError)
 		if ok {
 			if opErr.Err == syscall.ECONNRESET {
-				ev = EventConnectionClosed{}
+				ev = ConnectionClosedEvent{}
 				conn.vlog(ev, false)
 				conn.Closed = true
 				return ev
 			}
 
 			if opErr.Timeout() {
-				ev = EventTimeout{}
+				ev = TimeoutEvent{}
 				conn.vlog(ev, false)
 				conn.Closed = true
 				return ev
 			}
 		}
 
-		ev = EventError{err}
+		ev = ErrorEvent{err}
 		conn.vlog(ev, false)
 		return ev
 	}
@@ -330,6 +330,28 @@ func (conn *Conn) WaitEvent() Event {
 	conn.vlog(ev, false)
 
 	return ev
+}
+
+func (conn *Conn) WaitEventByType(evt EventType) (Event, bool) {
+	var lastEvent Event
+
+	for !conn.Closed {
+		ev := conn.WaitEvent()
+
+		if ev.Type() == evt {
+			return ev, true
+		}
+
+		if ev.Type() == EventTimeout {
+			ev := ev.(TimeoutEvent)
+			ev.LastEvent = lastEvent
+			return ev, false
+		}
+
+		lastEvent = ev
+	}
+
+	return lastEvent, false
 }
 
 func (conn *Conn) updateWindowSize(f http2.Frame) {
@@ -392,25 +414,25 @@ func getEventByFrame(f http2.Frame) Event {
 
 	switch f := f.(type) {
 	case *http2.DataFrame:
-		ev = EventDataFrame{*f}
+		ev = DataFrameEvent{*f}
 	case *http2.HeadersFrame:
-		ev = EventHeadersFrame{*f}
+		ev = HeadersFrameEvent{*f}
 	case *http2.PriorityFrame:
-		ev = EventPriorityFrame{*f}
+		ev = PriorityFrameEvent{*f}
 	case *http2.RSTStreamFrame:
-		ev = EventRSTStreamFrame{*f}
+		ev = RSTStreamFrameEvent{*f}
 	case *http2.SettingsFrame:
-		ev = EventSettingsFrame{*f}
+		ev = SettingsFrameEvent{*f}
 	case *http2.PushPromiseFrame:
-		ev = EventPushPromiseFrame{*f}
+		ev = PushPromiseFrameEvent{*f}
 	case *http2.PingFrame:
-		ev = EventPingFrame{*f}
+		ev = PingFrameEvent{*f}
 	case *http2.GoAwayFrame:
-		ev = EventGoAwayFrame{*f}
+		ev = GoAwayFrameEvent{*f}
 	case *http2.WindowUpdateFrame:
-		ev = EventWindowUpdateFrame{*f}
+		ev = WindowUpdateFrameEvent{*f}
 	case *http2.ContinuationFrame:
-		ev = EventContinuationFrame{*f}
+		ev = ContinuationFrameEvent{*f}
 		//default:
 		//	ev = EventUnknownFrame(f)
 	}

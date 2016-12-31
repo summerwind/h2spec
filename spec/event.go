@@ -13,7 +13,27 @@ var (
 	DefaultErrCode http2.ErrCode = math.MaxUint8
 )
 
+type EventType uint8
+
+const (
+	EventDataFrame         EventType = 0x0
+	EventHeadersFrame      EventType = 0x1
+	EventPriorityFrame     EventType = 0x2
+	EventRSTStreamFrame    EventType = 0x3
+	EventSettingsFrame     EventType = 0x4
+	EventPushPromiseFrame  EventType = 0x5
+	EventPingFrame         EventType = 0x6
+	EventGoAwayFrame       EventType = 0x7
+	EventWindowUpdateFrame EventType = 0x8
+	EventContinuationFrame EventType = 0x9
+	EventRawData           EventType = 0x10
+	EventConnectionClosed  EventType = 0x11
+	EventError             EventType = 0x12
+	EventTimeout           EventType = 0x13
+)
+
 type Event interface {
+	Type() EventType
 	String() string
 }
 
@@ -22,113 +42,169 @@ type EventFrame interface {
 	Header() http2.FrameHeader
 }
 
-type EventConnectionClosed struct{}
+type ConnectionClosedEvent struct{}
 
-func (ev EventConnectionClosed) String() string {
+func (ev ConnectionClosedEvent) Type() EventType {
+	return EventConnectionClosed
+}
+
+func (ev ConnectionClosedEvent) String() string {
 	return "Connection closed"
 }
 
-type EventError struct {
+type ErrorEvent struct {
 	Error error
 }
 
-func (ev EventError) String() string {
+func (ev ErrorEvent) Type() EventType {
+	return EventError
+}
+
+func (ev ErrorEvent) String() string {
 	return fmt.Sprintf("Error: %v", ev.Error)
 }
 
-type EventTimeout struct {
+type TimeoutEvent struct {
 	LastEvent Event
 }
 
-func (ev EventTimeout) String() string {
-	return "Timeout"
+func (ev TimeoutEvent) Type() EventType {
+	return EventTimeout
 }
 
-type EventRawData struct {
+func (ev TimeoutEvent) String() string {
+	return fmt.Sprintf("Timeout (%s)", ev.LastEvent)
+}
+
+type RawDataEvent struct {
 	Payload []byte
 }
 
-func (ev EventRawData) String() string {
+func (ev RawDataEvent) Type() EventType {
+	return EventRawData
+}
+
+func (ev RawDataEvent) String() string {
 	return fmt.Sprintf("Raw Data (0x%x)", ev.Payload)
 }
 
-type EventDataFrame struct {
+type DataFrameEvent struct {
 	http2.DataFrame
 }
 
-func (ev EventDataFrame) String() string {
+func (ev DataFrameEvent) Type() EventType {
+	return EventDataFrame
+}
+
+func (ev DataFrameEvent) String() string {
 	return frameString(ev.Header())
 }
 
-type EventHeadersFrame struct {
+type HeadersFrameEvent struct {
 	http2.HeadersFrame
 }
 
-func (ev EventHeadersFrame) String() string {
+func (ev HeadersFrameEvent) Type() EventType {
+	return EventHeadersFrame
+}
+
+func (ev HeadersFrameEvent) String() string {
 	return frameString(ev.Header())
 }
 
-type EventPriorityFrame struct {
+type PriorityFrameEvent struct {
 	http2.PriorityFrame
 }
 
-func (ev EventPriorityFrame) String() string {
+func (ev PriorityFrameEvent) Type() EventType {
+	return EventPriorityFrame
+}
+
+func (ev PriorityFrameEvent) String() string {
 	return frameString(ev.Header())
 }
 
-type EventRSTStreamFrame struct {
+type RSTStreamFrameEvent struct {
 	http2.RSTStreamFrame
 }
 
-func (ev EventRSTStreamFrame) String() string {
+func (ev RSTStreamFrameEvent) Type() EventType {
+	return EventRSTStreamFrame
+}
+
+func (ev RSTStreamFrameEvent) String() string {
 	return frameString(ev.Header())
 }
 
-type EventSettingsFrame struct {
+type SettingsFrameEvent struct {
 	http2.SettingsFrame
 }
 
-func (ev EventSettingsFrame) String() string {
+func (ev SettingsFrameEvent) Type() EventType {
+	return EventSettingsFrame
+}
+
+func (ev SettingsFrameEvent) String() string {
 	return frameString(ev.Header())
 }
 
-type EventPushPromiseFrame struct {
+type PushPromiseFrameEvent struct {
 	http2.PushPromiseFrame
 }
 
-func (ev EventPushPromiseFrame) String() string {
+func (ev PushPromiseFrameEvent) Type() EventType {
+	return EventPushPromiseFrame
+}
+
+func (ev PushPromiseFrameEvent) String() string {
 	return frameString(ev.Header())
 }
 
-type EventPingFrame struct {
+type PingFrameEvent struct {
 	http2.PingFrame
 }
 
-func (ev EventPingFrame) String() string {
+func (ev PingFrameEvent) Type() EventType {
+	return EventPingFrame
+}
+
+func (ev PingFrameEvent) String() string {
 	return frameString(ev.Header())
 }
 
-type EventGoAwayFrame struct {
+type GoAwayFrameEvent struct {
 	http2.GoAwayFrame
 }
 
-func (ev EventGoAwayFrame) String() string {
+func (ev GoAwayFrameEvent) Type() EventType {
+	return EventGoAwayFrame
+}
+
+func (ev GoAwayFrameEvent) String() string {
 	return frameString(ev.Header())
 }
 
-type EventWindowUpdateFrame struct {
+type WindowUpdateFrameEvent struct {
 	http2.WindowUpdateFrame
 }
 
-func (ev EventWindowUpdateFrame) String() string {
+func (ev WindowUpdateFrameEvent) Type() EventType {
+	return EventWindowUpdateFrame
+}
+
+func (ev WindowUpdateFrameEvent) String() string {
 	return frameString(ev.Header())
 }
 
-type EventContinuationFrame struct {
+type ContinuationFrameEvent struct {
 	http2.ContinuationFrame
 }
 
-func (ev EventContinuationFrame) String() string {
+func (ev ContinuationFrameEvent) Type() EventType {
+	return EventContinuationFrame
+}
+
+func (ev ContinuationFrameEvent) String() string {
 	return frameString(ev.Header())
 }
 

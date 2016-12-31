@@ -39,8 +39,6 @@ func ConnectionErrorHandling() *spec.TestGroup {
 		Desc:        "Sends an invalid PING frame to receive GOAWAY frame",
 		Requirement: "An endpoint that encounters a connection error SHOULD first send a GOAWAY frame",
 		Run: func(c *config.Config, conn *spec.Conn) error {
-			var actual spec.Event
-
 			err := conn.Handshake()
 			if err != nil {
 				return err
@@ -50,15 +48,7 @@ func ConnectionErrorHandling() *spec.TestGroup {
 			conn.Send([]byte("\x00\x00\x08\x06\x00\x00\x00\x00\x03"))
 			conn.Send([]byte("\x00\x00\x00\x00\x00\x00\x00\x00"))
 
-			passed := false
-			for !conn.Closed {
-				actual = conn.WaitEvent()
-				_, passed = actual.(spec.EventGoAwayFrame)
-				if passed {
-					break
-				}
-			}
-
+			actual, passed := conn.WaitEventByType(spec.EventGoAwayFrame)
 			if !passed {
 				return &spec.TestError{
 					Expected: []string{

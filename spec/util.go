@@ -117,10 +117,10 @@ func ServerDataLength(c *config.Config) (int, error) {
 		ev := conn.WaitEvent()
 
 		switch event := ev.(type) {
-		case EventDataFrame:
+		case DataFrameEvent:
 			len += int(event.Header().Length)
 			done = event.StreamEnded()
-		case EventHeadersFrame:
+		case HeadersFrameEvent:
 			done = event.StreamEnded()
 		}
 
