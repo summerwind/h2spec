@@ -76,9 +76,9 @@ func Settings() *spec.TestGroup {
 			}
 
 			// SETTINGS frame:
-			// length: 8, flags: 0x0, stream_id: 0x0
-			conn.Send([]byte("\x00\x00\x09\x04\x00\x00\x00\x00\x00"))
-			conn.Send([]byte("\x00\x03\x00\x00\x00\x64\x00\x02"))
+			// length: 3, flags: 0x0, stream_id: 0x0
+			conn.Send([]byte("\x00\x00\x03\x04\x00\x00\x00\x00\x00"))
+			conn.Send([]byte("\x00\x03\x00"))
 
 			codes := []http2.ErrCode{
 				http2.ErrCodeProtocol,
