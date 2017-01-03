@@ -342,10 +342,8 @@ func (conn *Conn) WaitEventByType(evt EventType) (Event, bool) {
 			return ev, true
 		}
 
-		if ev.Type() == EventTimeout {
-			ev := ev.(TimeoutEvent)
-			ev.LastEvent = lastEvent
-			return ev, false
+		if ev.Type() == EventTimeout && lastEvent != nil {
+			break
 		}
 
 		lastEvent = ev

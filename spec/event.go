@@ -64,16 +64,14 @@ func (ev ErrorEvent) String() string {
 	return fmt.Sprintf("Error: %v", ev.Error)
 }
 
-type TimeoutEvent struct {
-	LastEvent Event
-}
+type TimeoutEvent struct{}
 
 func (ev TimeoutEvent) Type() EventType {
 	return EventTimeout
 }
 
 func (ev TimeoutEvent) String() string {
-	return fmt.Sprintf("Timeout (%s)", ev.LastEvent)
+	return "Timeout"
 }
 
 type RawDataEvent struct {
