@@ -190,47 +190,6 @@ func StreamStates() *spec.TestGroup {
 	})
 
 	// closed:
-	// An endpoint MUST NOT send frames other than PRIORITY on a closed
-	// stream.
-	tg.AddTestCase(&spec.TestCase{
-		Desc:        "closed: Sends a PRIORITY frame",
-		Requirement: "The endpoint MUST treat this as a connection error of type STREAM_CLOSED.",
-		Run: func(c *config.Config, conn *spec.Conn) error {
-			var streamID uint32 = 1
-
-			err := conn.Handshake()
-			if err != nil {
-				return err
-			}
-
-			headers := spec.CommonHeaders(c)
-			hp := http2.HeadersFrameParam{
-				StreamID:      streamID,
-				EndStream:     true,
-				EndHeaders:    true,
-				BlockFragment: conn.EncodeHeaders(headers),
-			}
-			conn.WriteHeaders(hp)
-
-			err = spec.VerifyStreamClose(conn)
-			if err != nil {
-				return err
-			}
-
-			pp := http2.PriorityParam{
-				StreamDep: 0,
-				Exclusive: false,
-				Weight:    255,
-			}
-			conn.WritePriority(streamID, pp)
-
-			conn.WritePing(false, [8]byte{})
-
-			return spec.VerifyFrameType(conn, http2.FramePing)
-		},
-	})
-
-	// closed:
 	// An endpoint that receives any frame other than PRIORITY after
 	// receiving a RST_STREAM MUST treat that as a stream error
 	// (Section 5.4.2) of type STREAM_CLOSED.
