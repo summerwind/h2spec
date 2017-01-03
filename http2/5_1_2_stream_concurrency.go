@@ -52,7 +52,7 @@ func StreamConcurrency() *spec.TestGroup {
 				http2.ErrCodeProtocol,
 				http2.ErrCodeRefusedStream,
 			}
-			return spec.VerifyConnectionError(conn, codes...)
+			return spec.VerifyStreamError(conn, codes...)
 		},
 	})
 
