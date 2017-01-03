@@ -32,6 +32,31 @@ const (
 	EventTimeout           EventType = 0x13
 )
 
+var eventName = map[EventType]string{
+	EventDataFrame:         "DATA frame",
+	EventHeadersFrame:      "HEADERS frame",
+	EventPriorityFrame:     "PRIORITY frame",
+	EventRSTStreamFrame:    "RST_STREAM frame",
+	EventSettingsFrame:     "SETTINGS frame",
+	EventPushPromiseFrame:  "PUSH_PROMISE frame",
+	EventPingFrame:         "PING frame",
+	EventGoAwayFrame:       "GOAWAY frame",
+	EventWindowUpdateFrame: "WINDOW_UPDATE frame",
+	EventContinuationFrame: "CONTINUATION frame",
+	EventRawData:           "Raw data",
+	EventConnectionClosed:  "Connection closed",
+	EventError:             "Error",
+	EventTimeout:           "Timeout",
+}
+
+func (et EventType) String() string {
+	s, ok := eventName[et]
+	if ok {
+		return s
+	}
+	return fmt.Sprintf("Unknown event (%d)", uint8(et))
+}
+
 type Event interface {
 	Type() EventType
 	String() string

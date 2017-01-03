@@ -3,7 +3,6 @@ package http2
 import (
 	"github.com/summerwind/h2spec/config"
 	"github.com/summerwind/h2spec/spec"
-	"golang.org/x/net/http2"
 )
 
 func FrameFormat() *spec.TestGroup {
@@ -28,7 +27,7 @@ func FrameFormat() *spec.TestGroup {
 
 			conn.WritePing(false, [8]byte{})
 
-			return spec.VerifyFrameType(conn, http2.FramePing)
+			return spec.VerifyEventType(conn, spec.EventPingFrame)
 		},
 	})
 
@@ -50,7 +49,7 @@ func FrameFormat() *spec.TestGroup {
 			conn.Send([]byte("\x00\x00\x08\x06\x16\x00\x00\x00\x00"))
 			conn.Send([]byte("\x00\x00\x00\x00\x00\x00\x00\x00"))
 
-			return spec.VerifyFrameType(conn, http2.FramePing)
+			return spec.VerifyEventType(conn, spec.EventPingFrame)
 		},
 	})
 
@@ -71,7 +70,7 @@ func FrameFormat() *spec.TestGroup {
 			conn.Send([]byte("\x00\x00\x08\x06\x16\x80\x00\x00\x00"))
 			conn.Send([]byte("\x00\x00\x00\x00\x00\x00\x00\x00"))
 
-			return spec.VerifyFrameType(conn, http2.FramePing)
+			return spec.VerifyEventType(conn, spec.EventPingFrame)
 		},
 	})
 

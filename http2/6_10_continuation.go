@@ -39,7 +39,7 @@ func Continuation() *spec.TestGroup {
 			conn.WriteContinuation(streamID, false, conn.EncodeHeaders(dummyHeaders))
 			conn.WriteContinuation(streamID, true, conn.EncodeHeaders(dummyHeaders))
 
-			return spec.VerifyFrameType(conn, http2.FrameHeaders)
+			return spec.VerifyEventType(conn, spec.EventHeadersFrame)
 		},
 	})
 

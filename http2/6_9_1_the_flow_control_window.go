@@ -44,7 +44,7 @@ func TheFlowControlWindow() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings...)
 
-			err = spec.VerifyFrameType(conn, http2.FrameSettings)
+			err = spec.VerifyEventType(conn, spec.EventSettingsFrame)
 			if err != nil {
 				return err
 			}

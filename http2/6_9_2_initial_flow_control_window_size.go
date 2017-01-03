@@ -47,7 +47,7 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings1...)
 
-			err = spec.VerifyFrameType(conn, http2.FrameSettings)
+			err = spec.VerifyEventType(conn, spec.EventSettingsFrame)
 			if err != nil {
 				return err
 			}
@@ -72,7 +72,7 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings2...)
 
-			err = spec.VerifyFrameType(conn, http2.FrameSettings)
+			err = spec.VerifyEventType(conn, spec.EventSettingsFrame)
 			if err != nil {
 				return err
 			}
@@ -136,7 +136,7 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings1...)
 
-			err = spec.VerifyFrameType(conn, http2.FrameSettings)
+			err = spec.VerifyEventType(conn, spec.EventSettingsFrame)
 			if err != nil {
 				return err
 			}
@@ -152,7 +152,7 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			conn.WriteHeaders(hp)
 
 			// Verify reception of DATA frame.
-			err = spec.VerifyFrameType(conn, http2.FrameData)
+			err = spec.VerifyEventType(conn, spec.EventDataFrame)
 			if err != nil {
 				return err
 			}
@@ -167,7 +167,7 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings2...)
 
-			err = spec.VerifyFrameType(conn, http2.FrameSettings)
+			err = spec.VerifyEventType(conn, spec.EventSettingsFrame)
 			if err != nil {
 				return err
 			}

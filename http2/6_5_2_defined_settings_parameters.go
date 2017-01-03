@@ -125,7 +125,7 @@ func DefinedSETTINGSParameters() *spec.TestGroup {
 
 			conn.WritePing(false, [8]byte{})
 
-			return spec.VerifyFrameType(conn, http2.FramePing)
+			return spec.VerifyEventType(conn, spec.EventPingFrame)
 		},
 	})
 

@@ -24,7 +24,28 @@ func HTTP2ConnectionPreface() *spec.TestGroup {
 			conn.Send([]byte("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"))
 			conn.WriteSettings(setting)
 
-			return spec.VerifyFrameType(conn, http2.FrameSettings)
+			actual, passed := conn.WaitEventByType(spec.EventSettingsFrame)
+			switch event := actual.(type) {
+			case spec.SettingsFrameEvent:
+				if !event.IsAck() {
+					passed = true
+				}
+			default:
+				passed = false
+			}
+
+			if !passed {
+				expected := []string{
+					"SETTINGS Frame (flags:0x00)",
+				}
+
+				return &spec.TestError{
+					Expected: expected,
+					Actual:   actual.String(),
+				}
+			}
+
+			return nil
 		},
 	})
 

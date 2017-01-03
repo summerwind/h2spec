@@ -38,7 +38,7 @@ func FrameSize() *spec.TestGroup {
 			data := spec.DummyString(conn.MaxFrameSize())
 			conn.WriteData(streamID, true, []byte(data))
 
-			return spec.VerifyFrameType(conn, http2.FrameHeaders)
+			return spec.VerifyEventType(conn, spec.EventHeadersFrame)
 		},
 	})
 
