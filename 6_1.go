@@ -69,7 +69,7 @@ func DataTestGroup(ctx *Context) *TestGroup {
 			fmt.Fprintf(http2Conn.conn, "\x06\x54\x65\x73\x74")
 
 			actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
-			return TestStreamError(ctx, http2Conn, actualCodes)
+			return TestConnectionError(ctx, http2Conn, actualCodes)
 		},
 	))
 
