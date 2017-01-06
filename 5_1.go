@@ -250,6 +250,27 @@ func StreamStatesTestGroup(ctx *Context) *TestGroup {
 func StreamIdentifiersTestGroup(ctx *Context) *TestGroup {
 	tg := NewTestGroup("5.1.1", "Stream Identifiers")
 
+        tg.AddTestCase(NewTestCase(
+                "Sends 0 as a stream identifier",
+                "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
+                func(ctx *Context) (pass bool, expected []Result, actual Result) {
+                        http2Conn := CreateHttp2Conn(ctx, true)
+                        defer http2Conn.conn.Close()
+
+                        hdrs := commonHeaderFields(ctx)
+
+                        var hp http2.HeadersFrameParam
+                        hp.StreamID = 0
+                        hp.EndStream = true
+                        hp.EndHeaders = true
+                        hp.BlockFragment = http2Conn.EncodeHeader(hdrs)
+                        http2Conn.fr.WriteHeaders(hp)
+
+                        actualCodes := []http2.ErrCode{http2.ErrCodeProtocol}
+                        return TestConnectionError(ctx, http2Conn, actualCodes)
+                },
+        ))
+
 	tg.AddTestCase(NewTestCase(
 		"Sends even-numbered stream identifier",
 		"The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
