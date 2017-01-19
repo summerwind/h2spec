@@ -194,6 +194,15 @@ func (conn *Conn) WriteData(streamID uint32, endStream bool, data []byte) error 
 	return conn.framer.WriteData(streamID, endStream, data)
 }
 
+func (conn *Conn) WriteDataPadded(streamID uint32, endStream bool, data, pad []byte) error {
+	if conn.Verbose {
+		conn.debugFramer.WriteDataPadded(streamID, endStream, data, pad)
+		conn.logFrameSend()
+	}
+
+	return conn.framer.WriteDataPadded(streamID, endStream, data, pad)
+}
+
 func (conn *Conn) WriteHeaders(p http2.HeadersFrameParam) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteHeaders(p)

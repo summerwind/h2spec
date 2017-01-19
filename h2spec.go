@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/summerwind/h2spec/config"
+	"github.com/summerwind/h2spec/generic"
 	"github.com/summerwind/h2spec/hpack"
 	"github.com/summerwind/h2spec/http2"
 	"github.com/summerwind/h2spec/log"
@@ -17,6 +18,7 @@ func Run(c *config.Config) error {
 	failed := false
 
 	specs := []*spec.TestGroup{
+		generic.Spec(),
 		http2.Spec(),
 		hpack.Spec(),
 	}
