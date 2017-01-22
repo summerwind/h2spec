@@ -255,7 +255,6 @@ func VerifyPingFrameWithAck(conn *Conn, data [8]byte) error {
 			header := f.Header()
 			actualStr = fmt.Sprintf(
 				"PING Frame ((length:%d, flags:0x%02x, stream_id:%d, opaque_data: %s)",
-				header.Type,
 				header.Length,
 				header.Flags,
 				header.StreamID,

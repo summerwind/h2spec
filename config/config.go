@@ -108,7 +108,7 @@ func (c *Config) buildTargetMap() {
 
 		// Validate the format of the section string.
 		if compLen == 0 || compLen > 3 {
-			fmt.Println("Invalid section: %s", section)
+			fmt.Printf("Invalid section: %s", section)
 			continue
 		}
 
