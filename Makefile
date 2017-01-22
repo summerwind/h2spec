@@ -21,7 +21,6 @@ clean:
 	rm -rf h2spec
 	rm -rf release
 
-.PHONY: release
 release:
 	mkdir -p release
 	
@@ -37,3 +36,5 @@ release:
 	tar -czf release/h2spec_linux_amd64.tar.gz h2spec
 	rm -rf h2spec
 
+vendor:
+	glide install
