@@ -26,9 +26,10 @@ func WindowUpdate() *spec.TestGroup {
 
 			conn.WriteWindowUpdate(0, 1)
 
-			conn.WritePing(false, [8]byte{})
+			data := [8]byte{}
+			conn.WritePing(false, data)
 
-			return spec.VerifyEventType(conn, spec.EventPingFrame)
+			return spec.VerifyPingFrameWithAck(conn, data)
 		},
 	})
 
@@ -60,7 +61,7 @@ func WindowUpdate() *spec.TestGroup {
 
 			conn.WriteWindowUpdate(streamID, 1)
 
-			return spec.VerifyEventType(conn, spec.EventHeadersFrame)
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 

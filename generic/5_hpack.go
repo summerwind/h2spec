@@ -1,8 +1,6 @@
 package generic
 
 import (
-	"fmt"
-
 	"github.com/summerwind/h2spec/config"
 	"github.com/summerwind/h2spec/spec"
 	"golang.org/x/net/http2"
@@ -41,26 +39,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -95,26 +74,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -149,26 +109,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -203,26 +144,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -257,26 +179,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -311,26 +214,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -365,26 +249,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -419,26 +284,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -473,26 +319,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -528,26 +355,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -583,26 +391,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -638,26 +427,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -693,26 +463,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -745,26 +496,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -809,26 +541,7 @@ func HPACK() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 

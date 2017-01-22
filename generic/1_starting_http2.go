@@ -14,7 +14,7 @@ func StartingHTTP2() *spec.TestGroup {
 	// preface (Section 3.5) consisting of a SETTINGS frame (Section 6.5).
 	tg.AddTestCase(&spec.TestCase{
 		Desc:        "Sends a client connection preface",
-		Requirement: "The first HTTP/2 frame sent by the server MUST be a server connection preface.",
+		Requirement: "The endpoint MUST accept client connection preface.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			var passed bool
 

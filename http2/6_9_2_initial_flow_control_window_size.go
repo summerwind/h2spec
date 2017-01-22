@@ -47,7 +47,7 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings1...)
 
-			err = spec.VerifyEventType(conn, spec.EventSettingsFrame)
+			err = spec.VerifySettingsFrameWithAck(conn)
 			if err != nil {
 				return err
 			}
@@ -72,7 +72,7 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings2...)
 
-			err = spec.VerifyEventType(conn, spec.EventSettingsFrame)
+			err = spec.VerifySettingsFrameWithAck(conn)
 			if err != nil {
 				return err
 			}
@@ -136,7 +136,7 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings1...)
 
-			err = spec.VerifyEventType(conn, spec.EventSettingsFrame)
+			err = spec.VerifySettingsFrameWithAck(conn)
 			if err != nil {
 				return err
 			}
@@ -167,7 +167,7 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings2...)
 
-			err = spec.VerifyEventType(conn, spec.EventSettingsFrame)
+			err = spec.VerifySettingsFrameWithAck(conn)
 			if err != nil {
 				return err
 			}

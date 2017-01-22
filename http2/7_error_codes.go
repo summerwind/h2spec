@@ -55,9 +55,10 @@ func ErrorCodes() *spec.TestGroup {
 			conn.WriteHeaders(hp)
 			conn.WriteRSTStream(streamID, 0xff)
 
-			conn.WritePing(false, [8]byte{})
+			data := [8]byte{}
+			conn.WritePing(false, data)
 
-			return spec.VerifyEventType(conn, spec.EventPingFrame)
+			return spec.VerifyPingFrameWithAck(conn, data)
 		},
 	})
 

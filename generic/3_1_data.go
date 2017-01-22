@@ -1,8 +1,6 @@
 package generic
 
 import (
-	"fmt"
-
 	"golang.org/x/net/http2"
 
 	"github.com/summerwind/h2spec/config"
@@ -41,26 +39,7 @@ func Data() *spec.TestGroup {
 			conn.WriteHeaders(hp)
 			conn.WriteData(streamID, true, []byte("test"))
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -94,26 +73,7 @@ func Data() *spec.TestGroup {
 			conn.WriteData(streamID, false, []byte("test"))
 			conn.WriteData(streamID, true, []byte("test"))
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -145,26 +105,7 @@ func Data() *spec.TestGroup {
 			conn.WriteHeaders(hp)
 			conn.WriteDataPadded(streamID, true, []byte("test"), []byte("padded"))
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 

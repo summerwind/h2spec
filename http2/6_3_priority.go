@@ -98,7 +98,7 @@ func Priority() *spec.TestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			return spec.VerifyEventType(conn, spec.EventHeadersFrame)
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 

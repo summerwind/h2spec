@@ -35,26 +35,7 @@ func Settings() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings...)
 
-			actual, passed := conn.WaitEventByType(spec.EventSettingsFrame)
-			switch event := actual.(type) {
-			case spec.SettingsFrameEvent:
-				passed = event.IsAck()
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					"SETTINGS Frame (flags:0x01)",
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifySettingsFrameWithAck(conn)
 		},
 	})
 

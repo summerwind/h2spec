@@ -1,9 +1,6 @@
 package http2
 
 import (
-	"fmt"
-	"reflect"
-
 	"golang.org/x/net/http2"
 
 	"github.com/summerwind/h2spec/config"
@@ -28,28 +25,7 @@ func Ping() *spec.TestGroup {
 			data := [8]byte{'h', '2', 's', 'p', 'e', 'c'}
 			conn.WritePing(false, data)
 
-			actual, passed := conn.WaitEventByType(spec.EventPingFrame)
-			switch event := actual.(type) {
-			case spec.PingFrameEvent:
-				if event.IsAck() && reflect.DeepEqual(event.Data, data) {
-					passed = true
-				}
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					"PING Frame (length:8, flags:0x01, stream_id:0)",
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyPingFrameWithAck(conn, data)
 		},
 	})
 
@@ -72,39 +48,7 @@ func Ping() *spec.TestGroup {
 			conn.WritePing(true, unexpectedData)
 			conn.WritePing(false, expectedData)
 
-			actual, passed := conn.WaitEventByType(spec.EventPingFrame)
-			switch event := actual.(type) {
-			case spec.PingFrameEvent:
-				if reflect.DeepEqual(event.Data, unexpectedData) {
-					passed = false
-				} else if event.IsAck() && reflect.DeepEqual(event.Data, expectedData) {
-					passed = true
-				}
-			default:
-				passed = false
-			}
-
-			if !passed {
-				var actualStr string
-
-				expected := []string{
-					fmt.Sprintf("PING Frame (opaque_data: %s)", expectedData),
-				}
-
-				f, ok := actual.(spec.PingFrameEvent)
-				if ok {
-					actualStr = fmt.Sprintf("PING Frame (opaque_data: %s)", f.Data)
-				} else {
-					actualStr = actual.String()
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actualStr,
-				}
-			}
-
-			return nil
+			return spec.VerifyPingFrameWithAck(conn, expectedData)
 		},
 	})
 

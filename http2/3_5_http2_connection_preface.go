@@ -16,6 +16,8 @@ func HTTP2ConnectionPreface() *spec.TestGroup {
 		Desc:        "Sends client connection preface",
 		Requirement: "The server connection preface MUST be the first frame the server sends in the HTTP/2 connection.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
+			var passed bool
+
 			setting := http2.Setting{
 				ID:  http2.SettingInitialWindowSize,
 				Val: spec.DefaultWindowSize,
@@ -24,12 +26,10 @@ func HTTP2ConnectionPreface() *spec.TestGroup {
 			conn.Send([]byte("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"))
 			conn.WriteSettings(setting)
 
-			actual, passed := conn.WaitEventByType(spec.EventSettingsFrame)
+			actual := conn.WaitEvent()
 			switch event := actual.(type) {
 			case spec.SettingsFrameEvent:
-				if !event.IsAck() {
-					passed = true
-				}
+				passed = !event.IsAck()
 			default:
 				passed = false
 			}

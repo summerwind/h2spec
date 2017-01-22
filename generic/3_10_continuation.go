@@ -1,8 +1,6 @@
 package generic
 
 import (
-	"fmt"
-
 	"golang.org/x/net/http2"
 
 	"github.com/summerwind/h2spec/config"
@@ -42,26 +40,7 @@ func Continuation() *spec.TestGroup {
 			conn.WriteHeaders(hp)
 			conn.WriteContinuation(streamID, true, headerBlock[5:])
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 
@@ -96,26 +75,7 @@ func Continuation() *spec.TestGroup {
 			conn.WriteContinuation(streamID, false, headerBlock[5:10])
 			conn.WriteContinuation(streamID, true, headerBlock[10:])
 
-			actual, passed := conn.WaitEventByType(spec.EventHeadersFrame)
-			switch event := actual.(type) {
-			case spec.HeadersFrameEvent:
-				passed = (event.Header().StreamID == streamID)
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifyHeadersFrame(conn, streamID)
 		},
 	})
 

@@ -24,13 +24,15 @@ func StreamConcurrency() *spec.TestGroup {
 				return err
 			}
 
-			// Skip this test case when SETTINGS_MAX_CONCURRENT_STREAMS is unlimited.
+			// Skip this test case when SETTINGS_MAX_CONCURRENT_STREAMS
+			// is unlimited.
 			maxStreams, ok := conn.Settings[http2.SettingMaxConcurrentStreams]
 			if !ok {
 				return spec.ErrSkipped
 			}
 
-			// Set INITIAL_WINDOW_SIZE to zero to prevent the peer from closing the stream.
+			// Set INITIAL_WINDOW_SIZE to zero to prevent the peer from
+			// closing the stream.
 			settings := http2.Setting{http2.SettingInitialWindowSize, 0}
 			conn.WriteSettings(settings)
 

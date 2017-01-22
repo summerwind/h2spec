@@ -25,9 +25,10 @@ func FrameFormat() *spec.TestGroup {
 			conn.Send([]byte("\x00\x00\x08\x16\x00\x00\x00\x00\x00"))
 			conn.Send([]byte("\x00\x00\x00\x00\x00\x00\x00\x00"))
 
-			conn.WritePing(false, [8]byte{})
+			data := [8]byte{}
+			conn.WritePing(false, data)
 
-			return spec.VerifyEventType(conn, spec.EventPingFrame)
+			return spec.VerifyPingFrameWithAck(conn, data)
 		},
 	})
 

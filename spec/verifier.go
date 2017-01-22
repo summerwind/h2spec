@@ -2,6 +2,7 @@ package spec
 
 import (
 	"fmt"
+	"reflect"
 
 	"golang.org/x/net/http2"
 )
@@ -171,6 +172,98 @@ func VerifyStreamClose(conn *Conn) error {
 		return &TestError{
 			Expected: []string{ExpectedStreamClosed},
 			Actual:   actual.String(),
+		}
+	}
+
+	return nil
+}
+
+// VerifyHeadersFrame verifies whether a HEADERS frame with specified
+// stream ID has received.
+func VerifyHeadersFrame(conn *Conn, streamID uint32) error {
+	actual, passed := conn.WaitEventByType(EventHeadersFrame)
+	switch event := actual.(type) {
+	case HeadersFrameEvent:
+		passed = (event.Header().StreamID == streamID)
+	default:
+		passed = false
+	}
+
+	if !passed {
+		expected := []string{
+			fmt.Sprintf("HEADERS Frame (stream_id:%d)", streamID),
+		}
+
+		return &TestError{
+			Expected: expected,
+			Actual:   actual.String(),
+		}
+	}
+
+	return nil
+}
+
+// VerifySettingsFrameWithAck verifies whether a SETTINGS frame with
+// ACK flag has received.
+func VerifySettingsFrameWithAck(conn *Conn) error {
+	actual, passed := conn.WaitEventByType(EventSettingsFrame)
+	switch event := actual.(type) {
+	case SettingsFrameEvent:
+		passed = event.IsAck()
+	default:
+		passed = false
+	}
+
+	if !passed {
+		expected := []string{
+			"SETTINGS Frame (length:0, flags:0x01, stream_id:0)",
+		}
+
+		return &TestError{
+			Expected: expected,
+			Actual:   actual.String(),
+		}
+	}
+
+	return nil
+}
+
+// VerifyPingFrameWithAck verifies whether a PING frame with ACK flag
+// has received.
+func VerifyPingFrameWithAck(conn *Conn, data [8]byte) error {
+	actual, passed := conn.WaitEventByType(EventPingFrame)
+	switch event := actual.(type) {
+	case PingFrameEvent:
+		passed = event.IsAck() && reflect.DeepEqual(event.Data, data)
+	default:
+		passed = false
+	}
+
+	if !passed {
+		var actualStr string
+
+		expected := []string{
+			fmt.Sprintf("PING Frame (length:8, flags:0x01, stream_id:0, opaque_data:%s)", data),
+		}
+
+		f, ok := actual.(PingFrameEvent)
+		if ok {
+			header := f.Header()
+			actualStr = fmt.Sprintf(
+				"PING Frame ((length:%d, flags:0x%02x, stream_id:%d, opaque_data: %s)",
+				header.Type,
+				header.Length,
+				header.Flags,
+				header.StreamID,
+				f.Data,
+			)
+		} else {
+			actualStr = actual.String()
+		}
+
+		return &TestError{
+			Expected: expected,
+			Actual:   actualStr,
 		}
 	}
 

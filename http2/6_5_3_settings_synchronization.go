@@ -46,7 +46,7 @@ func SettingsSynchronization() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings...)
 
-			err = spec.VerifyEventType(conn, spec.EventSettingsFrame)
+			err = spec.VerifySettingsFrameWithAck(conn)
 			if err != nil {
 				return err
 			}
@@ -100,26 +100,7 @@ func SettingsSynchronization() *spec.TestGroup {
 			}
 			conn.WriteSettings(setting)
 
-			actual, passed := conn.WaitEventByType(spec.EventSettingsFrame)
-			switch event := actual.(type) {
-			case spec.SettingsFrameEvent:
-				passed = event.IsAck()
-			default:
-				passed = false
-			}
-
-			if !passed {
-				expected := []string{
-					"SETTINGS Frame (length:0, flags:0x01, stream_id:0)",
-				}
-
-				return &spec.TestError{
-					Expected: expected,
-					Actual:   actual.String(),
-				}
-			}
-
-			return nil
+			return spec.VerifySettingsFrameWithAck(conn)
 		},
 	})
 

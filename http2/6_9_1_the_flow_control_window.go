@@ -44,7 +44,7 @@ func TheFlowControlWindow() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings...)
 
-			err = spec.VerifyEventType(conn, spec.EventSettingsFrame)
+			err = spec.VerifySettingsFrameWithAck(conn)
 			if err != nil {
 				return err
 			}
