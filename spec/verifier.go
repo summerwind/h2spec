@@ -155,6 +155,10 @@ func VerifyStreamClose(conn *Conn) error {
 			if event.StreamEnded() {
 				passed = true
 			}
+		case RSTStreamFrameEvent:
+			if event.ErrCode == http2.ErrCodeNo {
+				passed = true
+			}
 		case TimeoutEvent:
 			if actual == nil {
 				actual = event
