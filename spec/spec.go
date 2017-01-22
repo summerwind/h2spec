@@ -153,18 +153,19 @@ type TestCase struct {
 
 // Test runs itself as a test case.
 func (tc *TestCase) Test(c *config.Config, seq int) error {
-	if c.DryRun {
-		msg := fmt.Sprintf("%s %s", seqStr(seq), tc.Desc)
-		log.Println(msg)
-		return nil
-	}
-
 	if tc.Strict && !c.Strict {
 		return nil
 	}
 
 	mode := c.RunMode(fmt.Sprintf("%s/%d", tc.Parent.ID(), seq))
 	if mode == config.RunModeNone {
+		return nil
+	}
+
+	if c.DryRun {
+		msg := fmt.Sprintf("%s %s", seqStr(seq), tc.Desc)
+		log.Println(msg)
+		tc.Result = NewTestResult(tc, seq, nil, time.Duration(0))
 		return nil
 	}
 
