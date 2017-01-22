@@ -8,5 +8,5 @@ cache:
 install:
   - go get github.com/Masterminds/glide
 script:
-  - make test
   - make build
+  - make test
