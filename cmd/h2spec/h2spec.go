@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	VERSION string = "0.0.0"
-	COMMIT  string = "(none)"
+	VERSION string = "2.0.0"
+	COMMIT  string = "(Unknown)"
 )
 
 func main() {
@@ -136,6 +136,5 @@ func run(cmd *cobra.Command, args []string) error {
 }
 
 func version() {
-	fmt.Printf("Version: %s\n", VERSION)
-	fmt.Printf("Commit:  %s\n", COMMIT)
+	fmt.Printf("Version: %s (%s)\n", VERSION, COMMIT)
 }
