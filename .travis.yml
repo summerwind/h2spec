@@ -2,9 +2,6 @@ language: go
 go:
   - 1.7.x
 sudo: false
-cache:
-  directories:
-    - vendor
 install:
   - go get github.com/Masterminds/glide
 script:
