@@ -6,10 +6,10 @@ import:
   - http2
   - http2/hpack
 - package: github.com/spf13/cobra
-  version: 2bd8a730ae1986edcd19ee9ca686431cfe78bf2e
+  version: dc208f4211e7f6df7ec8cb62640f57d3e154910d
 - package: github.com/spf13/pflag
-  version: 08b1a584251b5b62f458943640fc8ebd4d50aaa5
+  version: a232f6d9f87afaaa08bafaff5da685f974b83313
 - package: github.com/spf13/viper
-  version: 651d9d916abc3c3d6a91a12549495caba5edffd2
+  version: 5ed0fc31f7f453625df314d8e66b9791e8d13003
 - package: github.com/fatih/color
   version: bf82308e8c8546dc2b945157173eb8a959ae9505
