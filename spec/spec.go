@@ -124,7 +124,9 @@ func (tg *TestGroup) Test(c *config.Config) {
 // AddTestGroup registers a group to this group.
 func (tg *TestGroup) AddTestGroup(stg *TestGroup) {
 	stg.Parent = tg
-	stg.Strict = tg.Strict
+	if tg.Strict {
+		stg.Strict = true
+	}
 	tg.Groups = append(tg.Groups, stg)
 }
 
