@@ -1,49 +1,103 @@
 # h2spec
 
 h2spec is a conformance testing tool for HTTP/2 implementation.  
-This tool is compliant with [RFC 7540 (HTTP/2)](http://www.rfc-editor.org/rfc/rfc7540.txt).
+This tool is compliant with [RFC 7540 (HTTP/2)](http://www.rfc-editor.org/rfc/rfc7540.txt) and [RFC 7541 (HPACK)](http://www.rfc-editor.org/rfc/rfc7541.txt).
 
 ## Install
 
-Go to the [releases page](https://github.com/summerwind/h2spec/releases), find the version you want, and download the zip file.
-
-## Build
-
-1. Make sure you have go 1.5 and set GOPATH appropriately
-2. Run `go get github.com/summerwind/h2spec/cmd/h2spec`
-
-It is also possible to build specific version.
-
-1. Make sure you have go 1.5 and set GOPATH appropriately
-2. Run `go get gopkg.in/summerwind/h2spec.v1/cmd/h2spec`
+Go to the [releases page](https://github.com/summerwind/h2spec/releases), find the version you want, and download the zip file or tarball file.
 
 ## Usage
 
 ```
-$ h2spec --help
-Usage: h2spec [ARGS] [OPTIONS]
+Conformance testing tool for HTTP/2 implementation.
 
-Options:
-    -p:                   Target port. (Default: 80 or 443)
-    -h:                   Target host. (Default: 127.0.0.1)
-    -t:                   Connect over TLS. (Default: false)
-    -k:                   Don't verify server's certificate. (Default: false)
-    -o:                   Maximum time allowed for test. (Default: 2)
-    -S:                   Run the test cases marked as "strict".
-    -j:                   Creates report also in JUnit format into specified file.
-    -v:                   Display version information and exit.
-    --max-header-length:  Maximum header length (Default: 4000)
-    --dryrun:             Dry-run mode
-    --help:               Display this help and exit.
+Usage:
+  h2spec [spec...] [flags]
 
-Args:
-    "<spec>/<chapter.section>/<test>", e.g. "http2/3.3/1"
+Flags:
+      --dryrun                  Display only the title of test cases
+      --help                    Display this help and exit
+  -h, --host string             Target host (default "127.0.0.1")
+  -k, --insecure                Don't verify server's certificate
+  -j, --junit-report string     Path for JUnit test report
+      --max-header-length int   Maximum length of HTTP header (default 4000)
+  -p, --port int                Target port
+  -S, --strict                  Run all test cases including strict test cases
+  -o, --timeout int             Time seconds to test timeout (default 2)
+  -t, --tls                     Connect over TLS
+  -v, --verbose                 Output verbose log
+      --version                 Display version information and exit
+```
 
-Example:
-    ./h2spec "http2/3.5/1" -h 192.168.122.204 -k --junit-report "junit.report" -p 3443 -t -v
+### Running a specific test cases
+
+You can choose a test case to run by specifying the *Spec ID* as the command argument. For example, if you want to run test cases for HTTP/2, run h2spec as following:
+
+```
+$ h2spec http2
+```
+
+If you add a section number after the *Spec ID*, test cases related to a specific section will be run. For example, if you want to run test cases related to 6.3 of HTTP/2, run h2spec as following:
+
+```
+$ h2spec http2/6.3
+```
+
+If you add a test number after the section number, you can run the specific test case individually. For example, to run only the first test case related to 6.3 of HTTP/2 6.3, run h2spec as following:
+
+```
+$ h2spec http2/6.3/1
+```
+
+Spec ID can be specified multiple times.
+
+```
+$ h2spec http2/6.3 generic
+```
+
+Currently supported Spec IDs are as follows. `generic` is the original spec of h2spec, includes generic test cases for HTTP/2 servers.
+
+Spec ID | Description
+--- | ---
+http2 | Test cases for RFC 7540 (HTTP/2)
+hpack | Test cases for RFC 7541 (HPACK)
+generic | Generic test cases for HTTP/2 servers
+
+### Dryrun Mode
+
+To display the list of test cases to be run, use *Dryrun Mode* as follows:
+
+```
+$ h2spec --dryrun
+```
+
+### Strict Mode
+
+When *Strict Mode* is enabled, h2spec will run the test cases related to the contents requested with the `SHOULD` notation in each specification. It is useful for more rigorous verification of HTTP/2 implementation.
+
+```
+$ h2spec --strict
 ```
 
 ## Screenshot
 
-![Sceenshot](https://cloud.githubusercontent.com/assets/230145/6203647/bb15df9e-b56f-11e4-864e-fc63ac0743fb.png)
+![Sceenshot](https://cloud.githubusercontent.com/assets/230145/22183160/9e9fbb4c-e0fa-11e6-9383-e2cc1ed6750a.png)
 
+## Build
+
+First, you need to install Go, Glide and set GOPATH appropriately.
+
+To build:
+```
+$ make build
+```
+
+To test:
+```
+$ make test
+```
+
+## License
+
+h2spec is made available under MIT license.
