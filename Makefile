@@ -8,7 +8,7 @@ BUILD_FLAGS=-ldflags "-X main.VERSION=$(VERSION) -X main.COMMIT=$(COMMIT)"
 all: build
 
 .PHONY: build
-build:
+build: vendor
 	go build $(BUILD_FLAGS) cmd/h2spec/h2spec.go
 
 .PHONY: test
