@@ -66,41 +66,5 @@ func Priority() *spec.TestGroup {
 		},
 	})
 
-	// The PRIORITY frame can be sent for a stream in the "idle" or
-	// "closed" state. This allows for the reprioritization of a group
-	// of dependent streams by altering the priority of an unused or
-	// closed parent stream.
-	tg.AddTestCase(&spec.TestCase{
-		Strict:      true,
-		Desc:        "Sends a PRIORITY frame for an idle stream, then send a HEADER frame for a lower stream ID",
-		Requirement: "The endpoint respond to the HEADER request with no error.",
-		Run: func(c *config.Config, conn *spec.Conn) error {
-			var streamID uint32 = 1
-
-			err := conn.Handshake()
-			if err != nil {
-				return err
-			}
-
-			pp := http2.PriorityParam{
-				StreamDep: 0,
-				Exclusive: false,
-				Weight:    255,
-			}
-			conn.WritePriority(streamID+2, pp)
-
-			headers := spec.CommonHeaders(c)
-			hp := http2.HeadersFrameParam{
-				StreamID:      streamID,
-				EndStream:     true,
-				EndHeaders:    true,
-				BlockFragment: conn.EncodeHeaders(headers),
-			}
-			conn.WriteHeaders(hp)
-
-			return spec.VerifyHeadersFrame(conn, streamID)
-		},
-	})
-
 	return tg
 }
