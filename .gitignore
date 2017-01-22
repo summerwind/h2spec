@@ -1,3 +1,5 @@
 .DS_Store
-node_modules
-coverage
+h2spec
+glide.lock
+vendor/
+release/
