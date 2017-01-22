@@ -17,8 +17,16 @@ import (
 	"github.com/summerwind/h2spec/log"
 )
 
-const DefaultWindowSize = 65535
+const (
+	// DefaultWindowSize is the value of default connection window size.
+	DefaultWindowSize = 65535
+	// DefaultFrameSize is the value of default frame size.
+	DefaultFrameSize = 16384
+)
 
+// Conn represent a HTTP/2 connection.
+// This struct contains settings information, current window size,
+// encoder of HPACK and frame encoder.
 type Conn struct {
 	net.Conn
 
@@ -38,6 +46,7 @@ type Conn struct {
 	debugFramerBuf *bytes.Buffer
 }
 
+// Dial connects to the server based on configuration.
 func Dial(c *config.Config) (*Conn, error) {
 	var baseConn net.Conn
 	var err error
@@ -98,6 +107,7 @@ func Dial(c *config.Config) (*Conn, error) {
 	return &conn, nil
 }
 
+// Handshake performs HTTP/2 handshake with the server.
 func (conn *Conn) Handshake() error {
 	done := make(chan error)
 
@@ -155,10 +165,12 @@ func (conn *Conn) Handshake() error {
 	return nil
 }
 
+// MaxFrameSize returns value of Handshake performs HTTP/2 handshake
+// with the server.
 func (conn *Conn) MaxFrameSize() int {
 	val, ok := conn.Settings[http2.SettingMaxFrameSize]
 	if !ok {
-		val = 16384
+		return DefaultFrameSize
 	}
 	return int(val)
 }
@@ -179,12 +191,15 @@ func (conn *Conn) EncodeHeaders(headers []hpack.HeaderField) []byte {
 	return dst
 }
 
+// Send sends a byte sequense. This function is used to send a raw
+// data in tests.
 func (conn *Conn) Send(payload []byte) error {
 	conn.vlog(RawDataEvent{payload}, true)
 	_, err := conn.Write(payload)
 	return err
 }
 
+// WriteData sends a DATA frame.
 func (conn *Conn) WriteData(streamID uint32, endStream bool, data []byte) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteData(streamID, endStream, data)
@@ -194,6 +209,7 @@ func (conn *Conn) WriteData(streamID uint32, endStream bool, data []byte) error 
 	return conn.framer.WriteData(streamID, endStream, data)
 }
 
+// WriteDataPadded sends a DATA frame with padding.
 func (conn *Conn) WriteDataPadded(streamID uint32, endStream bool, data, pad []byte) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteDataPadded(streamID, endStream, data, pad)
@@ -203,6 +219,7 @@ func (conn *Conn) WriteDataPadded(streamID uint32, endStream bool, data, pad []b
 	return conn.framer.WriteDataPadded(streamID, endStream, data, pad)
 }
 
+// WriteHeaders sends a HEADERS frame.
 func (conn *Conn) WriteHeaders(p http2.HeadersFrameParam) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteHeaders(p)
@@ -212,6 +229,7 @@ func (conn *Conn) WriteHeaders(p http2.HeadersFrameParam) error {
 	return conn.framer.WriteHeaders(p)
 }
 
+// WritePriority sends a PRIORITY frame.
 func (conn *Conn) WritePriority(streamID uint32, p http2.PriorityParam) error {
 	if conn.Verbose {
 		conn.debugFramer.WritePriority(streamID, p)
@@ -221,6 +239,7 @@ func (conn *Conn) WritePriority(streamID uint32, p http2.PriorityParam) error {
 	return conn.framer.WritePriority(streamID, p)
 }
 
+// WriteRSTStream sends a RST_STREAM frame.
 func (conn *Conn) WriteRSTStream(streamID uint32, code http2.ErrCode) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteRSTStream(streamID, code)
@@ -230,6 +249,7 @@ func (conn *Conn) WriteRSTStream(streamID uint32, code http2.ErrCode) error {
 	return conn.framer.WriteRSTStream(streamID, code)
 }
 
+// WriteSettings sends a SETTINGS frame.
 func (conn *Conn) WriteSettings(settings ...http2.Setting) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteSettings(settings...)
@@ -239,6 +259,7 @@ func (conn *Conn) WriteSettings(settings ...http2.Setting) error {
 	return conn.framer.WriteSettings(settings...)
 }
 
+// WriteSettingsAck sends a SETTINGS frame with ACK flag.
 func (conn *Conn) WriteSettingsAck() error {
 	if conn.Verbose {
 		conn.debugFramer.WriteSettingsAck()
@@ -248,6 +269,7 @@ func (conn *Conn) WriteSettingsAck() error {
 	return conn.framer.WriteSettingsAck()
 }
 
+// WritePushPromise sends a PUSH_PROMISE frame.
 func (conn *Conn) WritePushPromise(p http2.PushPromiseParam) error {
 	if conn.Verbose {
 		conn.debugFramer.WritePushPromise(p)
@@ -257,6 +279,7 @@ func (conn *Conn) WritePushPromise(p http2.PushPromiseParam) error {
 	return conn.framer.WritePushPromise(p)
 }
 
+// WritePing sends a PING frame.
 func (conn *Conn) WritePing(ack bool, data [8]byte) error {
 	if conn.Verbose {
 		conn.debugFramer.WritePing(ack, data)
@@ -266,6 +289,7 @@ func (conn *Conn) WritePing(ack bool, data [8]byte) error {
 	return conn.framer.WritePing(ack, data)
 }
 
+// WritePing sends a PING frame.
 func (conn *Conn) WriteGoAway(maxStreamID uint32, code http2.ErrCode, debugData []byte) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteGoAway(maxStreamID, code, debugData)
@@ -275,6 +299,7 @@ func (conn *Conn) WriteGoAway(maxStreamID uint32, code http2.ErrCode, debugData 
 	return conn.framer.WriteGoAway(maxStreamID, code, debugData)
 }
 
+// WriteWindowUpdate sends a WINDOW_UPDATE frame.
 func (conn *Conn) WriteWindowUpdate(streamID, incr uint32) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteWindowUpdate(streamID, incr)
@@ -284,6 +309,7 @@ func (conn *Conn) WriteWindowUpdate(streamID, incr uint32) error {
 	return conn.framer.WriteWindowUpdate(streamID, incr)
 }
 
+// WriteContinuation sends a CONTINUATION frame.
 func (conn *Conn) WriteContinuation(streamID uint32, endHeaders bool, headerBlockFragment []byte) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteContinuation(streamID, endHeaders, headerBlockFragment)
@@ -293,6 +319,8 @@ func (conn *Conn) WriteContinuation(streamID uint32, endHeaders bool, headerBloc
 	return conn.framer.WriteContinuation(streamID, endHeaders, headerBlockFragment)
 }
 
+// WaitEvent returns a event occured on connection. This function is
+// used to wait the next event on the connection.
 func (conn *Conn) WaitEvent() Event {
 	var ev Event
 
@@ -341,6 +369,9 @@ func (conn *Conn) WaitEvent() Event {
 	return ev
 }
 
+// WaitEventByType returns a specified event occured on connection.
+// This function is used to wait the next event that has specified
+// type on the connection.
 func (conn *Conn) WaitEventByType(evt EventType) (Event, bool) {
 	var lastEvent Event
 
@@ -361,6 +392,8 @@ func (conn *Conn) WaitEventByType(evt EventType) (Event, bool) {
 	return lastEvent, false
 }
 
+// updateWindowSize calculates the current window size based on the
+// information in the given HTTP/2 frame.
 func (conn *Conn) updateWindowSize(f http2.Frame) {
 	if !conn.WindowUpdate {
 		return
@@ -389,6 +422,7 @@ func (conn *Conn) updateWindowSize(f http2.Frame) {
 	}
 }
 
+// logFrameSend writes a log of the frame to be sent.
 func (conn *Conn) logFrameSend() {
 	f, err := conn.debugFramer.ReadFrame()
 	if err != nil {
@@ -404,6 +438,7 @@ func (conn *Conn) logFrameSend() {
 	conn.vlog(ev, true)
 }
 
+// vlog writes a verbose log.
 func (conn *Conn) vlog(ev Event, send bool) {
 	if !conn.Verbose {
 		return
@@ -416,6 +451,7 @@ func (conn *Conn) vlog(ev Event, send bool) {
 	}
 }
 
+// getEventByFrame returns an event based on given HTTP/2 frame.
 func getEventByFrame(f http2.Frame) Event {
 	var ev Event
 

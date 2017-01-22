@@ -12,10 +12,13 @@ import (
 )
 
 var (
+	// ErrTimeout is used when the test times out.
 	ErrTimeout = errors.New("Timeout")
+	// ErrSkipped is used when the test skipped.
 	ErrSkipped = errors.New("Skipped")
 )
 
+// TestGroup represents a group of test case.
 type TestGroup struct {
 	Key         string
 	Section     string
@@ -31,10 +34,12 @@ type TestGroup struct {
 	SkippedCount int
 }
 
+// IsRoot returns bool as to whether it is the parent of all groups.
 func (tg *TestGroup) IsRoot() bool {
 	return tg.Parent == nil
 }
 
+// ID returns the unique ID of this group.
 func (tg *TestGroup) ID() string {
 	if tg.IsRoot() {
 		return tg.Key
@@ -43,6 +48,7 @@ func (tg *TestGroup) ID() string {
 	return fmt.Sprintf("%s/%s", tg.Key, tg.Section)
 }
 
+// Title returns the title of this group.
 func (tg *TestGroup) Title() string {
 	if tg.IsRoot() {
 		return fmt.Sprintf("%s", tg.Name)
@@ -51,6 +57,8 @@ func (tg *TestGroup) Title() string {
 	}
 }
 
+// Level returns a number. Level is determined by Key and the number
+// of "." included in Section.
 func (tg *TestGroup) Level() int {
 	if tg.IsRoot() {
 		return 0
@@ -59,6 +67,7 @@ func (tg *TestGroup) Level() int {
 	return strings.Count(tg.Section, ".") + 1
 }
 
+// Test runs all the tests included in this group.
 func (tg *TestGroup) Test(c *config.Config) {
 	level := tg.Level()
 
@@ -112,12 +121,14 @@ func (tg *TestGroup) Test(c *config.Config) {
 	}
 }
 
+// AddTestGroup registers a group to this group.
 func (tg *TestGroup) AddTestGroup(stg *TestGroup) {
 	stg.Parent = tg
 	stg.Strict = tg.Strict
 	tg.Groups = append(tg.Groups, stg)
 }
 
+// AddTestGroup registers a test to this group.
 func (tg *TestGroup) AddTestCase(tc *TestCase) {
 	tc.Parent = tg
 	if tg.Strict {
@@ -128,6 +139,7 @@ func (tg *TestGroup) AddTestCase(tc *TestCase) {
 	}
 }
 
+// TestCase represents a test case.
 type TestCase struct {
 	Desc        string
 	Requirement string
@@ -137,6 +149,7 @@ type TestCase struct {
 	Run         func(c *config.Config, conn *Conn) error
 }
 
+// Test runs itself as a test case.
 func (tc *TestCase) Test(c *config.Config, seq int) error {
 	if c.DryRun {
 		msg := fmt.Sprintf("%s %s", seqStr(seq), tc.Desc)
@@ -180,15 +193,19 @@ func (tc *TestCase) Test(c *config.Config, seq int) error {
 	return nil
 }
 
+// TestError represents a error result of test case and implements
+// type error.
 type TestError struct {
 	Expected []string
 	Actual   string
 }
 
+// Returns a string containing the reason of the error.
 func (e TestError) Error() string {
 	return fmt.Sprintf("%s\n%s", strings.Join(e.Expected, "\n"), e.Actual)
 }
 
+// TestResult represents a result of test case.
 type TestResult struct {
 	TestCase *TestCase
 	Sequence int
@@ -199,6 +216,7 @@ type TestResult struct {
 	Failed  bool
 }
 
+// NewTestResult returns a TestResult.
 func NewTestResult(tc *TestCase, seq int, err error, d time.Duration) *TestResult {
 	skipped := false
 	failed := false
@@ -223,6 +241,7 @@ func NewTestResult(tc *TestCase, seq int, err error, d time.Duration) *TestResul
 	return &tr
 }
 
+// Print prints the result of test case.
 func (tr *TestResult) Print() {
 	tc := tr.TestCase
 	desc := tc.Desc
