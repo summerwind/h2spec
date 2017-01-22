@@ -17,7 +17,7 @@ var (
 
 func main() {
 	var cmd = &cobra.Command{
-		Use:   "h2spec [section...]",
+		Use:   "h2spec [spec...]",
 		Short: "Conformance testing tool for HTTP/2 implementation",
 		Long:  "Conformance testing tool for HTTP/2 implementation.",
 		RunE:  run,
