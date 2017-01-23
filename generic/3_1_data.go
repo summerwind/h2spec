@@ -103,7 +103,7 @@ func Data() *spec.TestGroup {
 			}
 
 			conn.WriteHeaders(hp)
-			conn.WriteDataPadded(streamID, true, []byte("test"), []byte("padded"))
+			conn.WriteDataPadded(streamID, true, []byte("test"), []byte("\x00\x00\x00\x00\x00"))
 
 			return spec.VerifyHeadersFrame(conn, streamID)
 		},
