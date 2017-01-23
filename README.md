@@ -30,7 +30,7 @@ Flags:
       --version                 Display version information and exit
 ```
 
-### Running a specific test cases
+### Running a specific test case
 
 You can choose a test case to run by specifying the *Spec ID* as the command argument. For example, if you want to run test cases for HTTP/2, run h2spec as following:
 
@@ -50,13 +50,13 @@ If you add a test number after the section number, you can run the specific test
 $ h2spec http2/6.3/1
 ```
 
-Spec ID can be specified multiple times.
+The *Spec ID* can be specified multiple times.
 
 ```
 $ h2spec http2/6.3 generic
 ```
 
-Currently supported Spec IDs are as follows. `generic` is the original spec of h2spec, includes generic test cases for HTTP/2 servers.
+Currently supported *Spec IDs* are as follows. `generic` is the original spec of h2spec, includes generic test cases for HTTP/2 servers.
 
 Spec ID | Description
 --- | ---
