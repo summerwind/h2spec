@@ -31,7 +31,7 @@ release:
 	mkdir -p release
 	
 	GOARCH=amd64 GOOS=darwin go build $(BUILD_FLAGS) cmd/h2spec/h2spec.go
-	zip release/h2spec_darwin_amd64.zip -r h2spec
+	tar -czf release/h2spec_darwin_amd64.tar.gz h2spec
 	rm -rf h2spec
 	
 	GOARCH=amd64 GOOS=windows go build $(BUILD_FLAGS) cmd/h2spec/h2spec.go
