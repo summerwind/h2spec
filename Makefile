@@ -21,6 +21,12 @@ clean:
 	rm -rf h2spec
 	rm -rf release
 
+.PHONY: container
+container:
+	GOARCH=amd64 GOOS=linux go build $(BUILD_FLAGS) cmd/h2spec/h2spec.go
+	docker build -t summerwind/h2spec:latest -t summerwind/h2spec:$(VERSION) .
+	rm -rf h2spec
+
 release:
 	mkdir -p release
 	
