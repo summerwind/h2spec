@@ -5,7 +5,7 @@ This tool is compliant with [RFC 7540 (HTTP/2)](http://www.rfc-editor.org/rfc/rf
 
 ## Install
 
-Go to the [releases page](https://github.com/summerwind/h2spec/releases), find the version you want, and download the zip file or tarball file.
+Go to the [releases page](https://github.com/summerwind/h2spec/releases), find the version you want, and download the zip file or tarball file. The docker image is also available in [Docker Hub](https://hub.docker.com/r/summerwind/h2spec/).
 
 ## Usage
 
