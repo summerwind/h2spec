@@ -22,8 +22,8 @@ func IndexAddressSpace() *spec.TestGroup {
 				return err
 			}
 
-			// Indexed header field representation with index 70
-			indexedRep := []byte("\xC6")
+			// Indexed header field representation with index 126
+			indexedRep := []byte("\xFE")
 
 			headers := spec.CommonHeaders(c)
 			blockFragment := conn.EncodeHeaders(headers)
