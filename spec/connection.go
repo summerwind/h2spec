@@ -434,7 +434,7 @@ func (conn *Conn) logFrameSend() {
 		// http2 package does not parse DATA frame with stream ID: 0x0.
 		// So we are going to log the information that sent some frame.
 		if conn.Verbose {
-			log.Println(gray(fmt.Sprintf("     <-- [send] ??? Frame (Failed to parse the frame)")))
+			log.Println(gray(fmt.Sprintf("     [send] ??? Frame (Failed to parse the frame)")))
 		}
 		return
 	}
@@ -450,9 +450,9 @@ func (conn *Conn) vlog(ev Event, send bool) {
 	}
 
 	if send {
-		log.Println(gray(fmt.Sprintf("     <-- [send] %s", ev)))
+		log.Println(gray(fmt.Sprintf("     [send] %s", ev)))
 	} else {
-		log.Println(gray(fmt.Sprintf("     --> [recv] %s", ev)))
+		log.Println(gray(fmt.Sprintf("     [recv] %s", ev)))
 	}
 }
 
