@@ -191,6 +191,11 @@ func (conn *Conn) EncodeHeaders(headers []hpack.HeaderField) []byte {
 	return dst
 }
 
+// SetMaxDynamicTableSize changes the dynamic header table size to v.
+func (conn *Conn) SetMaxDynamicTableSize(v uint32) {
+	conn.encoder.SetMaxDynamicTableSize(v)
+}
+
 // Send sends a byte sequense. This function is used to send a raw
 // data in tests.
 func (conn *Conn) Send(payload []byte) error {

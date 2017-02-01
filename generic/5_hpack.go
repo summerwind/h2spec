@@ -481,12 +481,12 @@ func HPACK() *spec.TestGroup {
 				return err
 			}
 
-			// Dynamic table size update with value 0
-			tableSizeUpdate := []byte("\x20")
+			// Change encoder's table size to 128. This sends dynamic table
+			// size update with value 128.
+			conn.SetMaxDynamicTableSize(128)
 
 			headers := spec.CommonHeaders(c)
 			blockFragment := conn.EncodeHeaders(headers)
-			blockFragment = append(tableSizeUpdate, blockFragment...)
 
 			hp := http2.HeadersFrameParam{
 				StreamID:      streamID,
@@ -526,8 +526,8 @@ func HPACK() *spec.TestGroup {
 				return err
 			}
 
-			// 2 Dynamic Table Size Updates, 0 and 4096.
-			tableSizeUpdate := []byte("\x20\x3f\xe1\x1f")
+			// 2 Dynamic Table Size Updates, 128 and 4096.
+			tableSizeUpdate := []byte("\x3f\x61\x3f\xe1\x1f")
 
 			headers := spec.CommonHeaders(c)
 			blockFragment := conn.EncodeHeaders(headers)
