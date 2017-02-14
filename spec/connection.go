@@ -41,9 +41,12 @@ type Conn struct {
 	framer     *http2.Framer
 	encoder    *hpack.Encoder
 	encoderBuf *bytes.Buffer
+	decoder    *hpack.Decoder
 
 	debugFramer    *http2.Framer
 	debugFramerBuf *bytes.Buffer
+
+	server bool
 }
 
 // Dial connects to the server based on configuration.
@@ -82,6 +85,8 @@ func Dial(c *config.Config) (*Conn, error) {
 	var encoderBuf bytes.Buffer
 	encoder := hpack.NewEncoder(&encoderBuf)
 
+	decoder := hpack.NewDecoder(4096, func(f hpack.HeaderField) {})
+
 	conn := Conn{
 		Conn:     baseConn,
 		Settings: settings,
@@ -95,6 +100,49 @@ func Dial(c *config.Config) (*Conn, error) {
 		framer:     framer,
 		encoder:    encoder,
 		encoderBuf: &encoderBuf,
+		decoder:    decoder,
+
+		server: false,
+	}
+
+	if conn.Verbose {
+		conn.debugFramerBuf = new(bytes.Buffer)
+		conn.debugFramer = http2.NewFramer(conn.debugFramerBuf, conn.debugFramerBuf)
+		conn.debugFramer.AllowIllegalWrites = true
+		conn.debugFramer.AllowIllegalReads = true
+	}
+
+	return &conn, nil
+}
+
+func Accept(c *config.ClientSpecConfig, baseConn net.Conn) (*Conn, error) {
+	settings := map[http2.SettingID]uint32{}
+
+	framer := http2.NewFramer(baseConn, baseConn)
+	framer.AllowIllegalWrites = true
+	framer.AllowIllegalReads = true
+
+	var encoderBuf bytes.Buffer
+	encoder := hpack.NewEncoder(&encoderBuf)
+
+	decoder := hpack.NewDecoder(4096, func(f hpack.HeaderField) {})
+
+	conn := Conn{
+		Conn:     baseConn,
+		Settings: settings,
+		Timeout:  c.Timeout,
+		Verbose:  c.Verbose,
+		Closed:   false,
+
+		WindowUpdate: true,
+		WindowSize:   map[uint32]int{0: DefaultWindowSize},
+
+		framer:     framer,
+		encoder:    encoder,
+		encoderBuf: &encoderBuf,
+		decoder:    decoder,
+
+		server: true,
 	}
 
 	if conn.Verbose {
@@ -109,60 +157,11 @@ func Dial(c *config.Config) (*Conn, error) {
 
 // Handshake performs HTTP/2 handshake with the server.
 func (conn *Conn) Handshake() error {
-	done := make(chan error)
-
-	fmt.Fprintf(conn, "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")
-
-	go func() {
-		local := false
-		remote := false
-
-		setting := http2.Setting{
-			ID:  http2.SettingInitialWindowSize,
-			Val: DefaultWindowSize,
-		}
-		conn.WriteSettings(setting)
-
-		for !(local && remote) {
-			f, err := conn.framer.ReadFrame()
-			if err != nil {
-				done <- err
-				return
-			}
-
-			ev := getEventByFrame(f)
-			conn.vlog(ev, false)
-
-			sf, ok := f.(*http2.SettingsFrame)
-			if !ok {
-				continue
-			}
-
-			if sf.IsAck() {
-				local = true
-			} else {
-				remote = true
-				sf.ForeachSetting(func(setting http2.Setting) error {
-					conn.Settings[setting.ID] = setting.Val
-					return nil
-				})
-				conn.WriteSettingsAck()
-			}
-		}
-
-		done <- nil
-	}()
-
-	select {
-	case err := <-done:
-		if err != nil {
-			return err
-		}
-	case <-time.After(conn.Timeout):
-		return ErrTimeout
+	if conn.server {
+		return conn.handshakeAsServer()
+	} else {
+		return conn.handshakeAsClient()
 	}
-
-	return nil
 }
 
 // MaxFrameSize returns value of Handshake performs HTTP/2 handshake
@@ -324,6 +323,17 @@ func (conn *Conn) WriteContinuation(streamID uint32, endHeaders bool, headerBloc
 	return conn.framer.WriteContinuation(streamID, endHeaders, headerBlockFragment)
 }
 
+func (conn *Conn) WriteSuccessResponse(streamID uint32, c *config.ClientSpecConfig) {
+	hp := http2.HeadersFrameParam{
+		StreamID:      streamID,
+		EndStream:     false,
+		EndHeaders:    true,
+		BlockFragment: conn.EncodeHeaders(CommonRespHeaders(c)),
+	}
+	conn.WriteHeaders(hp)
+	conn.WriteData(streamID, true, []byte("success"))
+}
+
 // WaitEvent returns a event occured on connection. This function is
 // used to wait the next event on the connection.
 func (conn *Conn) WaitEvent() Event {
@@ -395,6 +405,49 @@ func (conn *Conn) WaitEventByType(evt EventType) (Event, bool) {
 	}
 
 	return lastEvent, false
+}
+
+type Request struct {
+	StreamID uint32
+	Headers  []hpack.HeaderField
+}
+
+func (conn *Conn) ReadRequest() (*Request, error) {
+	headers := make([]hpack.HeaderField, 0, 256)
+	conn.decoder.SetEmitFunc(func(f hpack.HeaderField) {
+		headers = append(headers, f)
+	})
+
+	done := false
+	streamID := uint32(0)
+
+	for !done {
+		f, ok := conn.WaitEventByType(EventHeadersFrame)
+		if !ok {
+			return nil, errors.New("No HEADER frame received")
+		}
+
+		hf, _ := f.(HeadersFrameEvent)
+
+		if streamID == uint32(0) {
+			streamID = hf.Header().StreamID
+		} else if streamID != hf.Header().StreamID {
+			return nil, errors.New("Encountered different StreamID")
+		}
+
+		_, err := conn.decoder.Write(hf.HeaderBlockFragment())
+		if err != nil {
+			return nil, err
+		}
+
+		done = hf.HeadersEnded()
+	}
+
+	request := &Request{
+		StreamID: streamID,
+		Headers:  headers,
+	}
+	return request, nil
 }
 
 // updateWindowSize calculates the current window size based on the
@@ -486,4 +539,127 @@ func getEventByFrame(f http2.Frame) Event {
 	}
 
 	return ev
+}
+
+func (conn *Conn) handshakeAsClient() error {
+	done := make(chan error)
+
+	fmt.Fprintf(conn, "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")
+
+	go func() {
+		local := false
+		remote := false
+
+		setting := http2.Setting{
+			ID:  http2.SettingInitialWindowSize,
+			Val: DefaultWindowSize,
+		}
+		conn.WriteSettings(setting)
+
+		for !(local && remote) {
+			f, err := conn.framer.ReadFrame()
+			if err != nil {
+				done <- err
+				return
+			}
+
+			ev := getEventByFrame(f)
+			conn.vlog(ev, false)
+
+			sf, ok := f.(*http2.SettingsFrame)
+			if !ok {
+				continue
+			}
+
+			if sf.IsAck() {
+				local = true
+			} else {
+				remote = true
+				sf.ForeachSetting(func(setting http2.Setting) error {
+					conn.Settings[setting.ID] = setting.Val
+					return nil
+				})
+				conn.WriteSettingsAck()
+			}
+		}
+
+		done <- nil
+	}()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			return err
+		}
+	case <-time.After(conn.Timeout):
+		return ErrTimeout
+	}
+
+	return nil
+}
+
+func (conn *Conn) handshakeAsServer() error {
+	done := make(chan error)
+
+	go func() {
+		prefaceBytes, err := conn.readBytes(24)
+		if err != nil {
+			done <- err
+			return
+		}
+
+		preface := string(prefaceBytes[:])
+		if preface != "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n" {
+			done <- errors.New("Illegal preface")
+			return
+		}
+
+		f, err := conn.framer.ReadFrame()
+		if err != nil {
+			done <- err
+			return
+		}
+
+		_, ok := f.(*http2.SettingsFrame)
+		if !ok {
+			done <- errors.New("First frame must be SETTINGS frame")
+			return
+		}
+
+		setting := http2.Setting{
+			ID:  http2.SettingInitialWindowSize,
+			Val: DefaultWindowSize,
+		}
+		conn.WriteSettings(setting)
+		conn.WriteSettingsAck()
+
+		done <- nil
+	}()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			return err
+		}
+	case <-time.After(conn.Timeout):
+		return ErrTimeout
+	}
+	return nil
+}
+
+func (conn *Conn) readBytes(size int) ([]byte, error) {
+	var remain = size
+	buffer := make([]byte, 0, size)
+
+	for remain > 0 {
+		tmp := make([]byte, remain)
+		n, err := conn.Read(tmp)
+		if err != nil {
+			return nil, err
+		}
+
+		buffer = append(buffer, tmp[:n]...)
+		remain = remain - n
+	}
+	return buffer, nil
 }
