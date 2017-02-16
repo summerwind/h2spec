@@ -98,6 +98,18 @@ func DummyHeaders(c *config.Config, len int) []hpack.HeaderField {
 	return headers
 }
 
+func DummyRespHeaders(c *config.ClientSpecConfig, len int) []hpack.HeaderField {
+	headers := make([]hpack.HeaderField, 0, len)
+	dummy := DummyString(c.MaxHeaderLen)
+
+	for i := 0; i < len; i++ {
+		name := fmt.Sprintf("x-dummy%d", i)
+		headers = append(headers, HeaderField(name, dummy))
+	}
+
+	return headers
+}
+
 // ServerDataLength returns the total length of the DATA frame of /.
 func ServerDataLength(c *config.Config) (int, error) {
 	conn, err := Dial(c)

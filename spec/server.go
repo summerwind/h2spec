@@ -234,7 +234,7 @@ func htmlReportForTestCase(tc *ClientTestCase) string {
 			msg = fmt.Sprintf("%s&nbsp;%s", label, ex)
 			buffer.WriteString(fmt.Sprintf(formatter, 30, "yellow", msg))
 		}
-		msg = fmt.Sprintf("&nbsp;&nbsp;Actual:&nbsp;%s")
+		msg = fmt.Sprintf("&nbsp;&nbsp;Actual:&nbsp;%s", err.Actual)
 		buffer.WriteString(fmt.Sprintf(formatter, 30, "green", msg))
 
 	} else if err != nil {
@@ -249,11 +249,10 @@ func htmlReportForTestCase(tc *ClientTestCase) string {
 }
 
 func closeConn(conn *Conn, lastStreamID uint32) {
-	if conn.Closed {
-		return
+	if !conn.Closed {
+		conn.WriteGoAway(lastStreamID, http2.ErrCodeNo, make([]byte, 0))
+		time.Sleep(1 * time.Second)
 	}
 
-	conn.WriteGoAway(lastStreamID, http2.ErrCodeNo, make([]byte, 0))
-	time.Sleep(3 * time.Second)
 	conn.Close()
 }
