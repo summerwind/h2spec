@@ -136,11 +136,16 @@ func (server *Server) handleConn(conn *Conn) {
 }
 
 func (server *Server) home(conn *Conn, req *Request) {
+	headers := []hpack.HeaderField{
+		HeaderField(":status", "404"),
+		HeaderField("content-type", "text/html;charset=utf-8"),
+	}
+
 	hp := http2.HeadersFrameParam{
 		StreamID:      req.StreamID,
 		EndStream:     false,
 		EndHeaders:    true,
-		BlockFragment: conn.EncodeHeaders(CommonRespHeaders(server.config)),
+		BlockFragment: conn.EncodeHeaders(headers),
 	}
 
 	conn.WriteHeaders(hp)
