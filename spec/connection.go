@@ -323,6 +323,15 @@ func (conn *Conn) WriteContinuation(streamID uint32, endHeaders bool, headerBloc
 	return conn.framer.WriteContinuation(streamID, endHeaders, headerBlockFragment)
 }
 
+func (conn *Conn) WriteRawFrame(t http2.FrameType, flags http2.Flags, streamID uint32, payload []byte) error {
+	if conn.Verbose {
+		conn.debugFramer.WriteRawFrame(t, flags, streamID, payload)
+		conn.logFrameSend()
+	}
+
+	return conn.framer.WriteRawFrame(t, flags, streamID, payload)
+}
+
 func (conn *Conn) WriteSuccessResponse(streamID uint32, c *config.ClientSpecConfig) {
 	hp := http2.HeadersFrameParam{
 		StreamID:      streamID,
