@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/summerwind/h2spec/config"
@@ -178,25 +179,72 @@ func htmlReport(tg *ClientTestGroup) []byte {
 	tmp := "<div>%d tests, %d passed, %d skipped, %d failed</div>"
 	buffer.WriteString(fmt.Sprintf(tmp, total, passed, skipped, failed))
 
-	buffer.WriteString(htmlReportForGroup(tg))
+	buffer.WriteString(htmlReportForTestGroup(tg))
 	return buffer.Bytes()
 }
 
-func htmlReportForGroup(tg *ClientTestGroup) string {
+func htmlReportForTestGroup(tg *ClientTestGroup) string {
 	var buffer bytes.Buffer
 
 	buffer.WriteString(fmt.Sprintf("<div>%s</div>", tg.Title()))
 
 	for _, tc := range tg.Tests {
-		tmp := "<div><a href=\"%s\" target=\"_blank\">%s</a>&nbsp;%s</div>"
-		buffer.WriteString(fmt.Sprintf(tmp, tc.Path(), tc.Path(), tc.Desc))
+		buffer.WriteString(htmlReportForTestCase(tc))
 	}
 
 	for _, g := range tg.Groups {
-		buffer.WriteString(htmlReportForGroup(g))
+		buffer.WriteString(htmlReportForTestGroup(g))
 	}
 
 	buffer.WriteString("<br>")
+	return buffer.String()
+}
+
+func htmlReportForTestCase(tc *ClientTestCase) string {
+	formatter := "<div>%s<a href=\"%s\" target=\"_blank\">%s</a>%s</div>"
+
+	tr := tc.Result
+
+	if tr == nil {
+		resultLabel := "<span style=\"color: red;\">&nbsp;&nbsp;</span>"
+		return fmt.Sprintf(formatter, resultLabel, tc.Path(), tc.Path(), tc.Desc)
+	}
+
+	if !tr.Failed {
+		resultLabel := "<span style=\"color: green;\">✔</span>"
+		return fmt.Sprintf(formatter, resultLabel, tc.Path(), tc.Path(), tc.Desc)
+	}
+
+	var buffer bytes.Buffer
+
+	resultLabel := "<span style=\"color: red;\">✖</span>"
+	buffer.WriteString(fmt.Sprintf(formatter, resultLabel, tc.Path(), tc.Path(), tc.Desc))
+
+	err, ok := tr.Error.(*TestError)
+	formatter = "<div style=\"padding-left: %dpx; color: %s\">%s</div>"
+	if ok {
+		msg := fmt.Sprintf("-> %s", tc.Requirement)
+		buffer.WriteString(fmt.Sprintf(formatter, 20, "red", msg))
+
+		label := "Expected:"
+		for i, ex := range err.Expected {
+			if i != 0 {
+				label = strings.Repeat("&nbsp;", len(label))
+			}
+			msg = fmt.Sprintf("%s&nbsp;%s", label, ex)
+			buffer.WriteString(fmt.Sprintf(formatter, 30, "yellow", msg))
+		}
+		msg = fmt.Sprintf("&nbsp;&nbsp;Actual:&nbsp;%s")
+		buffer.WriteString(fmt.Sprintf(formatter, 30, "green", msg))
+
+	} else if err != nil {
+		errMsg := fmt.Sprintf("Error: %v", err)
+		buffer.WriteString(fmt.Sprintf(formatter, 20, "red", errMsg))
+	} else {
+		errMsg := fmt.Sprintf("Error: %v", tr.Error.Error())
+		buffer.WriteString(fmt.Sprintf(formatter, 20, "red", errMsg))
+	}
+
 	return buffer.String()
 }
 
