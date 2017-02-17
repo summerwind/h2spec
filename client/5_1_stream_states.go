@@ -170,11 +170,6 @@ func StreamStates() *spec.ClientTestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			err := spec.VerifyStreamClose(conn)
-			if err != nil {
-				return err
-			}
-
 			conn.WriteData(req.StreamID, true, []byte("test"))
 
 			return spec.VerifyConnectionError(conn, http2.ErrCodeStreamClosed)
@@ -198,11 +193,6 @@ func StreamStates() *spec.ClientTestGroup {
 			}
 			conn.WriteHeaders(hp)
 
-			err := spec.VerifyStreamClose(conn)
-			if err != nil {
-				return err
-			}
-
 			conn.WriteHeaders(hp)
 
 			return spec.VerifyConnectionError(conn, http2.ErrCodeStreamClosed)
@@ -225,11 +215,6 @@ func StreamStates() *spec.ClientTestGroup {
 				BlockFragment: conn.EncodeHeaders(headers),
 			}
 			conn.WriteHeaders(hp)
-
-			err := spec.VerifyStreamClose(conn)
-			if err != nil {
-				return err
-			}
 
 			dummyHeaders := spec.DummyRespHeaders(c, 1)
 			conn.WriteContinuation(req.StreamID, true, conn.EncodeHeaders(dummyHeaders))

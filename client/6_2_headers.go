@@ -81,6 +81,7 @@ func Headers() *spec.ClientTestGroup {
 			// HEADERS frame:
 			// frame length: 16, pad length: 17
 			var flags http2.Flags
+			flags |= http2.FlagHeadersPadded
 			payload := append([]byte("\x11"), conn.EncodeHeaders(headers)...)
 			conn.WriteRawFrame(http2.FrameHeaders, flags, req.StreamID, payload)
 

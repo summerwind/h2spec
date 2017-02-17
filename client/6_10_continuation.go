@@ -32,7 +32,10 @@ func Continuation() *spec.ClientTestGroup {
 			conn.WriteContinuation(req.StreamID, false, conn.EncodeHeaders(dummyHeaders))
 			conn.WriteContinuation(req.StreamID, true, conn.EncodeHeaders(dummyHeaders))
 
-			return spec.VerifyHeadersFrame(conn, req.StreamID)
+			data := [8]byte{}
+			conn.WritePing(false, data)
+
+			return spec.VerifyPingFrameWithAck(conn, data)
 		},
 	})
 
