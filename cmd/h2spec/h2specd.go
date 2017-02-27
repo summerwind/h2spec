@@ -38,6 +38,7 @@ func main() {
 	flags.StringP("cert-file", "c", "server.crt", "Servr certificate file")
 	flags.StringP("cert-key-file", "k", "server.key", "Servr certificate key file")
 
+	flags.IntP("from-port", "f", 30000, "The port starting from for client test cases")
 	flags.StringP("exec", "e", "", "Binary or command for http2 client")
 
 	flags.BoolP("verbose", "v", false, "Output verbose log")
@@ -114,6 +115,11 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	fromPort, err := flags.GetInt("from-port")
+	if err != nil {
+		return err
+	}
+
 	exec, err := flags.GetString("exec")
 	if err != nil {
 		return err
@@ -145,6 +151,7 @@ func run(cmd *cobra.Command, args []string) error {
 		CertKeyFile:  certKeyFile,
 		Verbose:      verbose,
 		Sections:     args,
+		FromPort:     fromPort,
 		Exec:         exec,
 	}
 

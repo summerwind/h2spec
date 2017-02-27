@@ -101,14 +101,18 @@ func (tg *ClientTestGroup) AddTestCase(tc *ClientTestCase) {
 	tg.Tests = append(tg.Tests, tc)
 }
 
-func (tg *ClientTestGroup) ClientTestCases(testCases map[string]*ClientTestCase) {
+func (tg *ClientTestGroup) ClientTestCases(testCases map[int]*ClientTestCase, currentPort int) int {
 	for _, tc := range tg.Tests {
-		testCases[tc.Path()] = tc
+		currentPort += 1
+		tc.Port = currentPort
+		testCases[currentPort] = tc
 	}
 
 	for _, g := range tg.Groups {
-		g.ClientTestCases(testCases)
+		currentPort = g.ClientTestCases(testCases, currentPort+1)
 	}
+
+	return currentPort
 }
 
 func (tg *ClientTestGroup) IncRecursive(failed bool, skipped bool, inc int) {
@@ -133,6 +137,8 @@ type ClientTestCase struct {
 	Parent      *ClientTestGroup
 	Result      *ClientTestResult
 	Run         func(c *config.Config, conn *Conn, req *Request) error
+
+	Port int
 }
 
 // Test runs itself as a test case.
@@ -164,12 +170,8 @@ func (tc *ClientTestCase) Test(c *config.Config) error {
 	return nil
 }
 
-func (tc *ClientTestCase) Path() string {
-	return fmt.Sprintf("/%s/%d", tc.Parent.ID(), tc.Seq)
-}
-
 func (tc *ClientTestCase) FullPath(c *config.Config) string {
-	return fmt.Sprintf("%s://%s:%d%s", c.Scheme(), c.Host, c.Port, tc.Path())
+	return fmt.Sprintf("%s://%s:%d/", c.Scheme(), c.Host, tc.Port)
 }
 
 // ClientTestResult represents a result of test case.

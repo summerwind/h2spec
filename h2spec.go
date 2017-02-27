@@ -71,7 +71,10 @@ func Run(c *config.Config) error {
 func RunClientSpec(c *config.Config) error {
 	s := client.Spec()
 
-	server, _ := spec.Listen(c, s)
+	server, err := spec.Listen(c, s)
+	if err != nil {
+		return err
+	}
 
 	if c.Exec != "" {
 		go server.RunForever()

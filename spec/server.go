@@ -5,62 +5,66 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/summerwind/h2spec/config"
 	"github.com/summerwind/h2spec/log"
 	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/hpack"
 )
 
 type Server struct {
-	net.Listener
-
+	listeners []net.Listener
 	config    *config.Config
-	testCases map[string]*ClientTestCase
+	testCases map[int]*ClientTestCase
 	spec      *ClientTestGroup
 }
 
 func Listen(c *config.Config, tg *ClientTestGroup) (*Server, error) {
-	var err error
-	var listener net.Listener
-	if c.TLS {
-		tlsConfig, err := c.TLSConfig()
-		if err != nil {
-			return nil, err
-		}
+	testCases := make(map[int]*ClientTestCase)
+	tg.ClientTestCases(testCases, c.FromPort)
 
-		listener, err = tls.Listen("tcp", c.Addr(), tlsConfig)
-		if err != nil {
-			return nil, err
-		}
-
-		log.Println(fmt.Sprintf("Server is listened at https://%s", c.Addr()))
-	} else {
-		listener, err = net.Listen("tcp", c.Addr())
-		if err != nil {
-			return nil, err
-		}
-
-		log.Println(fmt.Sprintf("Server is listened at http://%s", c.Addr()))
-	}
-
-	testCases := make(map[string]*ClientTestCase)
-	tg.ClientTestCases(testCases)
-
-	server := Server{
-		Listener:  listener,
+	server := &Server{
+		listeners: make([]net.Listener, 0),
 		config:    c,
 		testCases: testCases,
 		spec:      tg,
 	}
-	return &server, nil
+
+	for port, tc := range testCases {
+		var err error
+		var listener net.Listener
+
+		addr := fmt.Sprintf("%s:%d", c.Host, port)
+
+		if c.TLS {
+			tlsConfig, err := c.TLSConfig()
+			if err != nil {
+				return nil, err
+			}
+
+			listener, err = tls.Listen("tcp", addr, tlsConfig)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			listener, err = net.Listen("tcp", addr)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		server.listeners = append(server.listeners, listener)
+		go server.RunListener(listener, tc)
+	}
+
+	return server, nil
 }
 
-func (server *Server) RunForever() {
+func (server *Server) RunListener(listener net.Listener, tc *ClientTestCase) {
 	for {
-		baseConn, err := server.Accept()
+		baseConn, err := listener.Accept()
 		if err != nil {
 			log.Println(err)
 			continue
@@ -72,11 +76,22 @@ func (server *Server) RunForever() {
 			continue
 		}
 
-		go server.handleConn(conn)
+		go server.handleConn(conn, tc)
 	}
 }
 
-func (server *Server) handleConn(conn *Conn) {
+func (server *Server) RunForever() {
+	http.HandleFunc("/", server.home)
+	http.ListenAndServe(server.config.Addr(), nil)
+}
+
+func (server *Server) Close() {
+	for _, listener := range server.listeners {
+		listener.Close()
+	}
+}
+
+func (server *Server) handleConn(conn *Conn, tc *ClientTestCase) {
 	start := time.Now()
 
 	err := conn.Handshake()
@@ -87,32 +102,6 @@ func (server *Server) handleConn(conn *Conn) {
 	request, err := conn.ReadRequest()
 	if err != nil {
 		log.Println(red(err))
-		return
-	}
-
-	var path string
-	hasPath := false
-	for _, f := range request.Headers {
-		if f.Name == ":path" {
-			path = f.Value
-			hasPath = true
-		}
-	}
-
-	if !hasPath {
-		log.Println(red("No :path found in request"))
-		return
-	}
-
-	if path == "/" {
-		server.home(conn, request)
-		return
-	}
-
-	tc, ok := server.testCases[path]
-	if !ok {
-		log.Println(red(fmt.Sprintf("No path match: %s", path)))
-		server.notFound(conn, request)
 		return
 	}
 
@@ -135,45 +124,11 @@ func (server *Server) handleConn(conn *Conn) {
 	tc.Parent.IncRecursive(tc.Result.Failed, tc.Result.Skipped, 1)
 }
 
-func (server *Server) home(conn *Conn, req *Request) {
-	headers := []hpack.HeaderField{
-		HeaderField(":status", "404"),
-		HeaderField("content-type", "text/html;charset=utf-8"),
-	}
-
-	hp := http2.HeadersFrameParam{
-		StreamID:      req.StreamID,
-		EndStream:     false,
-		EndHeaders:    true,
-		BlockFragment: conn.EncodeHeaders(headers),
-	}
-
-	conn.WriteHeaders(hp)
-
-	report := htmlReport(server.spec)
-	conn.WriteData(req.StreamID, true, report)
-
-	go closeConn(conn, req.StreamID)
+func (server *Server) home(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, htmlReport(server.spec, server.config))
 }
 
-func (server *Server) notFound(conn *Conn, req *Request) {
-	headers := []hpack.HeaderField{
-		HeaderField(":status", "404"),
-	}
-
-	hp := http2.HeadersFrameParam{
-		StreamID:      req.StreamID,
-		EndStream:     true,
-		EndHeaders:    true,
-		BlockFragment: conn.EncodeHeaders(headers),
-	}
-
-	conn.WriteHeaders(hp)
-	conn.WriteGoAway(req.StreamID, http2.ErrCodeNo, make([]byte, 0))
-	conn.Close()
-}
-
-func htmlReport(tg *ClientTestGroup) []byte {
+func htmlReport(tg *ClientTestGroup, c *config.Config) string {
 	var buffer bytes.Buffer
 
 	passed := tg.PassedCount
@@ -184,46 +139,46 @@ func htmlReport(tg *ClientTestGroup) []byte {
 	tmp := "<div>%d tests, %d passed, %d skipped, %d failed</div>"
 	buffer.WriteString(fmt.Sprintf(tmp, total, passed, skipped, failed))
 
-	buffer.WriteString(htmlReportForTestGroup(tg))
-	return buffer.Bytes()
+	buffer.WriteString(htmlReportForTestGroup(tg, c))
+	return buffer.String()
 }
 
-func htmlReportForTestGroup(tg *ClientTestGroup) string {
+func htmlReportForTestGroup(tg *ClientTestGroup, c *config.Config) string {
 	var buffer bytes.Buffer
 
 	buffer.WriteString(fmt.Sprintf("<div>%s</div>", tg.Title()))
 
 	for _, tc := range tg.Tests {
-		buffer.WriteString(htmlReportForTestCase(tc))
+		buffer.WriteString(htmlReportForTestCase(tc, c))
 	}
 
 	for _, g := range tg.Groups {
-		buffer.WriteString(htmlReportForTestGroup(g))
+		buffer.WriteString(htmlReportForTestGroup(g, c))
 	}
 
 	buffer.WriteString("<br>")
 	return buffer.String()
 }
 
-func htmlReportForTestCase(tc *ClientTestCase) string {
+func htmlReportForTestCase(tc *ClientTestCase, c *config.Config) string {
 	formatter := "<div>%s<a href=\"%s\" target=\"_blank\">%s</a>%s</div>"
 
 	tr := tc.Result
 
 	if tr == nil {
 		resultLabel := "<span style=\"color: red;\">&nbsp;&nbsp;</span>"
-		return fmt.Sprintf(formatter, resultLabel, tc.Path(), tc.Path(), tc.Desc)
+		return fmt.Sprintf(formatter, resultLabel, tc.FullPath(c), tc.FullPath(c), tc.Desc)
 	}
 
 	if !tr.Failed {
 		resultLabel := "<span style=\"color: green;\">✔</span>"
-		return fmt.Sprintf(formatter, resultLabel, tc.Path(), tc.Path(), tc.Desc)
+		return fmt.Sprintf(formatter, resultLabel, tc.FullPath(c), tc.FullPath(c), tc.Desc)
 	}
 
 	var buffer bytes.Buffer
 
 	resultLabel := "<span style=\"color: red;\">✖</span>"
-	buffer.WriteString(fmt.Sprintf(formatter, resultLabel, tc.Path(), tc.Path(), tc.Desc))
+	buffer.WriteString(fmt.Sprintf(formatter, resultLabel, tc.FullPath(c), tc.FullPath(c), tc.Desc))
 
 	err, ok := tr.Error.(*TestError)
 	formatter = "<div style=\"padding-left: %dpx; color: %s\">%s</div>"
