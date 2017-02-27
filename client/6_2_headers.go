@@ -21,7 +21,7 @@ func Headers() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a HEADERS frame without the END_HEADERS flag, and a PRIORITY frame",
 		Requirement: "The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			headers := spec.CommonRespHeaders(c)
 			hp := http2.HeadersFrameParam{
 				StreamID:      req.StreamID,
@@ -52,7 +52,7 @@ func Headers() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a HEADERS frame with 0x0 stream identifier",
 		Requirement: "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			headers := spec.CommonRespHeaders(c)
 
 			hp := http2.HeadersFrameParam{
@@ -75,7 +75,7 @@ func Headers() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a HEADERS frame with invalid pad length",
 		Requirement: "The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			headers := spec.CommonRespHeaders(c)
 
 			// HEADERS frame:

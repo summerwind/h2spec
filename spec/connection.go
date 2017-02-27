@@ -58,7 +58,12 @@ func Dial(c *config.Config) (*Conn, error) {
 		dialer := &net.Dialer{}
 		dialer.Timeout = c.Timeout
 
-		tlsConn, err := tls.DialWithDialer(dialer, "tcp", c.Addr(), c.TLSConfig())
+		tlsConfig, err := c.TLSConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		tlsConn, err := tls.DialWithDialer(dialer, "tcp", c.Addr(), tlsConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -115,7 +120,7 @@ func Dial(c *config.Config) (*Conn, error) {
 	return &conn, nil
 }
 
-func Accept(c *config.ClientSpecConfig, baseConn net.Conn) (*Conn, error) {
+func Accept(c *config.Config, baseConn net.Conn) (*Conn, error) {
 	settings := map[http2.SettingID]uint32{}
 
 	framer := http2.NewFramer(baseConn, baseConn)
@@ -332,7 +337,7 @@ func (conn *Conn) WriteRawFrame(t http2.FrameType, flags http2.Flags, streamID u
 	return conn.framer.WriteRawFrame(t, flags, streamID, payload)
 }
 
-func (conn *Conn) WriteSuccessResponse(streamID uint32, c *config.ClientSpecConfig) {
+func (conn *Conn) WriteSuccessResponse(streamID uint32, c *config.Config) {
 	hp := http2.HeadersFrameParam{
 		StreamID:      streamID,
 		EndStream:     false,

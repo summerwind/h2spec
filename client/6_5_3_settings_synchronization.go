@@ -15,7 +15,7 @@ func SettingsSynchronization() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a SETTINGS frame without ACK flag",
 		Requirement: "The endpoint MUST immediately emit a SETTINGS frame with the ACK flag set.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			setting := http2.Setting{
 				ID:  http2.SettingEnablePush,
 				Val: 0,

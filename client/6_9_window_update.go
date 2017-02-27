@@ -18,7 +18,7 @@ func WindowUpdate() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a WINDOW_UPDATE frame with a flow control window increment of 0",
 		Requirement: "The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			conn.WriteWindowUpdate(0, 0)
 
 			return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol)
@@ -33,7 +33,7 @@ func WindowUpdate() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a WINDOW_UPDATE frame with a flow control window increment of 0 on a stream",
 		Requirement: "The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			headers := spec.CommonRespHeaders(c)
 			hp := http2.HeadersFrameParam{
 				StreamID:      req.StreamID,
@@ -55,7 +55,7 @@ func WindowUpdate() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a WINDOW_UPDATE frame with a length other than 4 octets",
 		Requirement: "The endpoint MUST treat this as a connection error of type FRAME_SIZE_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			// WINDOW_UPDATE frame:
 			// length: 3, flags: 0x0, stream_id: 0
 			conn.Send([]byte("\x00\x00\x03\x08\x00\x00\x00\x00\x00"))

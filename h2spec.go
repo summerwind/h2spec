@@ -68,7 +68,7 @@ func Run(c *config.Config) error {
 	return nil
 }
 
-func RunClientSpec(c *config.ClientSpecConfig) error {
+func RunClientSpec(c *config.Config) error {
 	s := client.Spec()
 
 	server, _ := spec.Listen(c, s)

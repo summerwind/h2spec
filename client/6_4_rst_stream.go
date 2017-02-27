@@ -17,7 +17,7 @@ func RSTStream() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a RST_STREAM frame with 0x0 stream identifier",
 		Requirement: "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			conn.WriteRSTStream(0, http2.ErrCodeCancel)
 
 			return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol)
@@ -31,7 +31,7 @@ func RSTStream() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a RST_STREAM frame on a idle stream",
 		Requirement: "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			conn.WriteRSTStream(2, http2.ErrCodeCancel)
 
 			return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol)
@@ -44,7 +44,7 @@ func RSTStream() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a RST_STREAM frame with a length other than 4 octets",
 		Requirement: "The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			headers := spec.CommonRespHeaders(c)
 			hp := http2.HeadersFrameParam{
 				StreamID:      req.StreamID,

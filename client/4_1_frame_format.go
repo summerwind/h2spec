@@ -14,7 +14,7 @@ func FrameFormat() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a frame with unknown type",
 		Requirement: "The endpoint MUST ignore and discard any frame that has a type that is unknown.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			// UNKONWN Frame:
 			// Length: 8, Type: 255, Flags: 0, R: 0, StreamID: 0
 			conn.Send([]byte("\x00\x00\x08\x16\x00\x00\x00\x00\x00"))
@@ -36,7 +36,7 @@ func FrameFormat() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a frame with undefined flag",
 		Requirement: "The endpoint MUST ignore any flags that is undefined.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			// PING Frame:
 			// Length: 8, Type: 6, Flags: 255, R: 0, StreamID: 0
 			conn.Send([]byte("\x00\x00\x08\x06\x16\x00\x00\x00\x00"))
@@ -54,7 +54,7 @@ func FrameFormat() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a frame with reserved field bit",
 		Requirement: "The endpoint MUST ignore the value of reserved field.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			// PING Frame:
 			// Length: 8, Type: 6, Flags: 255, R: 1, StreamID: 0
 			conn.Send([]byte("\x00\x00\x08\x06\x16\x80\x00\x00\x00"))

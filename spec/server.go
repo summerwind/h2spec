@@ -17,12 +17,12 @@ import (
 type Server struct {
 	net.Listener
 
-	config    *config.ClientSpecConfig
+	config    *config.Config
 	testCases map[string]*ClientTestCase
 	spec      *ClientTestGroup
 }
 
-func Listen(c *config.ClientSpecConfig, tg *ClientTestGroup) (*Server, error) {
+func Listen(c *config.Config, tg *ClientTestGroup) (*Server, error) {
 	var err error
 	var listener net.Listener
 	if c.TLS {

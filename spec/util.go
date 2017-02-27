@@ -78,7 +78,7 @@ func CommonHeaders(c *config.Config) []hpack.HeaderField {
 
 // CommonHeaders returns a array of header field of HPACK contained
 // common http headers used in various test case.
-func CommonRespHeaders(c *config.ClientSpecConfig) []hpack.HeaderField {
+func CommonRespHeaders(c *config.Config) []hpack.HeaderField {
 	return []hpack.HeaderField{
 		HeaderField(":status", "200"),
 	}
@@ -98,7 +98,7 @@ func DummyHeaders(c *config.Config, len int) []hpack.HeaderField {
 	return headers
 }
 
-func DummyRespHeaders(c *config.ClientSpecConfig, len int) []hpack.HeaderField {
+func DummyRespHeaders(c *config.Config, len int) []hpack.HeaderField {
 	headers := make([]hpack.HeaderField, 0, len)
 	dummy := DummyString(c.MaxHeaderLen)
 

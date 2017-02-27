@@ -17,7 +17,7 @@ func Priority() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a PRIORITY frame with 0x0 stream identifier",
 		Requirement: "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			pp := http2.PriorityParam{
 				StreamDep: 0,
 				Exclusive: false,
@@ -35,7 +35,7 @@ func Priority() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a PRIORITY frame with a length other than 5 octets",
 		Requirement: "The endpoint MUST respond with a stream error of type FRAME_SIZE_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			headers := spec.CommonRespHeaders(c)
 			hp := http2.HeadersFrameParam{
 				StreamID:      req.StreamID,

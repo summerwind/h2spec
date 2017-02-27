@@ -132,7 +132,7 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	c := &config.ClientSpecConfig{
+	c := &config.Config{
 		Host:         host,
 		Port:         port,
 		Timeout:      time.Duration(timeout) * time.Second,

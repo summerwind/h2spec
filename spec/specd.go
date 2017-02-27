@@ -59,7 +59,7 @@ func (tg *ClientTestGroup) Level() int {
 }
 
 // Test runs all the tests included in this group.
-func (tg *ClientTestGroup) Test(c *config.ClientSpecConfig) {
+func (tg *ClientTestGroup) Test(c *config.Config) {
 	level := tg.Level()
 
 	log.SetIndentLevel(level)
@@ -132,11 +132,11 @@ type ClientTestCase struct {
 	Requirement string
 	Parent      *ClientTestGroup
 	Result      *ClientTestResult
-	Run         func(c *config.ClientSpecConfig, conn *Conn, req *Request) error
+	Run         func(c *config.Config, conn *Conn, req *Request) error
 }
 
 // Test runs itself as a test case.
-func (tc *ClientTestCase) Test(c *config.ClientSpecConfig) error {
+func (tc *ClientTestCase) Test(c *config.Config) error {
 	done := make(chan error)
 	go func() {
 		split := strings.Split(c.Exec, " ")
@@ -168,7 +168,7 @@ func (tc *ClientTestCase) Path() string {
 	return fmt.Sprintf("/%s/%d", tc.Parent.ID(), tc.Seq)
 }
 
-func (tc *ClientTestCase) FullPath(c *config.ClientSpecConfig) string {
+func (tc *ClientTestCase) FullPath(c *config.Config) string {
 	return fmt.Sprintf("%s://%s:%d%s", c.Scheme(), c.Host, c.Port, tc.Path())
 }
 

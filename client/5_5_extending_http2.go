@@ -11,7 +11,7 @@ func ExtendingHTTP2() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends an unknown extension frame",
 		Requirement: "The endpoint MUST ignore unknown or unsupported values in all extensible protocol elements.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 
 			// UNKONWN Frame:
 			// Length: 8, Type: 255, Flags: 0, R: 0, StreamID: 0

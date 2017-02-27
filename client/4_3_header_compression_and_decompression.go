@@ -17,7 +17,7 @@ func HeaderCompressionAndDecompression() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends invalid header block fragment",
 		Requirement: "The endpoint MUST terminate the connection with a connection error of type COMPRESSION_ERROR.",
-		Run: func(c *config.ClientSpecConfig, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
 			// Literal Header Field with Incremental Indexing without
 			// Length and String segment.
 			data := new(bytes.Buffer)
