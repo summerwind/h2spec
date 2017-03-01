@@ -155,3 +155,7 @@ func (c *Config) buildTargetMap() {
 		c.targetMap[section] = true
 	}
 }
+
+func (c *Config) IsBrowserMode() bool {
+	return c.Exec == ""
+}

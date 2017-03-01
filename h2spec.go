@@ -76,7 +76,7 @@ func RunClientSpec(c *config.Config) error {
 		return err
 	}
 
-	if c.Exec != "" {
+	if !c.IsBrowserMode() {
 		start := time.Now()
 		s.Test(c)
 		end := time.Now()
@@ -90,7 +90,6 @@ func RunClientSpec(c *config.Config) error {
 		log.SetIndentLevel(0)
 		log.Println(fmt.Sprintf("Finished in %.4f seconds", d.Seconds()))
 		reporter.PrintSummaryForClient(s)
-
 	} else {
 		// Block running
 		log.Println("--exec is not defined, enable BROWSER mode")

@@ -81,6 +81,11 @@ func (server *Server) Close() {
 }
 
 func (server *Server) handleConn(conn *Conn, tc *ClientTestCase) {
+	if server.config.IsBrowserMode() {
+		// Only log here when browser mode
+		log.Println(groupNames(tc.Parent))
+	}
+
 	start := time.Now()
 
 	err := conn.Handshake()
@@ -100,10 +105,12 @@ func (server *Server) handleConn(conn *Conn, tc *ClientTestCase) {
 	// Ensure that connection had been closed
 	go closeConn(conn, request.StreamID)
 
-	log.ResetLine()
-
 	tr := NewClientTestResult(tc, err, end.Sub(start))
-	tr.Print()
+
+	if server.config.IsBrowserMode() {
+		// Only log here when browser mode
+		tr.Print()
+	}
 
 	if tc.Result != nil {
 		tc.Parent.IncRecursive(tc.Result.Failed, tc.Result.Skipped, -1)
@@ -111,6 +118,14 @@ func (server *Server) handleConn(conn *Conn, tc *ClientTestCase) {
 
 	tc.Result = tr
 	tc.Parent.IncRecursive(tc.Result.Failed, tc.Result.Skipped, 1)
+}
+
+func groupNames(tg *ClientTestGroup) string {
+	if tg.IsRoot() {
+		return tg.Title()
+	}
+	parentGroupNames := groupNames(tg.Parent)
+	return fmt.Sprintf("%s -> %s", parentGroupNames, tg.Title())
 }
 
 func closeConn(conn *Conn, lastStreamID uint32) {

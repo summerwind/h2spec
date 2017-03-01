@@ -162,6 +162,10 @@ func (tc *ClientTestCase) Test(c *config.Config) error {
 	select {
 	case <-done:
 		// command failed with non-zero exit code is accept
+		if tc.Result != nil {
+			log.ResetLine()
+			tc.Result.Print()
+		}
 		return nil
 	case <-time.After(time.Duration(3) * time.Second):
 		return ErrTimeout
