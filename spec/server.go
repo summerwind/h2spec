@@ -19,7 +19,7 @@ type Server struct {
 
 func Listen(c *config.Config, tg *ClientTestGroup) (*Server, error) {
 	testCases := make(map[int]*ClientTestCase)
-	tg.ClientTestCases(testCases, c.FromPort)
+	tg.ClientTestCases(testCases, c, c.FromPort)
 
 	server := &Server{
 		listeners: make([]net.Listener, 0),

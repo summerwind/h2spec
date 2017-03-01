@@ -95,6 +95,11 @@ func htmlReport(tg *spec.ClientTestGroup, c *config.Config) string {
 }
 
 func htmlReportForTestGroup(tg *spec.ClientTestGroup, c *config.Config) string {
+	mode := c.RunMode(tg.ID())
+	if mode == config.RunModeNone {
+		return ""
+	}
+
 	var buffer bytes.Buffer
 
 	buffer.WriteString(fmt.Sprintf("<div>%s</div>", tg.Title()))

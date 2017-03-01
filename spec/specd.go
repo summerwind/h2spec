@@ -60,6 +60,11 @@ func (tg *ClientTestGroup) Level() int {
 
 // Test runs all the tests included in this group.
 func (tg *ClientTestGroup) Test(c *config.Config) {
+	mode := c.RunMode(tg.ID())
+	if mode == config.RunModeNone {
+		return
+	}
+
 	level := tg.Level()
 
 	log.SetIndentLevel(level)
@@ -101,15 +106,20 @@ func (tg *ClientTestGroup) AddTestCase(tc *ClientTestCase) {
 	tg.Tests = append(tg.Tests, tc)
 }
 
-func (tg *ClientTestGroup) ClientTestCases(testCases map[int]*ClientTestCase, currentPort int) int {
+func (tg *ClientTestGroup) ClientTestCases(testCases map[int]*ClientTestCase, c *config.Config, currentPort int) int {
+	mode := c.RunMode(tg.ID())
+	if mode == config.RunModeNone {
+		return currentPort
+	}
+
 	for _, tc := range tg.Tests {
-		currentPort += 1
 		tc.Port = currentPort
 		testCases[currentPort] = tc
+		currentPort += 1
 	}
 
 	for _, g := range tg.Groups {
-		currentPort = g.ClientTestCases(testCases, currentPort+1)
+		currentPort = g.ClientTestCases(testCases, c, currentPort)
 	}
 
 	return currentPort
