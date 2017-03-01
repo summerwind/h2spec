@@ -81,6 +81,7 @@ func CommonHeaders(c *config.Config) []hpack.HeaderField {
 func CommonRespHeaders(c *config.Config) []hpack.HeaderField {
 	return []hpack.HeaderField{
 		HeaderField(":status", "200"),
+		HeaderField("access-control-allow-origin", "*"),
 	}
 }
 

@@ -77,8 +77,6 @@ func RunClientSpec(c *config.Config) error {
 	}
 
 	if c.Exec != "" {
-		go server.RunForever()
-
 		start := time.Now()
 		s.Test(c)
 		end := time.Now()
@@ -96,8 +94,9 @@ func RunClientSpec(c *config.Config) error {
 	} else {
 		// Block running
 		log.Println("--exec is not defined, enable BROWSER mode")
-		log.Println("press ctrl+c to stop server")
-		server.RunForever()
+
+		reportServer := reporter.NewWebReportServer(c, s)
+		log.Println(reportServer.RunForever())
 	}
 
 	defer server.Close()
