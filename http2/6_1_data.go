@@ -94,7 +94,7 @@ func Data() *spec.TestGroup {
 			conn.Send([]byte("\x00\x00\x05\x00\x09\x00\x00\x00\x01"))
 			conn.Send([]byte("\x06\x54\x65\x73\x74"))
 
-			return spec.VerifyStreamError(conn, http2.ErrCodeProtocol)
+			return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol)
 		},
 	})
 
