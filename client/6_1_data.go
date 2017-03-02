@@ -76,7 +76,7 @@ func Data() *spec.ClientTestGroup {
 			flags |= http2.FlagHeadersPadded
 			conn.WriteRawFrame(http2.FrameData, flags, req.StreamID, payload)
 
-			return spec.VerifyStreamError(conn, http2.ErrCodeProtocol)
+			return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol)
 		},
 	})
 
