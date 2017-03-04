@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/summerwind/h2spec/client"
 	"github.com/summerwind/h2spec/config"
 	"github.com/summerwind/h2spec/generic"
 	"github.com/summerwind/h2spec/hpack"
@@ -63,6 +64,41 @@ func Run(c *config.Config) error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func RunClientSpec(c *config.Config) error {
+	s := client.Spec()
+
+	server, err := spec.Listen(c, s)
+	if err != nil {
+		return err
+	}
+
+	if !c.IsBrowserMode() {
+		start := time.Now()
+		s.Test(c)
+		end := time.Now()
+		d := end.Sub(start)
+
+		if s.FailedCount > 0 {
+			log.SetIndentLevel(0)
+			reporter.PrintFailedClientTests(s)
+		}
+
+		log.SetIndentLevel(0)
+		log.Println(fmt.Sprintf("Finished in %.4f seconds", d.Seconds()))
+		reporter.PrintSummaryForClient(s)
+	} else {
+		// Block running
+		log.Println("--exec is not defined, enable BROWSER mode")
+
+		reportServer := reporter.NewWebReportServer(c, s)
+		log.Println(reportServer.RunForever())
+	}
+
+	defer server.Close()
 
 	return nil
 }

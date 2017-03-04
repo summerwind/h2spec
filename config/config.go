@@ -27,6 +27,10 @@ type Config struct {
 	Verbose      bool
 	Sections     []string
 	targetMap    map[string]bool
+	CertFile     string
+	CertKeyFile  string
+	Exec         string
+	FromPort     int
 }
 
 // Addr returns the string concatinated with hostname and port number.
@@ -34,10 +38,18 @@ func (c *Config) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
 
+func (c *Config) Scheme() string {
+	if c.TLS {
+		return "https"
+	} else {
+		return "http"
+	}
+}
+
 // TLSConfig returns a tls.Config based on the configuration of h2spec.
-func (c *Config) TLSConfig() *tls.Config {
+func (c *Config) TLSConfig() (*tls.Config, error) {
 	if !c.TLS {
-		return nil
+		return nil, nil
 	}
 
 	config := tls.Config{
@@ -48,7 +60,15 @@ func (c *Config) TLSConfig() *tls.Config {
 		config.NextProtos = append(config.NextProtos, "h2", "h2-16")
 	}
 
-	return &config
+	if c.CertFile != "" && c.CertKeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(c.CertFile, c.CertKeyFile)
+		if err != nil {
+			return nil, err
+		}
+		config.Certificates = []tls.Certificate{cert}
+	}
+
+	return &config, nil
 }
 
 // RunMode returns a run mode of specified the section number.
@@ -134,4 +154,8 @@ func (c *Config) buildTargetMap() {
 		// The test case associated with this section string must be run.
 		c.targetMap[section] = true
 	}
+}
+
+func (c *Config) IsBrowserMode() bool {
+	return c.Exec == ""
 }

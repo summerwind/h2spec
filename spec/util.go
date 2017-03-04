@@ -76,9 +76,30 @@ func CommonHeaders(c *config.Config) []hpack.HeaderField {
 	}
 }
 
+// CommonHeaders returns a array of header field of HPACK contained
+// common http headers used in various test case.
+func CommonRespHeaders(c *config.Config) []hpack.HeaderField {
+	return []hpack.HeaderField{
+		HeaderField(":status", "200"),
+		HeaderField("access-control-allow-origin", "*"),
+	}
+}
+
 // DummyHeaders returns a array of header field of HPACK contained
 // dummy string values.
 func DummyHeaders(c *config.Config, len int) []hpack.HeaderField {
+	headers := make([]hpack.HeaderField, 0, len)
+	dummy := DummyString(c.MaxHeaderLen)
+
+	for i := 0; i < len; i++ {
+		name := fmt.Sprintf("x-dummy%d", i)
+		headers = append(headers, HeaderField(name, dummy))
+	}
+
+	return headers
+}
+
+func DummyRespHeaders(c *config.Config, len int) []hpack.HeaderField {
 	headers := make([]hpack.HeaderField, 0, len)
 	dummy := DummyString(c.MaxHeaderLen)
 
