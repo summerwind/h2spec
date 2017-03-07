@@ -87,23 +87,11 @@ func (server *Server) handleConn(conn *Conn, tc *ClientTestCase) {
 	}
 
 	start := time.Now()
-
-	err := conn.Handshake()
-	if err != nil {
-		log.Println(red(err))
-		return
-	}
-	request, err := conn.ReadRequest()
-	if err != nil {
-		log.Println(red(err))
-		return
-	}
-
-	err = tc.Run(server.config, conn, request)
+	err := tc.Run(server.config, conn)
 	end := time.Now()
 
 	// Ensure that connection had been closed
-	go closeConn(conn, request.StreamID)
+	go closeConn(conn)
 
 	tr := NewClientTestResult(tc, err, end.Sub(start))
 
@@ -128,9 +116,9 @@ func groupNames(tg *ClientTestGroup) string {
 	return fmt.Sprintf("%s -> %s", parentGroupNames, tg.Title())
 }
 
-func closeConn(conn *Conn, lastStreamID uint32) {
+func closeConn(conn *Conn) {
 	if !conn.Closed {
-		conn.WriteGoAway(lastStreamID, http2.ErrCodeNo, make([]byte, 0))
+		conn.WriteGoAway(0, http2.ErrCodeNo, make([]byte, 0))
 		time.Sleep(1 * time.Second)
 	}
 

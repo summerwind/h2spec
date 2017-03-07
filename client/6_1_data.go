@@ -17,7 +17,12 @@ func Data() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a DATA frame with 0x0 stream identifier",
 		Requirement: "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			err := conn.Handshake()
+			if err != nil {
+				return err
+			}
+
 			conn.WriteData(0, true, []byte("test"))
 
 			return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol)
@@ -32,7 +37,17 @@ func Data() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a DATA frame on the stream that is not in \"open\" or \"half-closed (local)\" state",
 		Requirement: "The endpoint MUST respond with a stream error of type STREAM_CLOSED.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			err := conn.Handshake()
+			if err != nil {
+				return err
+			}
+
+			req, err := conn.ReadRequest()
+			if err != nil {
+				return err
+			}
+
 			headers := spec.CommonRespHeaders(c)
 
 			hp := http2.HeadersFrameParam{
@@ -55,7 +70,17 @@ func Data() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a DATA frame with invalid pad length",
 		Requirement: "The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			err := conn.Handshake()
+			if err != nil {
+				return err
+			}
+
+			req, err := conn.ReadRequest()
+			if err != nil {
+				return err
+			}
+
 			headers := spec.CommonRespHeaders(c)
 			headers = append(headers, spec.HeaderField("content-length", "4"))
 

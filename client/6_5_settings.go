@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"golang.org/x/net/http2"
 
 	"github.com/summerwind/h2spec/config"
@@ -20,7 +21,17 @@ func Settings() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a SETTINGS frame with ACK flag and payload",
 		Requirement: "The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			_, err := conn.ReadClientPreface()
+			if err != nil {
+				return err
+			}
+
+			_, ok := conn.WaitEventByType(spec.EventSettingsFrame)
+			if !ok {
+				return errors.New("First frame from client must be SETTINGS")
+			}
+
 			// SETTINGS frame:
 			// length: 0, flags: 0x1, stream_id: 0x0
 			conn.Send([]byte("\x00\x00\x01\x04\x01\x00\x00\x00\x00"))
@@ -39,7 +50,17 @@ func Settings() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a SETTINGS frame with a stream identifier other than 0x0",
 		Requirement: "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			_, err := conn.ReadClientPreface()
+			if err != nil {
+				return err
+			}
+
+			_, ok := conn.WaitEventByType(spec.EventSettingsFrame)
+			if !ok {
+				return errors.New("First frame from client must be SETTINGS")
+			}
+
 			// SETTINGS frame:
 			// length: 6, flags: 0x0, stream_id: 0x1
 			conn.Send([]byte("\x00\x00\x06\x04\x00\x00\x00\x00\x01"))
@@ -59,7 +80,17 @@ func Settings() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a SETTINGS frame with a length other than a multiple of 6 octets",
 		Requirement: "The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			_, err := conn.ReadClientPreface()
+			if err != nil {
+				return err
+			}
+
+			_, ok := conn.WaitEventByType(spec.EventSettingsFrame)
+			if !ok {
+				return errors.New("First frame from client must be SETTINGS")
+			}
+
 			// SETTINGS frame:
 			// length: 3, flags: 0x0, stream_id: 0x0
 			conn.Send([]byte("\x00\x00\x03\x04\x00\x00\x00\x00\x00"))

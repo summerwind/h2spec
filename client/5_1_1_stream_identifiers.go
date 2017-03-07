@@ -13,12 +13,17 @@ func StreamIdentifiers() *spec.ClientTestGroup {
 	// MUST respond with a connection error (Section 5.4.1) of
 	// type PROTOCOL_ERROR.
 	tg.AddTestCase(&spec.ClientTestCase{
-		Desc:        "Sends odd-numbered stream identifier",
+		Desc:        "Sends even-numbered stream identifier",
 		Requirement: "The endpoint MUST respond with a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			err := conn.Handshake()
+			if err != nil {
+				return err
+			}
+
 			headers := spec.CommonRespHeaders(c)
 			hp := http2.HeadersFrameParam{
-				StreamID:      req.StreamID + 2,
+				StreamID:      101,
 				EndStream:     true,
 				EndHeaders:    true,
 				BlockFragment: conn.EncodeHeaders(headers),

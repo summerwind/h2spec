@@ -15,7 +15,17 @@ func FrameSize() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a DATA frame with 2^14 octets in length",
 		Requirement: "The endpoint MUST be capable of receiving and minimally processing frames up to 2^14 octets in length.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			err := conn.Handshake()
+			if err != nil {
+				return err
+			}
+
+			req, err := conn.ReadRequest()
+			if err != nil {
+				return err
+			}
+
 			headers := spec.CommonRespHeaders(c)
 
 			hp := http2.HeadersFrameParam{
@@ -44,7 +54,17 @@ func FrameSize() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a large size DATA frame that exceeds the SETTINGS_MAX_FRAME_SIZE",
 		Requirement: "The endpoint MUST send an error code of FRAME_SIZE_ERROR.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			err := conn.Handshake()
+			if err != nil {
+				return err
+			}
+
+			req, err := conn.ReadRequest()
+			if err != nil {
+				return err
+			}
+
 			headers := spec.CommonRespHeaders(c)
 
 			hp := http2.HeadersFrameParam{
@@ -71,7 +91,17 @@ func FrameSize() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a large size HEADERS frame that exceeds the SETTINGS_MAX_FRAME_SIZE",
 		Requirement: "The endpoint MUST respond with a connection error of type FRAME_SIZE_ERROR.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			err := conn.Handshake()
+			if err != nil {
+				return err
+			}
+
+			req, err := conn.ReadRequest()
+			if err != nil {
+				return err
+			}
+
 			headers := spec.CommonRespHeaders(c)
 			headers = append(headers, spec.DummyRespHeaders(c, 5)...)
 
