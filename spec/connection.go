@@ -616,15 +616,9 @@ func (conn *Conn) handshakeAsServer() error {
 	done := make(chan error)
 
 	go func() {
-		prefaceBytes, err := conn.readBytes(24)
+		_, err := conn.ReadClientPreface()
 		if err != nil {
 			done <- err
-			return
-		}
-
-		preface := string(prefaceBytes[:])
-		if preface != "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n" {
-			done <- errors.New("Illegal preface")
 			return
 		}
 
@@ -659,6 +653,19 @@ func (conn *Conn) handshakeAsServer() error {
 		return ErrTimeout
 	}
 	return nil
+}
+
+func (conn *Conn) ReadClientPreface() (string, error) {
+	prefaceBytes, err := conn.readBytes(24)
+	if err != nil {
+		return "", err
+	}
+
+	preface := string(prefaceBytes[:])
+	if preface != "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n" {
+		return "", errors.New("Illegal preface")
+	}
+	return preface, nil
 }
 
 func (conn *Conn) readBytes(size int) ([]byte, error) {

@@ -17,7 +17,12 @@ func ConnectionErrorHandling() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends an invalid PING frame for connection close",
 		Requirement: "The endpoint MUST close the TCP connection",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			err := conn.Handshake()
+			if err != nil {
+				return err
+			}
+
 			// PING frame with invalid stream ID
 			conn.Send([]byte("\x00\x00\x08\x06\x00\x00\x00\x00\x03"))
 			conn.Send([]byte("\x00\x00\x00\x00\x00\x00\x00\x00"))
@@ -32,7 +37,12 @@ func ConnectionErrorHandling() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends an invalid PING frame to receive GOAWAY frame",
 		Requirement: "An endpoint that encounters a connection error SHOULD first send a GOAWAY frame",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			err := conn.Handshake()
+			if err != nil {
+				return err
+			}
+
 			// PING frame with invalid stream ID
 			conn.Send([]byte("\x00\x00\x08\x06\x00\x00\x00\x00\x03"))
 			conn.Send([]byte("\x00\x00\x00\x00\x00\x00\x00\x00"))

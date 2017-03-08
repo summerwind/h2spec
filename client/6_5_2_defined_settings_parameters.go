@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"golang.org/x/net/http2"
 
 	"github.com/summerwind/h2spec/config"
@@ -17,7 +18,17 @@ func DefinedSETTINGSParameters() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "SETTINGS_INITIAL_WINDOW_SIZE (0x4): Sends the value above the maximum flow control window size",
 		Requirement: "The endpoint MUST treat this as a connection error of type FLOW_CONTROL_ERROR.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			_, err := conn.ReadClientPreface()
+			if err != nil {
+				return err
+			}
+
+			_, ok := conn.WaitEventByType(spec.EventSettingsFrame)
+			if !ok {
+				return errors.New("First frame from client must be SETTINGS")
+			}
+
 			setting := http2.Setting{
 				ID:  http2.SettingInitialWindowSize,
 				Val: 2147483648,
@@ -37,7 +48,17 @@ func DefinedSETTINGSParameters() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "SETTINGS_MAX_FRAME_SIZE (0x5): Sends the value below the initial value",
 		Requirement: "The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			_, err := conn.ReadClientPreface()
+			if err != nil {
+				return err
+			}
+
+			_, ok := conn.WaitEventByType(spec.EventSettingsFrame)
+			if !ok {
+				return errors.New("First frame from client must be SETTINGS")
+			}
+
 			setting := http2.Setting{
 				ID:  http2.SettingMaxFrameSize,
 				Val: 16383,
@@ -57,7 +78,17 @@ func DefinedSETTINGSParameters() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "SETTINGS_MAX_FRAME_SIZE (0x5): Sends the value above the maximum allowed frame size",
 		Requirement: "The endpoint MUST treat this as a connection error of type PROTOCOL_ERROR.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			_, err := conn.ReadClientPreface()
+			if err != nil {
+				return err
+			}
+
+			_, ok := conn.WaitEventByType(spec.EventSettingsFrame)
+			if !ok {
+				return errors.New("First frame from client must be SETTINGS")
+			}
+
 			setting := http2.Setting{
 				ID:  http2.SettingMaxFrameSize,
 				Val: 16777216,
@@ -73,7 +104,17 @@ func DefinedSETTINGSParameters() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends a SETTINGS frame with unknown identifier",
 		Requirement: "The endpoint MUST ignore that setting.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			_, err := conn.ReadClientPreface()
+			if err != nil {
+				return err
+			}
+
+			_, ok := conn.WaitEventByType(spec.EventSettingsFrame)
+			if !ok {
+				return errors.New("First frame from client must be SETTINGS")
+			}
+
 			setting := http2.Setting{
 				ID:  0xFF,
 				Val: 1,

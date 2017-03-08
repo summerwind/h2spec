@@ -146,7 +146,7 @@ type ClientTestCase struct {
 	Requirement string
 	Parent      *ClientTestGroup
 	Result      *ClientTestResult
-	Run         func(c *config.Config, conn *Conn, req *Request) error
+	Run         func(c *config.Config, conn *Conn) error
 
 	Port int
 }

@@ -22,7 +22,12 @@ func TheFlowControlWindow() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends multiple WINDOW_UPDATE frames increasing the flow control window to above 2^31-1",
 		Requirement: "The endpoint MUST sends a GOAWAY frame with a FLOW_CONTROL_ERROR code.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			err := conn.Handshake()
+			if err != nil {
+				return err
+			}
+
 			conn.WriteWindowUpdate(0, 2147483647)
 			conn.WriteWindowUpdate(0, 2147483647)
 
@@ -59,7 +64,17 @@ func TheFlowControlWindow() *spec.ClientTestGroup {
 	tg.AddTestCase(&spec.ClientTestCase{
 		Desc:        "Sends multiple WINDOW_UPDATE frames increasing the flow control window to above 2^31-1 on a stream",
 		Requirement: "The endpoint MUST sends a RST_STREAM frame with a FLOW_CONTROL_ERROR code.",
-		Run: func(c *config.Config, conn *spec.Conn, req *spec.Request) error {
+		Run: func(c *config.Config, conn *spec.Conn) error {
+			err := conn.Handshake()
+			if err != nil {
+				return err
+			}
+
+			req, err := conn.ReadRequest()
+			if err != nil {
+				return err
+			}
+
 			headers := spec.CommonRespHeaders(c)
 			hp := http2.HeadersFrameParam{
 				StreamID:      req.StreamID,
