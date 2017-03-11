@@ -138,12 +138,16 @@ func Headers() *spec.TestGroup {
 			}
 
 			headers := spec.CommonHeaders(c)
+			blockFragment := conn.EncodeHeaders(headers)
+
+			fh := []byte("\x00\x00\x00\x01\x0d\x00\x00\x00\x01")
+			fh[2] = byte(len(blockFragment) + 1)
 
 			// HEADERS frame:
 			// frame length: 16, pad length: 17
-			conn.Send([]byte("\x00\x00\x10\x01\x0d\x00\x00\x00\x01"))
-			conn.Send([]byte("\x11"))
-			conn.Send(conn.EncodeHeaders(headers))
+			conn.Send(fh)
+			conn.Send([]byte{byte(len(blockFragment) + 2)})
+			conn.Send(blockFragment)
 
 			return spec.VerifyStreamError(conn, http2.ErrCodeProtocol)
 		},
