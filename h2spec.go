@@ -14,9 +14,9 @@ import (
 	"github.com/summerwind/h2spec/spec"
 )
 
-func Run(c *config.Config) error {
+func Run(c *config.Config) (bool, error) {
 	total := 0
-	failed := false
+	success := true
 
 	specs := []*spec.TestGroup{
 		generic.Spec(),
@@ -29,7 +29,7 @@ func Run(c *config.Config) error {
 		s.Test(c)
 
 		if s.FailedCount > 0 {
-			failed = true
+			success = false
 		}
 
 		total += s.FailedCount
@@ -40,16 +40,16 @@ func Run(c *config.Config) error {
 	d := end.Sub(start)
 
 	if c.DryRun {
-		return nil
+		return true, nil
 	}
 
 	if total == 0 {
 		log.SetIndentLevel(0)
 		log.Println("No matched tests found.")
-		return nil
+		return true, nil
 	}
 
-	if failed {
+	if !success {
 		log.SetIndentLevel(0)
 		reporter.FailedTests(specs)
 	}
@@ -61,11 +61,11 @@ func Run(c *config.Config) error {
 	if c.JUnitReport != "" {
 		err := reporter.JUnitReport(specs, c.JUnitReport)
 		if err != nil {
-			return err
+			return false, err
 		}
 	}
 
-	return nil
+	return success, nil
 }
 
 func RunClientSpec(c *config.Config) error {

@@ -132,7 +132,12 @@ func run(cmd *cobra.Command, args []string) error {
 		Sections:     args,
 	}
 
-	return h2spec.Run(c)
+	success, err := h2spec.Run(c)
+	if !success {
+		os.Exit(1)
+	}
+
+	return err
 }
 
 func version() {
