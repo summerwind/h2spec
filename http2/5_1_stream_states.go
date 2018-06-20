@@ -327,7 +327,7 @@ func StreamStates() *spec.TestGroup {
 
 			conn.WriteData(streamID, true, []byte("test"))
 
-			return spec.VerifyConnectionError(conn, http2.ErrCodeStreamClosed)
+			return spec.VerifyStreamError(conn, http2.ErrCodeStreamClosed)
 		},
 	})
 
