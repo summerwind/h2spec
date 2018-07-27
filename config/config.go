@@ -17,6 +17,7 @@ const (
 type Config struct {
 	Host         string
 	Port         int
+	Path         string
 	Timeout      time.Duration
 	MaxHeaderLen int
 	JUnitReport  string

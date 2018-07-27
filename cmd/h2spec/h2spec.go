@@ -29,6 +29,7 @@ func main() {
 	flags := cmd.Flags()
 	flags.StringP("host", "h", "127.0.0.1", "Target host")
 	flags.IntP("port", "p", 0, "Target port")
+	flags.StringP("path", "P", "/", "Target path")
 	flags.IntP("timeout", "o", 2, "Time seconds to test timeout")
 	flags.Int("max-header-length", 4000, "Maximum length of HTTP header")
 	flags.StringP("junit-report", "j", "", "Path for JUnit test report")
@@ -66,6 +67,11 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	port, err := flags.GetInt("port")
+	if err != nil {
+		return err
+	}
+
+	path, err := flags.GetString("path")
 	if err != nil {
 		return err
 	}
@@ -121,6 +127,7 @@ func run(cmd *cobra.Command, args []string) error {
 	c := &config.Config{
 		Host:         host,
 		Port:         port,
+		Path:         path,
 		Timeout:      time.Duration(timeout) * time.Second,
 		MaxHeaderLen: maxHeaderLen,
 		JUnitReport:  junitReport,

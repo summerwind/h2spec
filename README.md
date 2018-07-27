@@ -22,6 +22,7 @@ Flags:
   -k, --insecure                Don't verify server's certificate
   -j, --junit-report string     Path for JUnit test report
       --max-header-length int   Maximum length of HTTP header (default 4000)
+  -P, --path string             Target path (default "/")
   -p, --port int                Target port
   -S, --strict                  Run all test cases including strict test cases
   -o, --timeout int             Time seconds to test timeout (default 2)
@@ -86,7 +87,7 @@ $ h2spec --strict
 
 ## Build
 
-First, you need to install Go, Glide and set GOPATH appropriately.
+To build from source, you need to install [Go](https://golang.org) and [dep](https://github.com/golang/dep) first.
 
 To build:
 ```

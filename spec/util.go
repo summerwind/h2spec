@@ -71,7 +71,7 @@ func CommonHeaders(c *config.Config) []hpack.HeaderField {
 	return []hpack.HeaderField{
 		HeaderField(":method", "GET"),
 		HeaderField(":scheme", scheme),
-		HeaderField(":path", "/"),
+		HeaderField(":path", c.Path),
 		HeaderField(":authority", authority),
 	}
 }
