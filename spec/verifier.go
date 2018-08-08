@@ -273,6 +273,64 @@ func VerifyPingFrameWithAck(conn *Conn, data [8]byte) error {
 	return nil
 }
 
+// VerifyPingFrameOrConnectionClose verifies whether a PING frame with
+// ACK flag has received or the connection was closed.
+func VerifyPingFrameOrConnectionClose(conn *Conn, data [8]byte) error {
+	var actual Event
+
+	passed := false
+	for !conn.Closed {
+		event := conn.WaitEvent()
+
+		switch ev := event.(type) {
+		case ConnectionClosedEvent:
+			passed = true
+		case PingFrameEvent:
+			passed = ev.IsAck() && reflect.DeepEqual(ev.Data, data)
+		case TimeoutEvent:
+			if actual == nil {
+				actual = ev
+			}
+		default:
+			actual = ev
+		}
+
+		if passed {
+			break
+		}
+	}
+
+	if !passed {
+		var actualStr string
+
+		expected := []string{
+			ExpectedConnectionClosed,
+			fmt.Sprintf("PING Frame (length:8, flags:0x01, stream_id:0, opaque_data:%s)", data),
+		}
+
+		f, ok := actual.(PingFrameEvent)
+		if ok {
+			header := f.Header()
+			actualStr = fmt.Sprintf(
+				"PING Frame ((length:%d, flags:0x%02x, stream_id:%d, opaque_data: %s)",
+				header.Length,
+				header.Flags,
+				header.StreamID,
+				f.Data,
+			)
+		} else {
+			actualStr = actual.String()
+		}
+
+		return &TestError{
+			Expected: expected,
+			Actual:   actualStr,
+		}
+	}
+
+	return nil
+}
+
 // VerifyEventType verifies whether a frame with specified type
 // has received.
 func VerifyEventType(conn *Conn, et EventType) error {

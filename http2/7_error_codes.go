@@ -24,7 +24,10 @@ func ErrorCodes() *spec.TestGroup {
 
 			conn.WriteGoAway(0, 0xff, []byte{})
 
-			return spec.VerifyConnectionClose(conn)
+			data := [8]byte{'h', '2', 's', 'p', 'e', 'c'}
+			conn.WritePing(false, data)
+
+			return spec.VerifyPingFrameOrConnectionClose(conn, data)
 		},
 	})
 

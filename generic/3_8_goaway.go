@@ -27,7 +27,10 @@ func GoAway() *spec.TestGroup {
 
 			conn.WriteGoAway(0, http2.ErrCodeNo, []byte("h2spec"))
 
-			return spec.VerifyConnectionClose(conn)
+			data := [8]byte{'h', '2', 's', 'p', 'e', 'c'}
+			conn.WritePing(false, data)
+
+			return spec.VerifyPingFrameOrConnectionClose(conn, data)
 		},
 	})
 
