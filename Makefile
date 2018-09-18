@@ -1,4 +1,4 @@
-VERSION=2.1.1
+VERSION=2.2.0
 COMMIT=$(shell git rev-parse --verify HEAD)
 
 PACKAGES=$(shell go list ./... | grep -v /vendor/)
