@@ -106,6 +106,7 @@ func (server *Server) handleConn(conn *Conn, tc *ClientTestCase) {
 
 	tc.Result = tr
 	tc.Parent.IncRecursive(tc.Result.Failed, tc.Result.Skipped, 1)
+	tc.Done <- true
 }
 
 func groupNames(tg *ClientTestGroup) string {
