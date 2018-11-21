@@ -7,6 +7,10 @@ This tool is compliant with [RFC 7540 (HTTP/2)](http://www.rfc-editor.org/rfc/rf
 
 Go to the [releases page](https://github.com/summerwind/h2spec/releases), find the version you want, and download the zip file or tarball file. The docker image is also available in [Docker Hub](https://hub.docker.com/r/summerwind/h2spec/).
 
+## Your server
+
+Your server should respond on `GET /` or `POST /` requests with status 200 response with non-empty data.
+
 ## Usage
 
 ```
