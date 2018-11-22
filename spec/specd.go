@@ -149,10 +149,12 @@ type ClientTestCase struct {
 	Run         func(c *config.Config, conn *Conn) error
 
 	Port int
+	Done chan bool
 }
 
 // Test runs itself as a test case.
 func (tc *ClientTestCase) Test(c *config.Config) error {
+	tc.Done = make(chan bool)
 	done := make(chan error)
 	go func() {
 		split := strings.Split(c.Exec, " ")
@@ -166,6 +168,7 @@ func (tc *ClientTestCase) Test(c *config.Config) error {
 			cmd.Stderr = os.Stderr
 		}
 		err := cmd.Run()
+		<-tc.Done
 		done <- err
 	}()
 
