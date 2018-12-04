@@ -212,7 +212,7 @@ func RequestPseudoHeaderFields() *spec.TestGroup {
 	// the ":method", ":scheme", and ":path" pseudo-header fields,
 	// unless it is a CONNECT request (Section 8.3).
 	tg.AddTestCase(&spec.TestCase{
-		Desc:        "Sends a HEADERS frame with duplicated \":method\" pseudo-header field",
+		Desc:        "Sends a HEADERS frame with duplicated \":path\" pseudo-header field",
 		Requirement: "The endpoint MUST respond with a stream error of type PROTOCOL_ERROR.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			var streamID uint32 = 1
@@ -223,7 +223,7 @@ func RequestPseudoHeaderFields() *spec.TestGroup {
 			}
 
 			headers := spec.CommonHeaders(c)
-			headers = append(headers, spec.HeaderField(":method", headers[2].Value))
+			headers = append(headers, spec.HeaderField(":path", headers[2].Value))
 
 			hp := http2.HeadersFrameParam{
 				StreamID:      streamID,
