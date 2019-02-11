@@ -43,4 +43,4 @@ release:
 	rm -rf h2spec
 
 vendor:
-	glide install
+	dep ensure -v

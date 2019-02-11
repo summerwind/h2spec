@@ -3,7 +3,7 @@ go:
   - 1.7.x
 sudo: false
 install:
-  - go get github.com/Masterminds/glide
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 script:
   - make build
   - make test
