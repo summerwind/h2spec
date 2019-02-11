@@ -1,7 +1,6 @@
 VERSION=2.2.0
 COMMIT=$(shell git rev-parse --verify HEAD)
 
-PACKAGES=$(shell go list ./... | grep -v /vendor/)
 BUILD_FLAGS=-ldflags "-X main.VERSION=$(VERSION) -X main.COMMIT=$(COMMIT)"
 
 .PHONY: all
@@ -13,8 +12,8 @@ build: vendor
 
 .PHONY: test
 test:
-	go test -v $(PACKAGES)
-	go vet $(PACKAGES)
+	go vet ./...
+	go test -v ./...
 
 .PHONY: clean
 clean:
