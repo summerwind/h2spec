@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
+	"reflect"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -358,10 +361,11 @@ func (conn *Conn) WaitEvent() Event {
 
 	f, err := conn.framer.ReadFrame()
 	if err != nil {
+		conn.Closed = true
+
 		if err == io.EOF {
 			ev = ConnectionClosedEvent{}
 			conn.vlog(ev, false)
-			conn.Closed = true
 			return ev
 		}
 
@@ -370,14 +374,30 @@ func (conn *Conn) WaitEvent() Event {
 			if opErr.Err == syscall.ECONNRESET {
 				ev = ConnectionClosedEvent{}
 				conn.vlog(ev, false)
-				conn.Closed = true
 				return ev
+			}
+
+			if runtime.GOOS == "windows" {
+				scErr, ok := opErr.Err.(*os.SyscallError)
+				if ok {
+					const WSAECONNABORTED = 10053
+					const WSAECONNRESET = 10054
+
+					rv := reflect.ValueOf(scErr.Err)
+					if rv.Kind() == reflect.Uintptr {
+						n := uintptr(rv.Uint())
+						if n == WSAECONNRESET || n == WSAECONNABORTED {
+							ev = ConnectionClosedEvent{}
+							conn.vlog(ev, false)
+							return ev
+						}
+					}
+				}
 			}
 
 			if opErr.Timeout() {
 				ev = TimeoutEvent{}
 				conn.vlog(ev, false)
-				conn.Closed = true
 				return ev
 			}
 		}
