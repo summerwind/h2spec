@@ -183,8 +183,6 @@ func (tc *ClientTestCase) Test(c *config.Config) error {
 	case <-time.After(time.Duration(3) * time.Second):
 		return ErrTimeout
 	}
-
-	return nil
 }
 
 func (tc *ClientTestCase) FullPath(c *config.Config) string {
