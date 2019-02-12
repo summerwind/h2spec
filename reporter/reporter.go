@@ -25,7 +25,7 @@ func Summary(groups []*spec.TestGroup) {
 
 // FailedTests outputs the report of failed tests.
 func FailedTests(groups []*spec.TestGroup) {
-	log.Println("Failures: \n")
+	log.Print("Failures: \n\n")
 
 	for _, tg := range groups {
 		printFailed(tg)
