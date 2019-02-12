@@ -33,7 +33,10 @@ func StreamConcurrency() *spec.TestGroup {
 
 			// Set INITIAL_WINDOW_SIZE to zero to prevent the peer from
 			// closing the stream.
-			settings := http2.Setting{http2.SettingInitialWindowSize, 0}
+			settings := http2.Setting{
+				ID:  http2.SettingInitialWindowSize,
+				Val: 0,
+			}
 			conn.WriteSettings(settings)
 
 			headers := spec.CommonHeaders(c)

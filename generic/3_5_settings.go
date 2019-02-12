@@ -26,12 +26,30 @@ func Settings() *spec.TestGroup {
 			}
 
 			settings := []http2.Setting{
-				http2.Setting{http2.SettingHeaderTableSize, 4096},
-				http2.Setting{http2.SettingEnablePush, 1},
-				http2.Setting{http2.SettingMaxConcurrentStreams, 100},
-				http2.Setting{http2.SettingInitialWindowSize, 65535},
-				http2.Setting{http2.SettingMaxFrameSize, 16384},
-				http2.Setting{http2.SettingMaxHeaderListSize, 100},
+				http2.Setting{
+					ID:  http2.SettingHeaderTableSize,
+					Val: 4096,
+				},
+				http2.Setting{
+					ID:  http2.SettingEnablePush,
+					Val: 1,
+				},
+				http2.Setting{
+					ID:  http2.SettingMaxConcurrentStreams,
+					Val: 100,
+				},
+				http2.Setting{
+					ID:  http2.SettingInitialWindowSize,
+					Val: 65535,
+				},
+				http2.Setting{
+					ID:  http2.SettingMaxFrameSize,
+					Val: 16384,
+				},
+				http2.Setting{
+					ID:  http2.SettingMaxHeaderListSize,
+					Val: 100,
+				},
 			}
 			conn.WriteSettings(settings...)
 
