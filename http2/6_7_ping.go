@@ -86,8 +86,8 @@ func Ping() *spec.TestGroup {
 			}
 
 			// PING frame:
-			// length: 8, flags: 0x0, stream_id: 1
-			conn.Send([]byte("\x00\x00\x06\x06\x00\x00\x00\x00\x01"))
+			// length: 8, flags: 0x0, stream_id: 0
+			conn.Send([]byte("\x00\x00\x06\x06\x00\x00\x00\x00\x00"))
 			conn.Send([]byte("\x00\x00\x00\x00\x00\x00"))
 
 			return spec.VerifyConnectionError(conn, http2.ErrCodeFrameSize)
