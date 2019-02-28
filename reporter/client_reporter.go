@@ -23,7 +23,7 @@ func PrintSummaryForClient(group *spec.ClientTestGroup) {
 	log.Println(SummaryForClient(group))
 }
 
-// FailedTests outputs the report of failed tests.
+// PrintFailedClientTests outputs the report of failed tests.
 func PrintFailedClientTests(group *spec.ClientTestGroup) {
 	log.Print("Failures: \n\n")
 

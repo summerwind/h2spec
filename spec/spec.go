@@ -130,7 +130,7 @@ func (tg *TestGroup) AddTestGroup(stg *TestGroup) {
 	tg.Groups = append(tg.Groups, stg)
 }
 
-// AddTestGroup registers a test to this group.
+// AddTestCase registers a test to this group.
 func (tg *TestGroup) AddTestCase(tc *TestCase) {
 	tc.Parent = tg
 	if tg.Strict {
@@ -203,7 +203,7 @@ type TestError struct {
 	Actual   string
 }
 
-// Returns a string containing the reason of the error.
+// Error returns a string containing the reason of the error.
 func (e TestError) Error() string {
 	return fmt.Sprintf("%s\n%s", strings.Join(e.Expected, "\n"), e.Actual)
 }

@@ -301,7 +301,7 @@ func (conn *Conn) WritePing(ack bool, data [8]byte) error {
 	return conn.framer.WritePing(ack, data)
 }
 
-// WritePing sends a PING frame.
+// WriteGoAway sends a PING frame.
 func (conn *Conn) WriteGoAway(maxStreamID uint32, code http2.ErrCode, debugData []byte) error {
 	if conn.Verbose {
 		conn.debugFramer.WriteGoAway(maxStreamID, code, debugData)
