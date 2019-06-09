@@ -3,28 +3,26 @@ COMMIT=$(shell git rev-parse --verify HEAD)
 
 BUILD_FLAGS=-ldflags "-X main.VERSION=$(VERSION) -X main.COMMIT=$(COMMIT)"
 
-.PHONY: all
 all: build
 
-.PHONY: build
-build: vendor
+build:
 	go build $(BUILD_FLAGS) cmd/h2spec/h2spec.go
 
-.PHONY: test
 test:
 	go vet ./...
 	go test -v ./...
 
-.PHONY: clean
 clean:
-	rm -rf h2spec
-	rm -rf release
+	rm -rf h2spec release
 
-.PHONY: container
-container:
-	GOARCH=amd64 GOOS=linux go build $(BUILD_FLAGS) cmd/h2spec/h2spec.go
-	docker build -t summerwind/h2spec:latest -t summerwind/h2spec:$(VERSION) .
-	rm -rf h2spec
+build-container:
+	docker build --build-arg BUILD_FLAGS=$(BUILD_FLAGS) -t summerwind/h2spec:latest -t summerwind/h2spec:$(VERSION) .
+
+push-container:
+	docker push summerwind/h2spec:latest
+
+push-release-container:
+	docker push summerwind/h2spec:$(VERSION)
 
 release:
 	mkdir -p release
@@ -41,5 +39,5 @@ release:
 	tar -czf release/h2spec_linux_amd64.tar.gz h2spec
 	rm -rf h2spec
 
-vendor:
-	dep ensure -v
+github-release: release
+	ghr v$(VERSION) release/
