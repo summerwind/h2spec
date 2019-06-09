@@ -1,6 +1,24 @@
-FROM alpine:3.4
-MAINTAINER Moto Ishizawa "summerwind.jp"
+FROM golang:1.12 as builder
 
-COPY ./h2spec /usr/bin/h2spec
+ARG BUILD_ARG
+ENV GO111MODULE=on \
+    GOPROXY=https://proxy.golang.org
 
-ENTRYPOINT ["h2spec"]
+WORKDIR /go/src/github.com/summerwind/h2spec
+COPY go.mod go.sum .
+RUN go mod download
+
+COPY . /workspace
+WORKDIR /workspace
+
+RUN go vet ./...
+RUN go test -v ./...
+RUN CGO_ENABLED=0 go build ${BUILD_FLAGS} ./cmd/h2spec
+
+###################
+
+FROM ubuntu:18.04
+
+COPY --from=builder /workspace/h2spec /usr/local/bin/h2spec
+
+CMD ["/usr/local/bin/h2spec"]
