@@ -7,7 +7,7 @@ import (
 	"github.com/summerwind/h2spec/spec"
 )
 
-// Summary outputs the summary of test result that includes
+// SummaryForClient outputs the summary of test result that includes
 // the number of passsed, skipped and failed.
 func SummaryForClient(group *spec.ClientTestGroup) string {
 	passed := group.PassedCount
@@ -23,7 +23,7 @@ func PrintSummaryForClient(group *spec.ClientTestGroup) {
 	log.Println(SummaryForClient(group))
 }
 
-// FailedTests outputs the report of failed tests.
+// PrintFailedClientTests outputs the report of failed tests.
 func PrintFailedClientTests(group *spec.ClientTestGroup) {
 	log.Print("Failures: \n\n")
 

@@ -93,13 +93,13 @@ func (tg *ClientTestGroup) Test(c *config.Config) {
 	log.PrintBlankLine()
 }
 
-// AddClientTestGroup registers a group to this group.
+// AddTestGroup registers a group to this group.
 func (tg *ClientTestGroup) AddTestGroup(stg *ClientTestGroup) {
 	stg.Parent = tg
 	tg.Groups = append(tg.Groups, stg)
 }
 
-// AddClientTestGroup registers a test to this group.
+// AddTestCase registers a test to this group.
 func (tg *ClientTestGroup) AddTestCase(tc *ClientTestCase) {
 	tc.Parent = tg
 	tc.Seq = len(tg.Tests) + 1
