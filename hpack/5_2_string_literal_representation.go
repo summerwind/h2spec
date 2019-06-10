@@ -121,9 +121,15 @@ func StringLiteralRepresentation() *spec.TestGroup {
 				return err
 			}
 
-			// Literal Header Field without Indexing - New Name (x-test: test)
+			// Literal Header Field without Indexing - New Name (x-test: tes{EOS}t)
 			// This contains a EOS symbol in the middle:
-			rep := []byte("\x00\x85\xf2\xb2\x4a\x87\xff\xff\xff\xfd\x25\x42\x7f")
+			//
+			// Header:       0000 0000
+			// Name Length:  1000 0101
+			// Name String:  1111 0010 1011 0010 0100 1010 1000 0100 1111 1111
+			// Value Length: 1000 0111
+			// Value String: 0100 1001 0101 0001 1111 1111 1111 1111 1111 1111 1111 1010 0111 1111
+			rep := []byte("\x00\x85\xf2\xb2\x4a\x84\xff\x87\x49\x51\xff\xff\xff\xfa\x7f")
 
 			headers := spec.CommonHeaders(c)
 			blockFragment := conn.EncodeHeaders(headers)
