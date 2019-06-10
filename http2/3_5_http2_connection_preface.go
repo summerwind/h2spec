@@ -60,9 +60,7 @@ func HTTP2ConnectionPreface() *spec.TestGroup {
 				return err
 			}
 
-			// Connection has not negotiated, so we verify connection close
-			// instead of connection error.
-			return spec.VerifyConnectionClose(conn)
+			return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol)
 		},
 	})
 
