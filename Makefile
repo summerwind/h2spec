@@ -1,6 +1,6 @@
 VERSION=2.2.1
 COMMIT=$(shell git rev-parse --verify HEAD)
-BUILD_FLAGS=-ldflags -X main.VERSION=$(VERSION) -X main.COMMIT=$(COMMIT)
+BUILD_FLAGS=-ldflags "-X main.VERSION=$(VERSION) -X main.COMMIT=$(COMMIT)"
 
 all: build
 
