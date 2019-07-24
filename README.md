@@ -91,7 +91,7 @@ $ h2spec --strict
 
 ## Build
 
-To build from source, you need to install [Go](https://golang.org) and [dep](https://github.com/golang/dep) first.
+To build from source, you need to install [Go](https://golang.org) and export `GO111MODULE=on` first.
 
 To build:
 ```
