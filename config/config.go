@@ -24,6 +24,7 @@ type Config struct {
 	Strict       bool
 	DryRun       bool
 	TLS          bool
+	Ciphers      string
 	Insecure     bool
 	Verbose      bool
 	Sections     []string
@@ -34,7 +35,7 @@ type Config struct {
 	FromPort     int
 }
 
-// Addr returns the string concatinated with hostname and port number.
+// Addr returns the string concatenated with hostname and port number.
 func (c *Config) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
@@ -47,6 +48,69 @@ func (c *Config) Scheme() string {
 	}
 }
 
+func CiphersuiteByName(name string) uint16 {
+	switch name {
+	case "TLS_RSA_WITH_RC4_128_SHA":
+		return tls.TLS_RSA_WITH_RC4_128_SHA
+	case "TLS_RSA_WITH_3DES_EDE_CBC_SHA":
+		return tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA
+	case "TLS_RSA_WITH_AES_128_CBC_SHA":
+		return tls.TLS_RSA_WITH_AES_128_CBC_SHA
+	case "TLS_RSA_WITH_AES_128_CBC_SHA256":
+		return tls.TLS_RSA_WITH_AES_128_CBC_SHA256
+	case "TLS_RSA_WITH_AES_256_GCM_SHA384":
+		return tls.TLS_RSA_WITH_AES_256_GCM_SHA384
+	case "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA":
+		return tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
+	case "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA":
+		return tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+	case "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA":
+		return tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+	case "TLS_ECDHE_RSA_WITH_RC4_128_SHA":
+		return tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA
+	case "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA":
+		return tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
+	case "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA":
+		return tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+	case "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA":
+		return tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+	case "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256":
+		return tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+	case "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256":
+		return tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+	case "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256":
+		return tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	case "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256":
+		return tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+	case "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384":
+		return tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	case "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384":
+		return tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+	case "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305":
+		return tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+	case "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305":
+		return tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+	}
+	return 0
+}
+
+// Decode the user-defined list of allowed cipher suites from string
+// representation.
+// TODO: now Golang doesn't provide a way to convert ciphersuite name to ID,
+// thus manual implementation is required.
+func (c *Config) GetCiphersuites() []uint16 {
+	var ids []uint16
+
+	for _, name := range strings.Split(c.Ciphers, ":") {
+		id := CiphersuiteByName(name)
+		if id != 0 {
+			ids = append(ids, id)
+		}
+	}
+
+	return ids
+}
+
 // TLSConfig returns a tls.Config based on the configuration of h2spec.
 func (c *Config) TLSConfig() (*tls.Config, error) {
 	if !c.TLS {
@@ -55,6 +119,7 @@ func (c *Config) TLSConfig() (*tls.Config, error) {
 
 	config := tls.Config{
 		InsecureSkipVerify: c.Insecure,
+		CipherSuites: c.GetCiphersuites(),
 	}
 
 	if config.NextProtos == nil {
