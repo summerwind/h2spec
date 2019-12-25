@@ -12,7 +12,7 @@ func StreamDependencies() *spec.TestGroup {
 	// A stream cannot depend on itself. An endpoint MUST treat this
 	// as a stream error (Section 5.4.2) of type PROTOCOL_ERROR.
 	tg.AddTestCase(&spec.TestCase{
-		Desc:        "Sends HEADERS frame that depend on itself",
+		Desc:        "Sends HEADERS frame that depends on itself",
 		Requirement: "The endpoint MUST treat this as a stream error of type PROTOCOL_ERROR.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			var streamID uint32 = 1
