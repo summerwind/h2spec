@@ -20,6 +20,7 @@ Usage:
   h2spec [spec...] [flags]
 
 Flags:
+  -c, --ciphers string          List of colon-separated TLS cipher names
       --dryrun                  Display only the title of test cases
       --help                    Display this help and exit
   -h, --host string             Target host (default "127.0.0.1")
