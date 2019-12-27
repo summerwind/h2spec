@@ -36,6 +36,7 @@ func main() {
 	flags.BoolP("strict", "S", false, "Run all test cases including strict test cases")
 	flags.Bool("dryrun", false, "Display only the title of test cases")
 	flags.BoolP("tls", "t", false, "Connect over TLS")
+	flags.StringP("ciphers", "c", "", "List of colon-separated TLS cipher names")
 	flags.BoolP("insecure", "k", false, "Don't verify server's certificate")
 	flags.BoolP("verbose", "v", false, "Output verbose log")
 	flags.Bool("version", false, "Display version information and exit")
@@ -106,6 +107,11 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	ciphers, err := flags.GetString("ciphers")
+	if err != nil {
+		return err
+	}
+
 	insecure, err := flags.GetBool("insecure")
 	if err != nil {
 		return err
@@ -134,6 +140,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Strict:       strict,
 		DryRun:       dryRun,
 		TLS:          tls,
+		Ciphers:      ciphers,
 		Insecure:     insecure,
 		Verbose:      verbose,
 		Sections:     args,
