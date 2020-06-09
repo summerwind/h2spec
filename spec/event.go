@@ -240,3 +240,12 @@ func frameString(header http2.FrameHeader) string {
 		header.StreamID,
 	)
 }
+
+func FindEventByType(eventType EventType, events ...Event) Event {
+	for _, event := range events {
+		if event.Type() == eventType {
+			return event
+		}
+	}
+	return nil
+}

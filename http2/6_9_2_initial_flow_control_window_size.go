@@ -21,7 +21,8 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 		Requirement: "The endpoint MUST adjust the size of all stream flow-control windows.",
 		Run: func(c *config.Config, conn *spec.Conn) error {
 			var streamID uint32 = 1
-			var actual spec.Event
+			var settingsFrame spec.Event
+			var dataFrame spec.Event
 
 			// Skip this test case when the length of data is 0.
 			dataLen, err := spec.ServerDataLength(c)
@@ -72,14 +73,22 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings2...)
 
-			err = spec.VerifySettingsFrameWithAck(conn)
+			// The server can send 3 packets in any order: HEADERS, DATA, SETTINGS
+			packet1 := conn.WaitEvent()
+			packet2 := conn.WaitEvent()
+			packet3 := conn.WaitEvent()
+			dataFrame = spec.FindEventByType(spec.EventDataFrame, packet1, packet2, packet3)
+			settingsFrame = spec.FindEventByType(spec.EventSettingsFrame, packet1, packet2, packet3)
+
+			// Check SETTINGS frame
+			err = spec.VerifyGivenSettingsFrameWithAck(settingsFrame)
 			if err != nil {
 				return err
 			}
 
-			// Wait for DATA frame...
-			actual, passed := conn.WaitEventByType(spec.EventDataFrame)
-			switch event := actual.(type) {
+			// Check DATA frame
+			var passed bool
+			switch event := dataFrame.(type) {
 			case spec.DataFrameEvent:
 				passed = (event.Header().Length == 1)
 			default:
@@ -93,7 +102,7 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 
 				return &spec.TestError{
 					Expected: expected,
-					Actual:   actual.String(),
+					Actual:   dataFrame.String(),
 				}
 			}
 

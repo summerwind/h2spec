@@ -210,7 +210,14 @@ func VerifyHeadersFrame(conn *Conn, streamID uint32) error {
 // VerifySettingsFrameWithAck verifies whether a SETTINGS frame with
 // ACK flag has received.
 func VerifySettingsFrameWithAck(conn *Conn) error {
-	actual, passed := conn.WaitEventByType(EventSettingsFrame)
+	actual, _ := conn.WaitEventByType(EventSettingsFrame)
+	return VerifyGivenSettingsFrameWithAck(actual)
+}
+
+// VerifyGivenSettingsFrameWithAck verifies whether the given frame
+// is a SETTINGS frame with ACK flag.
+func VerifyGivenSettingsFrameWithAck(actual Event) error {
+	var passed bool
 	switch event := actual.(type) {
 	case SettingsFrameEvent:
 		passed = event.IsAck()
