@@ -3,6 +3,7 @@ package spec
 import (
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -165,7 +166,7 @@ func (tc *TestCase) Test(c *config.Config, seq int) error {
 	if c.DryRun {
 		msg := fmt.Sprintf("%s %s", seqStr(seq), tc.Desc)
 		log.Println(msg)
-		tc.Result = NewTestResult(tc, seq, nil, time.Duration(0))
+		tc.Result = NewTestResult(tc, seq, nil, time.Duration(0), nil)
 		return nil
 	}
 
@@ -189,7 +190,7 @@ func (tc *TestCase) Test(c *config.Config, seq int) error {
 
 	log.ResetLine()
 
-	tr := NewTestResult(tc, seq, err, end.Sub(start))
+	tr := NewTestResult(tc, seq, err, end.Sub(start), conn.LocalAddr())
 	tr.Print()
 	tc.Result = tr
 
@@ -210,17 +211,18 @@ func (e TestError) Error() string {
 
 // TestResult represents a result of test case.
 type TestResult struct {
-	TestCase *TestCase
-	Sequence int
-	Error    error
-	Duration time.Duration
+	TestCase   *TestCase
+	Sequence   int
+	Error      error
+	Duration   time.Duration
+	SourceAddr net.Addr
 
 	Skipped bool
 	Failed  bool
 }
 
 // NewTestResult returns a TestResult.
-func NewTestResult(tc *TestCase, seq int, err error, d time.Duration) *TestResult {
+func NewTestResult(tc *TestCase, seq int, err error, d time.Duration, addr net.Addr) *TestResult {
 	skipped := false
 	failed := false
 
@@ -233,12 +235,13 @@ func NewTestResult(tc *TestCase, seq int, err error, d time.Duration) *TestResul
 	}
 
 	tr := TestResult{
-		TestCase: tc,
-		Sequence: seq,
-		Error:    err,
-		Duration: d,
-		Skipped:  skipped,
-		Failed:   failed,
+		TestCase:   tc,
+		Sequence:   seq,
+		Error:      err,
+		Duration:   d,
+		SourceAddr: addr,
+		Skipped:    skipped,
+		Failed:     failed,
 	}
 
 	return &tr
@@ -260,6 +263,7 @@ func (tr *TestResult) Print() {
 		return
 	}
 
+	log.Println(red(fmt.Sprintf("using source address %s", tr.SourceAddr)))
 	log.Println(red(fmt.Sprintf("%s %s %s", "×", seq, desc)))
 	err, ok := tr.Error.(*TestError)
 	if ok {
