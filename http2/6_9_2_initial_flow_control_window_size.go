@@ -72,11 +72,6 @@ func InitialFlowControlWindowSize() *spec.TestGroup {
 			}
 			conn.WriteSettings(settings2...)
 
-			err = spec.VerifySettingsFrameWithAck(conn)
-			if err != nil {
-				return err
-			}
-
 			// Wait for DATA frame...
 			actual, passed := conn.WaitEventByType(spec.EventDataFrame)
 			switch event := actual.(type) {
