@@ -19,7 +19,6 @@ func Spec() *spec.TestGroup {
 	}
 
 	tg.AddTestGroup(CompressionProcessOverview())
-	tg.AddTestGroup(DynamicTableManagement())
 	tg.AddTestGroup(PrimitiveTypeRepresentations())
 	tg.AddTestGroup(BinaryFormat())
 
