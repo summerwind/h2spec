@@ -371,15 +371,15 @@ func (conn *Conn) WaitEvent() Event {
 
 		opErr, ok := err.(*net.OpError)
 		if ok {
-			if opErr.Err == syscall.ECONNRESET {
-				ev = ConnectionClosedEvent{}
-				conn.vlog(ev, false)
-				return ev
-			}
+			scErr, ok := opErr.Err.(*os.SyscallError)
+			if ok {
+				if scErr.Err == syscall.ECONNRESET {
+					ev = ConnectionClosedEvent{}
+					conn.vlog(ev, false)
+					return ev
+				}
 
-			if runtime.GOOS == "windows" {
-				scErr, ok := opErr.Err.(*os.SyscallError)
-				if ok {
+				if runtime.GOOS == "windows" {
 					const WSAECONNABORTED = 10053
 					const WSAECONNRESET = 10054
 
