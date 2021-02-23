@@ -33,7 +33,7 @@ type JUnitTestSuite struct {
 type JUnitTestCase struct {
 	XMLName   xml.Name      `xml:"testcase"`
 	Package   string        `xml:"package,attr"`
-	ClassName string        `xml:"classname,attr"`
+	Name      string        `xml:"name,attr"`
 	Time      string        `xml:"time,attr"`
 	Failure   *JUnitFailure `xml:"failure"`
 	Skipped   *JUnitSkipped `xml:"skipped"`
@@ -102,7 +102,7 @@ func convertJUnitReport(groups []*spec.TestGroup) []*JUnitTestSuite {
 
 			jtc := &JUnitTestCase{
 				Package:   tg.ID(),
-				ClassName: tc.Desc,
+				Name:      tc.Desc,
 				Time:      fmt.Sprintf("%.04f", tc.Result.Duration.Seconds()),
 			}
 
