@@ -171,8 +171,7 @@ func (tc *TestCase) Test(c *config.Config, seq int) error {
 	}
 
 	if !c.Verbose {
-		msg := gray(fmt.Sprintf("  %s %s", seqStr(seq), tc.Desc))
-		log.Print(msg)
+		log.Print(gray(fmt.Sprintf("  %s %s", seqStr(seq), tc.Desc)))
 	}
 
 	conn, err := Dial(c)
@@ -183,6 +182,10 @@ func (tc *TestCase) Test(c *config.Config, seq int) error {
 		return err
 	}
 	defer conn.Close()
+
+	if c.Verbose {
+		log.Println(gray(fmt.Sprintf("     source address: %s", conn.LocalAddr())))
+	}
 
 	start := time.Now()
 	err = tc.Run(c, conn)
@@ -263,7 +266,6 @@ func (tr *TestResult) Print() {
 		return
 	}
 
-	log.Println(red(fmt.Sprintf("using source address %s", tr.SourceAddr)))
 	log.Println(red(fmt.Sprintf("%s %s %s", "×", seq, desc)))
 	err, ok := tr.Error.(*TestError)
 	if ok {
