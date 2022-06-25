@@ -371,7 +371,7 @@ func (conn *Conn) WaitEvent() Event {
 
 		opErr, ok := err.(*net.OpError)
 		if ok {
-			if opErr.Err == syscall.ECONNRESET {
+			if opErr.Err == syscall.ECONNRESET || errors.Is(err, syscall.ECONNRESET) {
 				ev = ConnectionClosedEvent{}
 				conn.vlog(ev, false)
 				return ev
