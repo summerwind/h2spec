@@ -61,7 +61,7 @@ func ErrorCodes() *spec.TestGroup {
 			data := [8]byte{}
 			conn.WritePing(false, data)
 
-			return spec.VerifyPingFrameWithAck(conn, data)
+			return spec.VerifyPingFrameOrConnectionClose(conn, data)
 		},
 	})
 
