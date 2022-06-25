@@ -1,4 +1,4 @@
-FROM golang:1.14 as builder
+FROM golang:1.18 as builder
 
 ARG VERSION
 ARG COMMIT
@@ -19,7 +19,7 @@ RUN CGO_ENABLED=0 go build -ldflags "-X main.VERSION=${VERSION} -X main.COMMIT=$
 
 ###################
 
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 COPY --from=builder /workspace/h2spec /usr/local/bin/h2spec
 
