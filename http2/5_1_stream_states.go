@@ -24,7 +24,13 @@ func StreamStates() *spec.TestGroup {
 
 			conn.WriteData(1, true, []byte("test"))
 
-			return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol)
+			// This is an unclear part of the specification. Section 6.1 says
+			// to treat this as a stream error.
+			// --------
+			// If a DATA frame is received whose stream is not in "open" or
+			// "half-closed (local)" state, the recipient MUST respond with
+			// a stream error (Section 5.4.2) of type STREAM_CLOSED.
+			return spec.VerifyStreamError(conn, http2.ErrCodeProtocol, http2.ErrCodeStreamClosed)
 		},
 	})
 
