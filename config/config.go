@@ -33,6 +33,7 @@ type Config struct {
 	CertKeyFile  string
 	Exec         string
 	FromPort     int
+	Excluded     []string
 }
 
 // Addr returns the string concatenated with hostname and port number.

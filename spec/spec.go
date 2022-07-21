@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"regexp"
 
 	"github.com/summerwind/h2spec/config"
 	"github.com/summerwind/h2spec/log"
@@ -154,6 +155,28 @@ type TestCase struct {
 
 // Test runs itself as a test case.
 func (tc *TestCase) Test(c *config.Config, seq int) error {
+	fullTestID := fmt.Sprintf("%v/%v", tc.Parent.ID(), seq)
+	// TODO: As for now our default target tests system is Ubuntu 20.04,
+	// `go` version there is 1.13.8, which doesn't have `slices.Contains` yet.
+	// Let's check it out later.
+	for _, exc := range c.Excluded {
+		matched, _ := regexp.MatchString(exc, fullTestID)
+		if matched {
+			if c.Verbose {
+				message := fmt.Sprintf("Test %#v is manually disabled by --exclude/-x %#v, skipping.",
+				                       fullTestID, exc)
+				log.Println(message)
+			}
+			tc.Result = &TestResult{
+				TestCase: tc,
+				Sequence: seq,
+				Error: ErrSkipped,
+				Skipped: true,
+			}
+			return nil
+		}
+	}
+
 	if tc.Strict && !c.Strict {
 		return nil
 	}
