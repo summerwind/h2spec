@@ -41,6 +41,7 @@ func main() {
 	flags.BoolP("verbose", "v", false, "Output verbose log")
 	flags.Bool("version", false, "Display version information and exit")
 	flags.Bool("help", false, "Display this help and exit")
+	flags.StringSliceP("exclude", "x", []string{}, "Disable specific tests")
 
 	err := cmd.Execute()
 	if err != nil {
@@ -122,6 +123,11 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	exclude, err := flags.GetStringSlice("exclude")
+	if err != nil {
+		return err
+	}
+
 	if port == 0 {
 		if tls {
 			port = 443
@@ -144,6 +150,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Insecure:     insecure,
 		Verbose:      verbose,
 		Sections:     args,
+		Excluded:     exclude,
 	}
 
 	success, err := h2spec.Run(c)
