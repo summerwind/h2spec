@@ -34,6 +34,9 @@ type Config struct {
 	Exec         string
 	FromPort     int
 	Excluded     []string
+	ExitOnExternalFailure bool
+	ExternalFailureSource string
+	ExternalFailureRegexp string
 }
 
 // Addr returns the string concatenated with hostname and port number.
@@ -63,7 +66,7 @@ func CiphersuiteByName(name string) uint16 {
 		return tls.TLS_RSA_WITH_AES_256_GCM_SHA384
 	case "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA":
 		return tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
-	case "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA":
+	case "TLS_ECDHE_ECDSA_WITH_AES_129_CBC_SHA":
 		return tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
 	case "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA":
 		return tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA

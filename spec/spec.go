@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 	"regexp"
+	"bufio"
 
 	"github.com/summerwind/h2spec/config"
 	"github.com/summerwind/h2spec/log"
@@ -153,6 +154,13 @@ type TestCase struct {
 	Run         func(c *config.Config, conn *Conn) error
 }
 
+func (tc *TestCase) ExitOnError(err error) {
+	if err != nil {
+		fmt.Printf("\n%v\n", err)
+		os.Exit(1)
+	}
+}
+
 // Test runs itself as a test case.
 func (tc *TestCase) Test(c *config.Config, seq int) error {
 	fullTestID := fmt.Sprintf("%v/%v", tc.Parent.ID(), seq)
@@ -197,6 +205,16 @@ func (tc *TestCase) Test(c *config.Config, seq int) error {
 		log.Print(gray(fmt.Sprintf("  %s %s", seqStr(seq), tc.Desc)))
 	}
 
+	var r *bufio.Reader
+	if c.ExitOnExternalFailure {
+		f, err := os.Open(c.ExternalFailureSource)
+		tc.ExitOnError(err)
+		defer f.Close()
+		_, err = f.Seek(0, 2)
+		tc.ExitOnError(err)
+		r = bufio.NewReader(f)
+	}
+
 	conn, err := Dial(c)
 	if err != nil {
 		msg := red(fmt.Sprintf("%s %s %s", "×", seqStr(seq), tc.Desc))
@@ -213,6 +231,20 @@ func (tc *TestCase) Test(c *config.Config, seq int) error {
 	start := time.Now()
 	err = tc.Run(c, conn)
 	end := time.Now()
+
+	if c.ExitOnExternalFailure {
+		s := bufio.NewScanner(r)
+		for s.Scan() {
+			pattern := regexp.MustCompile(c.ExternalFailureRegexp)
+			if pattern.MatchString(s.Text()) {
+				fmt.Println("\nAn external failure has been triggered, exiting.")
+				os.Exit(1)
+			}
+		}
+		if err := s.Err(); err != nil {
+			tc.ExitOnError(err)
+		}
+	}
 
 	log.ResetLine()
 
