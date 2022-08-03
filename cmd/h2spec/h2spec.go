@@ -38,10 +38,13 @@ func main() {
 	flags.BoolP("tls", "t", false, "Connect over TLS")
 	flags.StringP("ciphers", "c", "", "List of colon-separated TLS cipher names")
 	flags.BoolP("insecure", "k", false, "Don't verify server's certificate")
+	flags.StringSliceP("exclude", "x", []string{}, "Disable specific tests")
+	flags.Bool("exit-on-external-failure", false, "Stop tests execution on an external failure event")
+	flags.String("external-failure-source", "", "Path to the file that needs to be tracked for failures")
+	flags.String("external-failure-regexp", "", "A regular expression for a falure to be marched with")
 	flags.BoolP("verbose", "v", false, "Output verbose log")
 	flags.Bool("version", false, "Display version information and exit")
 	flags.Bool("help", false, "Display this help and exit")
-	flags.StringSliceP("exclude", "x", []string{}, "Disable specific tests")
 
 	err := cmd.Execute()
 	if err != nil {
@@ -128,6 +131,21 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	exitOnExternalFailure, err := flags.GetBool("exit-on-external-failure")
+	if err != nil {
+		return err
+	}
+
+	externalFailureSource, err := flags.GetString("external-failure-source")
+	if err != nil {
+		return err
+	}
+
+	externalFailureRegexp, err := flags.GetString("external-failure-regexp")
+	if err != nil {
+		return err
+	}
+
 	if port == 0 {
 		if tls {
 			port = 443
@@ -151,6 +169,9 @@ func run(cmd *cobra.Command, args []string) error {
 		Verbose:      verbose,
 		Sections:     args,
 		Excluded:     exclude,
+		ExitOnExternalFailure: exitOnExternalFailure,
+		ExternalFailureSource: externalFailureSource,
+		ExternalFailureRegexp: externalFailureRegexp,
 	}
 
 	success, err := h2spec.Run(c)

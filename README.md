@@ -20,21 +20,24 @@ Usage:
   h2spec [spec...] [flags]
 
 Flags:
-  -c, --ciphers string          List of colon-separated TLS cipher names
-      --dryrun                  Display only the title of test cases
-  -x, --exclude strings         Disable specific tests
-      --help                    Display this help and exit
-  -h, --host string             Target host (default "127.0.0.1")
-  -k, --insecure                Don't verify server's certificate
-  -j, --junit-report string     Path for JUnit test report
-      --max-header-length int   Maximum length of HTTP header (default 4000)
-  -P, --path string             Target path (default "/")
-  -p, --port int                Target port
-  -S, --strict                  Run all test cases including strict test cases
-  -o, --timeout int             Time seconds to test timeout (default 2)
-  -t, --tls                     Connect over TLS
-  -v, --verbose                 Output verbose log
-      --version                 Display version information and exit
+  -c, --ciphers string                   List of colon-separated TLS cipher names
+      --dryrun                           Display only the title of test cases
+  -x, --exclude strings                  Disable specific tests
+      --exit-on-external-failure         Stop tests execution on an external failure event
+      --external-failure-regexp string   A regular expression for a falure to be marched with
+      --external-failure-source string   Path to the file that needs to be tracked for failures
+      --help                             Display this help and exit
+  -h, --host string                      Target host (default "127.0.0.1")
+  -k, --insecure                         Don't verify server's certificate
+  -j, --junit-report string              Path for JUnit test report
+      --max-header-length int            Maximum length of HTTP header (default 4000)
+  -P, --path string                      Target path (default "/")
+  -p, --port int                         Target port
+  -S, --strict                           Run all test cases including strict test cases
+  -o, --timeout int                      Time seconds to test timeout (default 2)
+  -t, --tls                              Connect over TLS
+  -v, --verbose                          Output verbose log
+      --version                          Display version information and exit
 ```
 
 ### Running a specific test case
@@ -91,6 +94,13 @@ $ h2spec --strict
 If you use `h2spec` as a part of your CI/CD pipeline, you may find it useful to be able to manually exclude specific tests by their *Spec ID*s before the corresponding issue gets resolved:
 ```
 $ h2spec --exclude hpack/2 --exclude hpack/4/1
+```
+
+### Exit On External Failure
+There are cases when you'd want `h2pec` to stop performing tests due to some external event happened. Usually that would be a message in some log file:
+
+```
+h2spec --exit-on-external-failure --external-failure-regexp "regexp that matches your error message" --external-failure-source /tmp/some_log_file
 ```
 
 ## Screenshot
