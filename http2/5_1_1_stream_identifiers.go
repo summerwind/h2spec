@@ -68,5 +68,39 @@ func StreamIdentifiers() *spec.TestGroup {
 		},
 	})
 
+    // An endpoint that receives an unexpected stream identifier
+    // MUST respond with a connection error (Section 5.4.1) of
+    // type PROTOCOL_ERROR.
+    tg.AddTestCase(&spec.TestCase{
+        Desc:        "Sends stream identifier that has already been used",
+        Requirement: "The endpoint MUST response with a connection error of type PROTOCOL_ERROR.",
+        Run: func(c *config.Config, conn *spec.Conn) error {
+            err := conn.Handshake()
+            if err != nil {
+                return err
+            }
+
+            headers := spec.CommonHeaders(c)
+
+            hp1 := http2.HeadersFrameParam{
+                StreamID:      5,
+                EndStream:     true,
+                EndHeaders:    true,
+                BlockFragment: conn.EncodeHeaders(headers),
+            }
+            conn.WriteHeaders(hp1)
+
+            hp2 := http2.HeadersFrameParam{
+                StreamID:      5,
+                EndStream:     true,
+                EndHeaders:    true,
+                BlockFragment: conn.EncodeHeaders(headers),
+            }
+            conn.WriteHeaders(hp2)
+
+            return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol)
+        },
+    })
+
 	return tg
 }
