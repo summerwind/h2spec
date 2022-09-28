@@ -68,12 +68,12 @@ func StreamIdentifiers() *spec.TestGroup {
 		},
 	})
 
-    // An endpoint that receives an unexpected stream identifier
-    // MUST respond with a connection error (Section 5.4.1) of
-    // type PROTOCOL_ERROR.
+    // An endpoint that detects a stream error, should send
+    // a RST_STREAM frame that contains the stream identifier of the stream
+    // where the error occured. (Section 5.4.2)
     tg.AddTestCase(&spec.TestCase{
-        Desc:        "Sends stream identifier that has already been used",
-        Requirement: "The endpoint MUST response with a connection error of type PROTOCOL_ERROR.",
+        Desc:        "Sends HEADERS frame with the stream which is in half-closed (remote) state",
+        Requirement: "The endpoint MUST respond with a RST_FRAME frame",
         Run: func(c *config.Config, conn *spec.Conn) error {
             err := conn.Handshake()
             if err != nil {
@@ -98,7 +98,7 @@ func StreamIdentifiers() *spec.TestGroup {
             }
             conn.WriteHeaders(hp2)
 
-            return spec.VerifyConnectionError(conn, http2.ErrCodeProtocol)
+            return spec.VerifyStreamError(conn, http2.ErrCodeStreamClosed)
         },
     })
 
