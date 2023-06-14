@@ -66,6 +66,7 @@ func Dial(c *config.Config) (*Conn, error) {
 			return nil, err
 		}
 
+		tlsConfig.ServerName = c.ServerName
 		tlsConn, err := tls.DialWithDialer(dialer, "tcp", c.Addr(), tlsConfig)
 		if err != nil {
 			return nil, err

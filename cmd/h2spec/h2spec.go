@@ -29,6 +29,7 @@ func main() {
 	flags := cmd.Flags()
 	flags.StringP("host", "h", "127.0.0.1", "Target host")
 	flags.IntP("port", "p", 0, "Target port")
+	flags.StringP("server-name", "n", "", "Server name (SNI)")
 	flags.StringP("path", "P", "/", "Target path")
 	flags.IntP("timeout", "o", 2, "Time seconds to test timeout")
 	flags.Int("max-header-length", 4000, "Maximum length of HTTP header")
@@ -146,6 +147,11 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	serverName, err := flags.GetString("server-name")
+	if err != nil {
+		return err
+	}
+
 	if port == 0 {
 		if tls {
 			port = 443
@@ -157,6 +163,7 @@ func run(cmd *cobra.Command, args []string) error {
 	c := &config.Config{
 		Host:         host,
 		Port:         port,
+		ServerName:   serverName,
 		Path:         path,
 		Timeout:      time.Duration(timeout) * time.Second,
 		MaxHeaderLen: maxHeaderLen,

@@ -17,6 +17,7 @@ const (
 type Config struct {
 	Host         string
 	Port         int
+	ServerName	 string
 	Path         string
 	Timeout      time.Duration
 	MaxHeaderLen int
