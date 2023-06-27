@@ -40,6 +40,7 @@ func main() {
 	flags.StringP("ciphers", "c", "", "List of colon-separated TLS cipher names")
 	flags.BoolP("insecure", "k", false, "Don't verify server's certificate")
 	flags.StringSliceP("exclude", "x", []string{}, "Disable specific tests")
+	flags.StringSliceP("execute-specific-tests", "", []string{}, "Exeute specific tests")
 	flags.Bool("exit-on-external-failure", false, "Stop tests execution on an external failure event")
 	flags.String("external-failure-source", "", "Path to the file that needs to be tracked for failures")
 	flags.String("external-failure-regexp", "", "A regular expression for a falure to be marched with")
@@ -132,6 +133,11 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	executeSpecificTests, err  := flags.GetStringSlice("execute-specific-tests")
+	if err != nil {
+		return err
+	}
+
 	exitOnExternalFailure, err := flags.GetBool("exit-on-external-failure")
 	if err != nil {
 		return err
@@ -176,6 +182,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Verbose:      verbose,
 		Sections:     args,
 		Excluded:     exclude,
+		ExecuteSpecificTests:  executeSpecificTests,
 		ExitOnExternalFailure: exitOnExternalFailure,
 		ExternalFailureSource: externalFailureSource,
 		ExternalFailureRegexp: externalFailureRegexp,

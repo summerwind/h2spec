@@ -17,7 +17,7 @@ const (
 type Config struct {
 	Host         string
 	Port         int
-	ServerName	 string
+	ServerName   string
 	Path         string
 	Timeout      time.Duration
 	MaxHeaderLen int
@@ -35,6 +35,7 @@ type Config struct {
 	Exec         string
 	FromPort     int
 	Excluded     []string
+	ExecuteSpecificTests  []string
 	ExitOnExternalFailure bool
 	ExternalFailureSource string
 	ExternalFailureRegexp string
