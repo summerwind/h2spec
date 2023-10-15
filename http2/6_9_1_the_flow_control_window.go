@@ -145,9 +145,11 @@ func TheFlowControlWindow() *spec.TestGroup {
 			}
 
 			headers := spec.CommonHeaders(c)
+			headers[0].Value = "POST"
+
 			hp := http2.HeadersFrameParam{
 				StreamID:      streamID,
-				EndStream:     false,
+				EndStream:     true,
 				EndHeaders:    true,
 				BlockFragment: conn.EncodeHeaders(headers),
 			}
@@ -155,6 +157,8 @@ func TheFlowControlWindow() *spec.TestGroup {
 
 			conn.WriteWindowUpdate(streamID, 2147483647)
 			conn.WriteWindowUpdate(streamID, 2147483647)
+
+			conn.WriteData(streamID, true, []byte("test"))
 
 			actual, passed := conn.WaitEventByType(spec.EventRSTStreamFrame)
 			switch event := actual.(type) {
